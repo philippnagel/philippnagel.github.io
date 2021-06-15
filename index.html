@@ -20,40 +20,21 @@
   <link rel="me" href="https://linkedin.com/philippnagel" />
   <link rel="me" href="https://github/philippnagel" />
 
-
-  <link rel="stylesheet" href="https://unpkg.com/latex.css/style.min.css" />
-  <link rel="stylesheet" href="https://latex.now.sh/prism/prism.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="libertinus" id="top">
-  <header>
-    <h1><span class="latex">Philipp Nagel 🌌</h1>
-  </header>
-
-  <main class="abstract">
-       <!-- <article>
-          <h2>Email me at phil@philippnagel.com</h2>
-        </article> -->
+<body>
+  <img id="userPhoto" src=" alt="User Photo">
     
-    <a href="https://nagel.writeas.com/" class="links"><strong>Blog ✍️</strong></a>
-    
-  </main>
+  <a href="https://www.instagram.com/thesimpsons" id="userName">@thesimpsons</a>
+  <div id="links">
+      <a class="link" href="https://pt.wikipedia.org/wiki/Homer_Simpson" target="_blank">Wikipedia</a>
+      <a class="link" href="https://foxplay.com/br/forme" target="_blank">IMDB</a>
+  </div>
 
-  <script>
-    MathJax = {
-      tex: {
-        inlineMath: [['$', '$'],],
-      },
-    }
-    const toggle = document.getElementById('typeface-toggle')
-    const typeface = document.getElementById('typeface')
-    toggle.addEventListener('click', () => {
-      document.body.classList.toggle('libertinus')
-      typeface.textContent = document.body.classList.contains('libertinus') ? 'Libertinus' : 'Latin Modern'
-    })
-  </script>
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+  <!-- Javascript -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
+  <script  src="index.js"></script>
 
 </body>
 
