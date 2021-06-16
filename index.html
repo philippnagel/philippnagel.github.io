@@ -33,19 +33,16 @@
       <a class="link" href="https://twitter.com/philippnag" target="_blank">Twitter</a>
       <a class="hide" href="https://twitter.com/philippnag" target="_blank">Twitter</a>
       <form action="https://formspree.io/f/xqkpoqpb" method="POST">
-        <label>
-          Your email:
-          <input type="email" name="_replyto">
-        </label>
-        <label>
-          Your message:
-          <textarea name="message"></textarea>
-        </label>
+          <label for="email">Email Address</label>
+          <input class="inputfield" type="email" name="email">
+                                                                    
+          <label for="message">Message</label>
+          <input class="inputfield" type="text" name="message">                                                         
+                                                                                                                      
+          <input class="button" type="submit" value="Send">
       
         <!-- your other form fields go here -->
-      
-        <button type="submit">Send</button>
-      </form>
+            </form>
   </div>
 
   <!-- Javascript -->
@@ -53,22 +50,3 @@
   <script  src="index.js"></script>
 
 </body>
-
-</html>
-
-
-
-<form action="https://formspree.io/f/xqkpoqpb" method="POST">
-  <label>
-    Your email:
-    <input type="email" name="_replyto">
-  </label>
-  <label>
-    Your message:
-    <textarea name="message"></textarea>
-  </label>
-
-  <!-- your other form fields go here -->
-
-  <button type="submit">Send</button>
-</form>
