@@ -12,8 +12,6 @@
 
 html, body{
     background-color: var(--bgColor);
-    height: 100%;
-    width: 100%;
 }
 
 #userPhoto{
