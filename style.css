@@ -6,10 +6,6 @@
     --font: 'Karla', sans-serif;
 }
 
-* { 
-    box-sizing: border-box; 
-  }
-
 html, body{
     background-color: var(--bgColor);
 }
