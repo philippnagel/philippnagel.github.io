@@ -1,97 +1,97 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml"><url>
     <loc>https://philippnagel.com/market-ontology/concepts/centralization-vs-bilateral</loc>
-    <lastmod>2026-08-16T09:12:39.557Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.449Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/concepts/message-formats</loc>
-    <lastmod>2026-08-16T09:12:39.557Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.449Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/concepts/metering-data-flow</loc>
-    <lastmod>2026-08-16T09:12:39.557Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.449Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/concepts/settlement-models</loc>
-    <lastmod>2026-08-16T09:12:39.557Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.449Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/concepts/switching-processes</loc>
-    <lastmod>2026-08-16T09:12:39.557Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.449Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/</loc>
-    <lastmod>2026-08-16T09:12:39.592Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.486Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/markets/entsoe-cim</loc>
-    <lastmod>2026-08-16T09:12:39.566Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.465Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/markets/germany</loc>
-    <lastmod>2026-08-16T09:12:39.566Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.466Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/markets/japan</loc>
-    <lastmod>2026-08-16T09:12:39.566Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.466Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/markets/netherlands</loc>
-    <lastmod>2026-08-16T09:12:39.566Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.466Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/ontology-map</loc>
-    <lastmod>2026-08-16T09:12:39.557Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.450Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/acer-entsoe-network-code-process</loc>
-    <lastmod>2026-08-16T09:12:39.557Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.451Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/bdew-bnetza-bsi-germany-primary</loc>
-    <lastmod>2026-08-16T09:12:39.566Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.465Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/bsi-tr03109-bdew-codes-germany-layers</loc>
-    <lastmod>2026-08-16T09:12:39.566Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.465Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/ceeds-common-energy-data-space</loc>
-    <lastmod>2026-08-16T09:12:39.557Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.451Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/ebix-nedu-market-messaging</loc>
-    <lastmod>2026-08-16T09:12:39.565Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.465Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/ebix-organisation-and-closure</loc>
-    <lastmod>2026-08-16T09:12:39.557Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.451Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/echonet-wisun-meti-japan-primary</loc>
-    <lastmod>2026-08-16T09:12:39.566Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.465Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/edsn-official-and-industry-profiles</loc>
-    <lastmod>2026-08-16T09:12:39.565Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.465Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/edsn-tennet-nbn-netherlands-primary</loc>
-    <lastmod>2026-08-16T09:12:39.565Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.465Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/entsoe-network-codes-and-cim</loc>
-    <lastmod>2026-08-16T09:12:39.557Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.451Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/eu-dso-entity-acer-ceeds-primary</loc>
-    <lastmod>2026-08-16T09:12:39.565Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.465Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/eu-implementing-regulation-2023-1162</loc>
-    <lastmod>2026-08-16T09:12:39.557Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.451Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/japan-observatory-international-comparison</loc>
-    <lastmod>2026-08-16T09:12:39.557Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.451Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/netbeheer-nederland-dsmr-specs</loc>
-    <lastmod>2026-08-16T09:12:39.565Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.465Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/protocol-anatomy-german-energy-industry</loc>
-    <lastmod>2026-08-16T09:12:39.558Z</lastmod>
+    <lastmod>2026-08-16T09:19:36.452Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/concepts/</loc>
-    <lastmod>2026-08-16T09:12:41.531Z</lastmod>
+    <lastmod>2026-08-16T09:19:38.273Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/markets/</loc>
-    <lastmod>2026-08-16T09:12:41.531Z</lastmod>
+    <lastmod>2026-08-16T09:19:38.273Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/</loc>
-    <lastmod>2026-08-16T09:12:41.531Z</lastmod>
+    <lastmod>2026-08-16T09:19:38.273Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/tags/project</loc>
-    <lastmod>2026-08-16T09:12:41.531Z</lastmod>
+    <lastmod>2026-08-16T09:19:38.273Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/tags/resource</loc>
-    <lastmod>2026-08-16T09:12:41.531Z</lastmod>
+    <lastmod>2026-08-16T09:19:38.273Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/tags/</loc>
-    <lastmod>2026-08-16T09:12:41.531Z</lastmod>
+    <lastmod>2026-08-16T09:19:38.273Z</lastmod>
   </url></urlset>
