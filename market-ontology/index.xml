@@ -10,37 +10,43 @@
     <link>https://philippnagel.com/market-ontology/concepts/</link>
     <guid>https://philippnagel.com/market-ontology/concepts/</guid>
     <description><![CDATA[  ]]></description>
-    <pubDate>Sun, 16 Aug 2026 08:27:07 GMT</pubDate>
+    <pubDate>Sun, 16 Aug 2026 08:42:00 GMT</pubDate>
   </item><item>
     <title>markets</title>
     <link>https://philippnagel.com/market-ontology/markets/</link>
     <guid>https://philippnagel.com/market-ontology/markets/</guid>
     <description><![CDATA[  ]]></description>
-    <pubDate>Sun, 16 Aug 2026 08:27:07 GMT</pubDate>
+    <pubDate>Sun, 16 Aug 2026 08:42:00 GMT</pubDate>
   </item><item>
     <title>sources</title>
     <link>https://philippnagel.com/market-ontology/sources/</link>
     <guid>https://philippnagel.com/market-ontology/sources/</guid>
     <description><![CDATA[  ]]></description>
-    <pubDate>Sun, 16 Aug 2026 08:27:07 GMT</pubDate>
+    <pubDate>Sun, 16 Aug 2026 08:42:00 GMT</pubDate>
   </item><item>
     <title>project</title>
     <link>https://philippnagel.com/market-ontology/tags/project</link>
     <guid>https://philippnagel.com/market-ontology/tags/project</guid>
     <description><![CDATA[  ]]></description>
-    <pubDate>Sun, 16 Aug 2026 08:27:07 GMT</pubDate>
+    <pubDate>Sun, 16 Aug 2026 08:42:00 GMT</pubDate>
   </item><item>
     <title>resource</title>
     <link>https://philippnagel.com/market-ontology/tags/resource</link>
     <guid>https://philippnagel.com/market-ontology/tags/resource</guid>
     <description><![CDATA[  ]]></description>
-    <pubDate>Sun, 16 Aug 2026 08:27:07 GMT</pubDate>
+    <pubDate>Sun, 16 Aug 2026 08:42:00 GMT</pubDate>
   </item><item>
     <title>Tag Index</title>
     <link>https://philippnagel.com/market-ontology/tags/</link>
     <guid>https://philippnagel.com/market-ontology/tags/</guid>
     <description><![CDATA[  ]]></description>
-    <pubDate>Sun, 16 Aug 2026 08:27:07 GMT</pubDate>
+    <pubDate>Sun, 16 Aug 2026 08:42:00 GMT</pubDate>
+  </item><item>
+    <title>ontology-map</title>
+    <link>https://philippnagel.com/market-ontology/ontology-map</link>
+    <guid>https://philippnagel.com/market-ontology/ontology-map</guid>
+    <description><![CDATA[ Ontology Map Two views of the same four markets: the protocol stack layer-by-layer, and the centralization/harmonization structure. ]]></description>
+    <pubDate>Sun, 16 Aug 2026 08:41:58 GMT</pubDate>
   </item><item>
     <title>index</title>
     <link>https://philippnagel.com/market-ontology/</link>
@@ -58,12 +64,6 @@
     <link>https://philippnagel.com/market-ontology/markets/germany</link>
     <guid>https://philippnagel.com/market-ontology/markets/germany</guid>
     <description><![CDATA[ Overview Germany runs energy market communication as bilateral EDIFACT messaging between market roles (supplier, DSO, MSB/metering point operator), governed by BDEW’s EDI@Energy framework under BNetzA oversight. ]]></description>
-    <pubDate>Sun, 16 Aug 2026 08:26:09 GMT</pubDate>
-  </item><item>
-    <title>japan</title>
-    <link>https://philippnagel.com/market-ontology/markets/japan</link>
-    <guid>https://philippnagel.com/market-ontology/markets/japan</guid>
-    <description><![CDATA[ Overview Japan’s architecture is built around the 10 General Transmission &amp; Distribution Operators (一般送配電事業者, TDOs), each owning meters and running its own MDMS/HES stack, feeding a single shared national aggregation layer (集約システム, built/operated by GDBL) and a single certified data intermediary... ]]></description>
     <pubDate>Sun, 16 Aug 2026 08:26:09 GMT</pubDate>
   </item>
     </channel>
