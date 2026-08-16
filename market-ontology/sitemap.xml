@@ -1,91 +1,94 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml"><url>
     <loc>https://philippnagel.com/market-ontology/concepts/centralization-vs-bilateral</loc>
-    <lastmod>2026-08-16T08:50:32.230Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.123Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/concepts/message-formats</loc>
-    <lastmod>2026-08-16T08:50:32.230Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.123Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/concepts/metering-data-flow</loc>
-    <lastmod>2026-08-16T08:50:32.230Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.123Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/concepts/settlement-models</loc>
-    <lastmod>2026-08-16T08:50:32.230Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.123Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/concepts/switching-processes</loc>
-    <lastmod>2026-08-16T08:50:32.230Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.123Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/</loc>
-    <lastmod>2026-08-16T08:50:32.243Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.147Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/markets/entsoe-cim</loc>
-    <lastmod>2026-08-16T08:50:32.234Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.128Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/markets/germany</loc>
-    <lastmod>2026-08-16T08:50:32.234Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.128Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/markets/japan</loc>
-    <lastmod>2026-08-16T08:50:32.234Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.128Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/markets/netherlands</loc>
-    <lastmod>2026-08-16T08:50:32.234Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.128Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/ontology-map</loc>
-    <lastmod>2026-08-16T08:50:32.230Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.124Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/acer-entsoe-network-code-process</loc>
-    <lastmod>2026-08-16T08:50:32.231Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.124Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/bdew-bnetza-bsi-germany-primary</loc>
-    <lastmod>2026-08-16T08:50:32.234Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.128Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/ceeds-common-energy-data-space</loc>
-    <lastmod>2026-08-16T08:50:32.231Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.124Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/ebix-nedu-market-messaging</loc>
-    <lastmod>2026-08-16T08:50:32.234Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.128Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/ebix-organisation-and-closure</loc>
-    <lastmod>2026-08-16T08:50:32.231Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.124Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/echonet-wisun-meti-japan-primary</loc>
-    <lastmod>2026-08-16T08:50:32.234Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.128Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/edsn-official-and-industry-profiles</loc>
-    <lastmod>2026-08-16T08:50:32.234Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.128Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/edsn-tennet-nbn-netherlands-primary</loc>
-    <lastmod>2026-08-16T08:50:32.234Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.128Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/entsoe-network-codes-and-cim</loc>
-    <lastmod>2026-08-16T08:50:32.231Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.124Z</lastmod>
+  </url><url>
+    <loc>https://philippnagel.com/market-ontology/sources/eu-dso-entity-acer-ceeds-primary</loc>
+    <lastmod>2026-08-16T09:00:07.128Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/eu-implementing-regulation-2023-1162</loc>
-    <lastmod>2026-08-16T08:50:32.231Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.124Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/japan-observatory-international-comparison</loc>
-    <lastmod>2026-08-16T08:50:32.231Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.124Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/netbeheer-nederland-dsmr-specs</loc>
-    <lastmod>2026-08-16T08:50:32.234Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.128Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/protocol-anatomy-german-energy-industry</loc>
-    <lastmod>2026-08-16T08:50:32.231Z</lastmod>
+    <lastmod>2026-08-16T09:00:07.124Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/concepts/</loc>
-    <lastmod>2026-08-16T08:50:33.874Z</lastmod>
+    <lastmod>2026-08-16T09:00:08.875Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/markets/</loc>
-    <lastmod>2026-08-16T08:50:33.874Z</lastmod>
+    <lastmod>2026-08-16T09:00:08.875Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/sources/</loc>
-    <lastmod>2026-08-16T08:50:33.874Z</lastmod>
+    <lastmod>2026-08-16T09:00:08.875Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/tags/project</loc>
-    <lastmod>2026-08-16T08:50:33.874Z</lastmod>
+    <lastmod>2026-08-16T09:00:08.875Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/tags/resource</loc>
-    <lastmod>2026-08-16T08:50:33.874Z</lastmod>
+    <lastmod>2026-08-16T09:00:08.875Z</lastmod>
   </url><url>
     <loc>https://philippnagel.com/market-ontology/tags/</loc>
-    <lastmod>2026-08-16T08:50:33.874Z</lastmod>
+    <lastmod>2026-08-16T09:00:08.875Z</lastmod>
   </url></urlset>
