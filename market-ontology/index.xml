@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+    <channel>
+      <title>Market Ontology</title>
+      <link>https://philippnagel.com/market-ontology</link>
+      <description>Last 10 notes on Market Ontology</description>
+      <generator>Quartz -- quartz.jzhao.xyz</generator>
+      <item>
+    <title>concepts</title>
+    <link>https://philippnagel.com/market-ontology/concepts/</link>
+    <guid>https://philippnagel.com/market-ontology/concepts/</guid>
+    <description><![CDATA[  ]]></description>
+    <pubDate>Sun, 16 Aug 2026 08:27:07 GMT</pubDate>
+  </item><item>
+    <title>markets</title>
+    <link>https://philippnagel.com/market-ontology/markets/</link>
+    <guid>https://philippnagel.com/market-ontology/markets/</guid>
+    <description><![CDATA[  ]]></description>
+    <pubDate>Sun, 16 Aug 2026 08:27:07 GMT</pubDate>
+  </item><item>
+    <title>sources</title>
+    <link>https://philippnagel.com/market-ontology/sources/</link>
+    <guid>https://philippnagel.com/market-ontology/sources/</guid>
+    <description><![CDATA[  ]]></description>
+    <pubDate>Sun, 16 Aug 2026 08:27:07 GMT</pubDate>
+  </item><item>
+    <title>project</title>
+    <link>https://philippnagel.com/market-ontology/tags/project</link>
+    <guid>https://philippnagel.com/market-ontology/tags/project</guid>
+    <description><![CDATA[  ]]></description>
+    <pubDate>Sun, 16 Aug 2026 08:27:07 GMT</pubDate>
+  </item><item>
+    <title>resource</title>
+    <link>https://philippnagel.com/market-ontology/tags/resource</link>
+    <guid>https://philippnagel.com/market-ontology/tags/resource</guid>
+    <description><![CDATA[  ]]></description>
+    <pubDate>Sun, 16 Aug 2026 08:27:07 GMT</pubDate>
+  </item><item>
+    <title>Tag Index</title>
+    <link>https://philippnagel.com/market-ontology/tags/</link>
+    <guid>https://philippnagel.com/market-ontology/tags/</guid>
+    <description><![CDATA[  ]]></description>
+    <pubDate>Sun, 16 Aug 2026 08:27:07 GMT</pubDate>
+  </item><item>
+    <title>index</title>
+    <link>https://philippnagel.com/market-ontology/</link>
+    <guid>https://philippnagel.com/market-ontology/</guid>
+    <description><![CDATA[ Market Ontology — Energy-Market-Communication Systems → Ontology Map — protocol-stack and centralization diagrams (Mermaid, renders in Obsidian preview) Comparative ontology of how national/regional energy markets structure supplier-switching, metering-data-flow, and settlement communication — built... ]]></description>
+    <pubDate>Sun, 16 Aug 2026 08:26:57 GMT</pubDate>
+  </item><item>
+    <title>entsoe-cim</title>
+    <link>https://philippnagel.com/market-ontology/markets/entsoe-cim</link>
+    <guid>https://philippnagel.com/market-ontology/markets/entsoe-cim</guid>
+    <description><![CDATA[ Overview ENTSO-E (European Network of Transmission System Operators for Electricity) coordinates transmission-level grid operation, cross-border capacity allocation, and balancing across ~40 European TSOs, using the IEC Common Information Model (CIM — IEC 61970/61968/62325) as its shared data langua... ]]></description>
+    <pubDate>Sun, 16 Aug 2026 08:26:09 GMT</pubDate>
+  </item><item>
+    <title>germany</title>
+    <link>https://philippnagel.com/market-ontology/markets/germany</link>
+    <guid>https://philippnagel.com/market-ontology/markets/germany</guid>
+    <description><![CDATA[ Overview Germany runs energy market communication as bilateral EDIFACT messaging between market roles (supplier, DSO, MSB/metering point operator), governed by BDEW’s EDI@Energy framework under BNetzA oversight. ]]></description>
+    <pubDate>Sun, 16 Aug 2026 08:26:09 GMT</pubDate>
+  </item><item>
+    <title>japan</title>
+    <link>https://philippnagel.com/market-ontology/markets/japan</link>
+    <guid>https://philippnagel.com/market-ontology/markets/japan</guid>
+    <description><![CDATA[ Overview Japan’s architecture is built around the 10 General Transmission &amp; Distribution Operators (一般送配電事業者, TDOs), each owning meters and running its own MDMS/HES stack, feeding a single shared national aggregation layer (集約システム, built/operated by GDBL) and a single certified data intermediary... ]]></description>
+    <pubDate>Sun, 16 Aug 2026 08:26:09 GMT</pubDate>
+  </item>
+    </channel>
+  </rss>
