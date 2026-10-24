@@ -1,133 +1,313 @@
 import type { Pal } from "../palette";
 import { polyPts, sagPts, type Pix } from "../pix";
 import type { SceneDef } from "../types";
-import { envelope, key, label, landscape, pole } from "./common";
+import {
+  bush,
+  clouds,
+  dataSky,
+  envelope,
+  key,
+  label,
+  meadow,
+  plate,
+  pole,
+  tree,
+} from "./common";
 
 export const cabinetOutside = (g: Pix, p: Pal, x: number, y: number) => {
-  g.fill(x, y, 48, 27, p.metal, p.outline);
-  g.fill(x + 4, y + 3, 20, 21, p.metalDark, p.outline);
-  g.fill(x + 6, y + 5, 16, 17, p.white, p.outline);
-  g.fill(x + 8, y + 7, 12, 5, p.green, p.outline);
-  g.r(x + 9, y + 15, 3, 2, p.data);
-  g.r(x + 14, y + 15, 3, 2, p.power);
-  g.fill(x + 28, y + 5, 16, 16, p.metal2, p.outline);
-  g.p(x + 31, y + 8, p.data);
-  g.p(x + 34, y + 8, p.power);
-  g.p(x + 37, y + 8, p.green);
-  g.fill(x + 31, y + 12, 8, 6, p.metalDark, p.outline);
-  g.r(x + 42, y + 1, 1, 5, p.outline);
+  g.shadow(x + 50, y + 56, 52, 3, p.outline, 0.5);
+  g.slab(x, y, 96, 54, p.metal);
+  g.slab(x + 6, y + 6, 54, 42, p.steel);
+  g.slab(x + 10, y + 10, 46, 34, p.paper);
+  // meter inside the window
+  g.slab(x + 14, y + 13, 38, 28, p.concrete);
+  g.slab(x + 17, y + 16, 32, 10, p.leaf);
+  g.r(x + 19, y + 18, 5, 6, p.leaf[3]);
+  g.r(x + 26, y + 18, 5, 6, p.leaf[3]);
+  g.r(x + 33, y + 18, 5, 6, p.leaf[3]);
+  g.r(x + 40, y + 18, 5, 6, p.leaf[3]);
+  g.disc(x + 24, y + 33, 3, p.data);
+  g.disc(x + 34, y + 33, 3, p.power);
+  g.r(x + 14, y + 12, 38, 2, p.glass[4]);
+  // gateway compartment
+  g.slab(x + 64, y + 6, 26, 42, p.dark);
+  for (let i = 0; i < 4; i++) g.r(x + 68, y + 12 + i * 4, 18, 1, p.dark[3]);
+  g.r(x + 68, y + 30, 3, 3, p.data);
+  g.r(x + 74, y + 30, 3, 3, p.power);
+  g.r(x + 80, y + 30, 3, 3, p.leaf[3]);
+  g.r(x + 68, y + 38, 18, 5, p.dark[1]);
+  // hinges and seal
+  for (const hy of [10, 40]) g.slab(x + 1, y + hy, 4, 6, p.dark);
+  g.ball(x + 58, y + 49, 2, p.red);
 };
 
 const grid = (g: Pix, p: Pal) => {
-  pole(g, p, 20, 2, 58);
-  g.r(12, 4, 20, 2, p.wood);
-  for (const x of [13, 21, 30]) g.r(x, 2, 1, 2, p.concrete);
-  g.r(14, 60, 14, 1, p.outline);
-  label(g, p, 44, 62, "CONNECTION");
+  pole(g, p, 40, 4, 112, 8);
+  g.slab(14, 10, 60, 6, p.wood);
+  for (const x of [16, 38, 68]) g.r(x, 4, 3, 7, p.concrete[3]);
+  g.cylV(52, 40, 14, 28, p.steel);
+  g.slab(51, 36, 16, 4, p.metal);
+  g.r(46, 72, 2, 36, p.dark[2]);
+  label(g, p, 100, 118, "CONNECTION");
 };
 
 const cabinet = (g: Pix, p: Pal) => {
-  cabinetOutside(g, p, 4, 0);
-  label(g, p, 56, 30, "METER CABINET");
+  cabinetOutside(g, p, 8, 0);
+  label(g, p, 112, 62, "METER CABINET");
 };
 
 const pv = (g: Pix, p: Pal) => {
-  for (let x = 8; x < 60; x++) {
-    const top = Math.round((x + 2) / 2.75) + 1;
-    for (let y = top; y < Math.min(top + 6, 25); y++)
-      g.p(x, y, (x + y) % 4 ? p.pv : p.pv2);
-    g.p(x, top - 1, p.outline);
+  const s = (x: number) => 168 + (x - 265) * 0.353 - 170;
+  for (let i = 0; i < 5; i++) {
+    const x0 = 290 - 278 + i * 25,
+      x1 = x0 + 23;
+    const wx0 = x0 + 278,
+      wx1 = x1 + 278;
+    const q: [number, number][] = [
+      [x0, s(wx0) + 7],
+      [x1, s(wx1) + 7],
+      [x1, s(wx1) + 24],
+      [x0, s(wx0) + 24],
+    ];
+    g.poly(q, p.pv[0]);
+    g.poly(
+      q
+        .map(([x, y]) => [x, y] as [number, number])
+        .map(
+          ([x, y], j) =>
+            [x + (j === 0 || j === 3 ? 1 : -1), y + (j < 2 ? 1 : -1)] as [
+              number,
+              number,
+            ],
+        ),
+      p.pv[2],
+    );
+    for (let k = 1; k < 4; k++)
+      g.line(
+        x0 + k * 6,
+        s(wx0 + k * 6) + 8,
+        x0 + k * 6,
+        s(wx0 + k * 6) + 23,
+        p.pv[1],
+      );
+    g.line(
+      x0 + 2,
+      (s(wx0) + s(wx1)) / 2 + 15,
+      x1 - 2,
+      (s(wx0) + s(wx1)) / 2 + 15,
+      p.pv[1],
+    );
+    g.line(x0 + 3, s(wx0 + 3) + 9, x0 + 9, s(wx0 + 9) + 9, p.pv[4]);
   }
-  label(g, p, 66, 28, "ROOF PV");
+  label(g, p, 134, 66, "ROOF PV");
 };
 
 const hems = (g: Pix, p: Pal) => {
-  g.fill(10, 2, 26, 16, p.metalDark, p.outline);
-  const bars = [6, 10, 8, 12, 7];
+  g.slab(8, 4, 66, 40, p.dark);
+  g.r(11, 7, 60, 34, p.dark[1]);
+  const bars = [10, 18, 14, 24, 16, 20];
   bars.forEach((b, i) =>
-    g.r(13 + i * 5, 16 - b, 3, b, i % 2 ? p.power : p.green),
+    g.r(15 + i * 9, 36 - b, 6, b, i % 2 ? p.amber[2] : p.leaf[3]),
   );
-  g.r(22, 18, 2, 4, p.metal2);
-  g.fill(42, 10, 8, 12, p.green2, p.outline);
-  g.fill(44, 14, 4, 8, p.wood, p.outline);
-  label(g, p, 56, 26, "HEMS");
+  g.line(14, 20, 70, 14, p.cyan[3]);
+  g.r(38, 44, 6, 6, p.metal[2]);
+  g.slab(30, 50, 22, 3, p.metal);
+  // plant and speaker
+  g.slab(86, 30, 14, 20, p.wall);
+  g.cylV(88, 34, 10, 16, p.metal);
+  g.ball(93, 26, 7, p.leaf);
+  label(g, p, 110, 54, "HEMS");
+};
+const hemsAnim = (g: Pix, t: number, p: Pal) => {
+  const k = Math.floor(t * 2) % 6;
+  g.r(15 + k * 9, 36 - 8, 6, 2, p.white);
 };
 
 const wallbox = (g: Pix, p: Pal) => {
-  g.fill(6, 30, 8, 14, p.metalDark, p.outline);
-  g.r(8, 33, 4, 2, p.green);
-  g.p(10, 38, p.yellow);
+  g.slab(10, 20, 30, 52, p.dark);
+  g.slab(14, 26, 22, 16, p.dark);
+  g.r(16, 28, 18, 12, p.leaf[2]);
+  g.r(20, 46, 10, 3, p.leaf[3]);
+  g.disc(25, 58, 4, p.metal[2]);
+  g.disc(25, 58, 2, p.dark[0]);
   // EV
-  g.fill(22, 38, 52, 12, p.white, p.outline);
-  g.fill(32, 32, 28, 7, p.white, p.outline);
-  g.fill(35, 34, 10, 4, p.glass, p.outline);
-  g.fill(47, 34, 10, 4, p.glass, p.outline);
-  for (const x of [32, 62]) {
-    g.disc(x, 51, 3, p.outline);
-    g.disc(x, 51, 1, p.metal);
+  g.shadow(122, 80, 76, 4, p.outline, 0.55);
+  g.poly(
+    [
+      [48, 62],
+      [52, 50],
+      [76, 46],
+      [90, 28],
+      [140, 28],
+      [160, 46],
+      [190, 52],
+      [194, 62],
+      [194, 74],
+      [48, 74],
+    ],
+    p.cyan[0],
+  );
+  g.poly(
+    [
+      [50, 62],
+      [54, 52],
+      [78, 48],
+      [92, 30],
+      [138, 30],
+      [158, 48],
+      [188, 54],
+      [192, 62],
+      [192, 72],
+      [50, 72],
+    ],
+    p.cyan[2],
+  );
+  g.poly(
+    [
+      [92, 30],
+      [138, 30],
+      [136, 34],
+      [94, 34],
+    ],
+    p.cyan[4],
+  );
+  g.poly(
+    [
+      [96, 36],
+      [114, 36],
+      [114, 48],
+      [84, 48],
+    ],
+    p.glass[2],
+  );
+  g.poly(
+    [
+      [118, 36],
+      [135, 36],
+      [152, 48],
+      [118, 48],
+    ],
+    p.glass[2],
+  );
+  g.r(115, 36, 2, 12, p.cyan[0]);
+  g.r(52, 70, 138, 2, p.cyan[1]);
+  g.r(184, 56, 8, 4, p.yellow[3]);
+  g.r(50, 56, 4, 4, p.red[2]);
+  for (const wx of [78, 160]) {
+    g.disc(wx, 74, 11, p.outline);
+    g.disc(wx, 74, 9, p.dark[2]);
+    g.disc(wx, 74, 5, p.metal[3]);
+    g.disc(wx, 74, 2, p.metal[1]);
   }
-  g.r(21, 42, 2, 3, p.yellow);
-  for (const [x, y] of sagPts(14, 38, 22, 44, 5)) g.p(x, y, p.cable);
-  label(g, p, 84, 14, "WALLBOX + EV");
+  for (const [x, y] of sagPts(36, 62, 54, 62, 10)) g.r(x, y, 2, 2, p.dark[1]);
+  g.r(46, 60, 8, 4, p.yellow[2]);
+  label(g, p, 208, 8, "WALLBOX + EV");
+};
+const wallboxAnim = (g: Pix, t: number, p: Pal) => {
+  const k = (Math.sin(t * 3) + 1) / 2;
+  g.r(16, 46, Math.round(14 * k) + 2, 3, p.leaf[4]);
 };
 
 const pki = (g: Pix, p: Pal) => {
-  g.fill(6, 2, 34, 24, p.white, p.outline);
-  for (const y of [6, 9, 12, 15]) g.r(10, y, y === 15 ? 12 : 22, 1, p.metal);
-  g.disc(34, 21, 4, p.outline);
-  g.disc(34, 21, 3, p.red);
-  g.r(31, 25, 2, 4, p.red);
-  g.r(35, 25, 2, 4, p.red);
-  key(g, p, 6, 28);
-  label(g, p, 48, 34, "TRUST CHAIN");
+  plate(g, p, 124, 112);
+  g.slab(14, 12, 76, 56, p.paper);
+  g.box(18, 16, 68, 48, p.yellow[2]);
+  g.r(24, 24, 40, 3, p.metal[2]);
+  for (const y of [32, 38, 44]) g.r(24, y, y === 44 ? 34 : 52, 2, p.metal[3]);
+  g.ball(76, 56, 11, p.red);
+  g.poly(
+    [
+      [70, 64],
+      [66, 82],
+      [72, 76],
+      [76, 84],
+      [76, 66],
+    ],
+    p.red[1],
+  );
+  g.poly(
+    [
+      [78, 66],
+      [80, 84],
+      [84, 76],
+      [90, 82],
+      [86, 64],
+    ],
+    p.red[2],
+  );
+  key(g, p, 12, 76);
+  label(g, p, 124, 94, "TRUST CHAIN");
 };
 
 const master = (g: Pix, p: Pal) => {
-  g.fill(4, 7, 30, 22, p.yellow, p.outline);
-  g.fill(4, 4, 12, 4, p.yellow, p.outline);
-  g.fill(16, 12, 26, 18, p.white, p.outline);
-  g.disc(23, 19, 3, p.outline);
-  g.disc(23, 19, 2, p.wall);
-  g.r(23, 26, 0, 0, p.outline);
-  g.r(30, 17, 9, 1, p.metal);
-  g.r(30, 21, 9, 1, p.metal);
-  g.r(30, 25, 6, 1, p.metal);
-  label(g, p, 48, 34, "MASTER DATA");
+  plate(g, p, 124, 108);
+  g.slab(10, 24, 66, 52, p.yellow);
+  g.slab(10, 16, 28, 10, p.yellow);
+  g.slab(34, 34, 62, 40, p.paper);
+  g.slab(40, 40, 18, 22, p.skin);
+  g.ball(49, 48, 5, p.skin);
+  g.slab(42, 56, 14, 8, p.cyan);
+  for (const y of [42, 49, 56]) g.r(64, y, 26, 2, p.metal[2]);
+  for (let i = 0; i < 12; i++) g.r(64 + i * 2, 64, i % 3 ? 1 : 2, 6, p.outline);
+  label(g, p, 124, 90, "MASTER DATA");
 };
 
 const msgs = (g: Pix, p: Pal) => {
-  envelope(g, p, 8, 8);
-  envelope(g, p, 28, 14, p.yellow);
-  envelope(g, p, 48, 8, p.glass);
-  for (let x = 20; x < 28; x += 2) g.p(x, 12, p.data);
-  for (let x = 40; x < 48; x += 2) g.p(x, 14, p.data);
-  g.line(60, 12, 68, 12, p.data);
-  g.line(65, 9, 68, 12, p.data);
-  g.line(65, 15, 68, 12, p.data);
-  label(g, p, 80, 34, "MARKET MESSAGES");
+  plate(g, p, 170, 108);
+  envelope(g, p, 12, 20);
+  envelope(g, p, 56, 42, p.yellow);
+  envelope(g, p, 100, 20, p.cyan);
+  for (let x = 30; x < 54; x += 4) g.r(x, 36, 2, 2, p.data);
+  for (let x = 74; x < 98; x += 4) g.r(x, 40, 2, 2, p.data);
+  g.poly(
+    [
+      [132, 24],
+      [152, 36],
+      [132, 48],
+    ],
+    p.data,
+  );
+  g.r(120, 33, 14, 6, p.data);
+  label(g, p, 170, 90, "MARKET MESSAGES");
+};
+const msgsAnim = (g: Pix, t: number, p: Pal) => {
+  const u = (t * 0.35) % 1;
+  envelope(
+    g,
+    p,
+    Math.round(12 + u * 110),
+    Math.round(60 - Math.sin(u * 3.14) * 8),
+    p.paper,
+  );
 };
 
 const backend = (g: Pix, p: Pal) => {
+  plate(g, p, 140, 112);
   for (const [x, y, r] of [
-    [16, 14, 6],
-    [27, 11, 8],
-    [38, 15, 6],
+    [40, 40, 16],
+    [62, 32, 20],
+    [88, 40, 16],
+    [64, 44, 18],
   ] as const)
-    g.disc(x, y, r, p.outline);
-  for (const [x, y, r] of [
-    [16, 14, 5],
-    [27, 11, 7],
-    [38, 15, 5],
-  ] as const)
-    g.disc(x, y, r, p.white);
-  g.r(14, 16, 26, 5, p.white);
-  g.fill(21, 8, 14, 24, p.metalDark, p.outline);
-  for (const y of [11, 17, 23]) {
-    g.r(23, y, 10, 3, p.panel2);
-    g.p(24, y + 1, p.green);
-    g.p(26, y + 1, p.data);
+    g.ball(x, y, r, p.paper);
+  g.slab(52, 26, 36, 56, p.dark);
+  for (let i = 0; i < 4; i++) {
+    g.slab(55, 30 + i * 12, 30, 10, p.dark);
+    g.r(58, 33 + i * 12, 10, 3, p.dark[3]);
   }
-  label(g, p, 56, 34, "GATEWAY ADMIN");
+  label(g, p, 140, 94, "GATEWAY ADMIN");
+};
+const backendAnim = (g: Pix, t: number, p: Pal) => {
+  for (let i = 0; i < 4; i++) {
+    g.r(
+      76,
+      34 + i * 12,
+      3,
+      3,
+      Math.sin(t * 4 + i * 1.7) > 0 ? p.leaf[4] : p.leaf[1],
+    );
+    g.r(80, 34 + i * 12, 3, 3, Math.sin(t * 3 + i) > 0.3 ? p.data : p.cyan[1]);
+  }
 };
 
 export const house: SceneDef = {
@@ -135,33 +315,91 @@ export const house: SceneDef = {
   name: "Metering Point",
   hint: "One household. The meter cabinet is where the physical connection meets the data layer. Dive into it.",
   bg(g, p) {
-    landscape(g, p, { road: true, seed: 5 });
-    // house shell
-    for (let j = 0; j < 26; j++) {
-      const half = Math.round((j + 1) * 2.75);
-      g.r(132 - half, 78 + j, half * 2, 1, j % 3 ? p.roof : p.roof2);
-      g.p(132 - half, 78 + j, p.outline);
-      g.p(132 + half - 1, 78 + j, p.outline);
+    dataSky(g, p, 5);
+    meadow(g, p, { road: true, seed: 5 });
+    tree(g, p, 606, 316, 1.1, "round");
+    // house body (cutaway)
+    g.shadow(265, 322, 160, 5, p.outline, 0.5);
+    g.slab(124, 220, 284, 100, p.wall);
+    g.r(126, 224, 280, 92, p.wall[3]);
+    for (let x = 128; x < 404; x += 8) g.r(x, 224, 1, 92, p.wall[2]);
+    for (let y = 224; y < 316; y += 46) g.r(126, y, 280, 1, p.wall[2]);
+    // wooden floor
+    g.r(126, 304, 280, 14, p.wood[2]);
+    for (let x = 126; x < 406; x += 22) g.r(x, 304, 1, 14, p.wood[0]);
+    g.r(126, 304, 280, 2, p.wood[3]);
+    // ceiling beam
+    g.slab(124, 218, 284, 8, p.wood);
+    // roof
+    g.poly(
+      [
+        [104, 222],
+        [265, 166],
+        [426, 222],
+      ],
+      p.roof[0],
+    );
+    g.poly(
+      [
+        [110, 220],
+        [265, 171],
+        [420, 220],
+      ],
+      p.roof[2],
+    );
+    for (let y = 176; y < 218; y += 5) {
+      const half = ((y - 168) / 54) * 153;
+      g.r(265 - half, y, half * 2, 1, p.roof[1]);
+      for (let x = 265 - half + ((y / 5) % 2 ? 0 : 6); x < 265 + half; x += 12)
+        g.p(x, y + 1, p.roof[3]);
     }
-    g.r(58, 104, 148, 2, p.outline);
-    g.fill(64, 106, 136, 60, p.wall, p.outline);
-    g.r(66, 108, 132, 52, p.wall2);
-    g.r(64, 160, 136, 6, p.wood);
-    g.fill(106, 124, 10, 14, p.glass, p.outline);
+    g.slab(100, 220, 330, 6, p.roof);
+    // window with curtains and picture
+    g.slab(340, 240, 50, 54, p.paper);
+    g.r(344, 244, 42, 46, p.glass[2]);
+    g.r(344, 244, 42, 14, p.glass[3]);
+    g.r(364, 244, 2, 46, p.paper[2]);
+    g.r(344, 266, 42, 2, p.paper[2]);
+    g.poly(
+      [
+        [342, 242],
+        [356, 242],
+        [348, 292],
+        [342, 292],
+      ],
+      p.red[2],
+    );
+    g.poly(
+      [
+        [388, 242],
+        [374, 242],
+        [382, 292],
+        [388, 292],
+      ],
+      p.red[2],
+    );
+    g.slab(322, 266, 14, 18, p.wood);
+    g.r(325, 269, 8, 12, p.cyan[2]);
     // garage
-    g.fill(202, 112, 104, 54, p.wall, p.outline);
-    g.r(204, 120, 100, 44, p.wall2);
-    g.fill(200, 108, 108, 6, p.roof2, p.outline);
-    g.r(202, 160, 104, 6, p.concrete);
+    g.slab(404, 250, 222, 70, p.wall);
+    g.r(407, 258, 216, 56, p.wall[1]);
+    g.slab(398, 238, 234, 14, p.concrete);
+    g.r(407, 304, 216, 14, p.concrete[2]);
+    for (let x = 407; x < 623; x += 12) g.r(x, 304, 1, 14, p.concrete[1]);
+    // door opening arch to garage
+    g.slab(404, 248, 8, 72, p.wood);
+  },
+  anim(g, t, p) {
+    clouds(g, p, t, 5, 8);
   },
   objects: [
     {
       id: "grid",
       layer: "p",
-      x: 6,
-      y: 96,
-      w: 44,
-      h: 70,
+      x: 10,
+      y: 188,
+      w: 100,
+      h: 126,
       name: "Connection",
       paint: grid,
       links: [],
@@ -170,59 +408,62 @@ export const house: SceneDef = {
     {
       id: "cabinet",
       layer: "p",
-      x: 68,
-      y: 108,
-      w: 56,
-      h: 38,
+      x: 140,
+      y: 236,
+      w: 112,
+      h: 72,
       name: "Meter cabinet",
       paint: cabinet,
       links: [],
-      portal: { dx: 4, dy: 0 },
+      portal: { dx: 8, dy: 0 },
       text: "Smart meter plus communication gateway. Click to zoom inside.",
     },
     {
       id: "pv",
       layer: "p",
-      x: 134,
-      y: 78,
-      w: 66,
-      h: 34,
+      x: 278,
+      y: 170,
+      w: 138,
+      h: 74,
       name: "Roof PV",
       paint: pv,
       links: [],
-      text: "Generation behind the meter, reported as a separate energy flow.",
+      text: "Rooftop solar: generation behind the meter, reported as a separate energy flow.",
     },
     {
       id: "hems",
       layer: "p",
-      x: 126,
-      y: 128,
-      w: 56,
-      h: 30,
+      x: 264,
+      y: 252,
+      w: 112,
+      h: 66,
       name: "HEMS",
       paint: hems,
+      anim: hemsAnim,
       links: [],
-      text: "Reads consumption through the gateway and steers flexible devices.",
+      text: "Home energy management: reads consumption through the gateway and steers flexible devices.",
     },
     {
       id: "wallbox",
       layer: "p",
-      x: 208,
-      y: 112,
-      w: 84,
-      h: 56,
+      x: 418,
+      y: 236,
+      w: 206,
+      h: 88,
       name: "Wallbox + EV",
       paint: wallbox,
+      anim: wallboxAnim,
       links: [],
+      lights: [{ x: 25, y: 34, r: 30, color: "#58e090" }],
       text: "A large flexible load that can be scheduled or throttled on a signal.",
     },
     {
       id: "pki",
       layer: "d",
-      x: 8,
-      y: 12,
-      w: 48,
-      h: 38,
+      x: 24,
+      y: 22,
+      w: 124,
+      h: 112,
       name: "Trust chain",
       paint: pki,
       links: ["cabinet"],
@@ -231,10 +472,10 @@ export const house: SceneDef = {
     {
       id: "master",
       layer: "d",
-      x: 66,
-      y: 12,
-      w: 48,
-      h: 38,
+      x: 160,
+      y: 26,
+      w: 124,
+      h: 108,
       name: "Master data",
       paint: master,
       links: ["grid", "cabinet"],
@@ -243,45 +484,49 @@ export const house: SceneDef = {
     {
       id: "msgs",
       layer: "d",
-      x: 126,
-      y: 12,
-      w: 80,
-      h: 38,
+      x: 296,
+      y: 26,
+      w: 170,
+      h: 108,
       name: "Market messages",
       paint: msgs,
+      anim: msgsAnim,
       links: ["cabinet", "pv"],
       text: "Standardised files carry master data, meter readings and orders between market parties.",
     },
     {
       id: "backend",
       layer: "d",
-      x: 218,
-      y: 12,
-      w: 56,
-      h: 38,
+      x: 480,
+      y: 22,
+      w: 140,
+      h: 112,
       name: "Gateway admin",
       paint: backend,
+      anim: backendAnim,
       links: ["cabinet", "hems", "wallbox"],
       text: "Configures, updates and monitors gateways over an encrypted wide-area link.",
     },
   ],
   wires: [
-    { kind: "p", pts: sagPts(30, 102, 76, 109, 8) },
+    { kind: "p", pts: sagPts(58, 212, 176, 244, 26) },
     {
       kind: "p",
       pts: polyPts([
-        [120, 152],
-        [214, 152],
+        [232, 300],
+        [440, 300],
       ]),
     },
     {
       kind: "d",
       pts: polyPts([
-        [100, 106],
-        [100, 52],
-        [246, 52],
+        [196, 238],
+        [196, 150],
+        [550, 150],
+        [550, 136],
       ]),
     },
-    { kind: "d", pts: sagPts(20, 64, 300, 64, 0) },
+    { kind: "d", pts: sagPts(30, 144, 610, 144, 0) },
   ],
 };
+void bush;

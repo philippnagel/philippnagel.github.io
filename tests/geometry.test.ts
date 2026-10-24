@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  PORTAL_W,
   SH,
   SW,
   fitView,
@@ -17,7 +18,7 @@ describe("fitView", () => {
     const o = origins(scenes);
     expect(
       fitView(o[0]!, size, ins).w / fitView(o[1]!, size, ins).w,
-    ).toBeCloseTo(SW / 48);
+    ).toBeCloseTo(SW / PORTAL_W);
   });
 
   test("frame fits inside the free area", () => {

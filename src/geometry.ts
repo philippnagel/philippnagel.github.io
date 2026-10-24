@@ -1,12 +1,12 @@
 import type { Insets, Obj, Origin, SceneDef, Size, View } from "./types";
 
 /** Every scene is a SW x SH grid of art pixels. */
-export const SW = 320;
-export const SH = 180;
+export const SW = 640;
+export const SH = 360;
 /** Divider between the data band (above) and the power band (below). */
-export const BAND_Y = 80;
-export const PORTAL_W = 48;
-export const PORTAL_H = 27;
+export const BAND_Y = 160;
+export const PORTAL_W = 96;
+export const PORTAL_H = 54;
 export const KID = PORTAL_W / SW;
 
 /** Scene-space window of an object's portal. */

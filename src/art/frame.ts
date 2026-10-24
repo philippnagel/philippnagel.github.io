@@ -1,30 +1,31 @@
-import type { Pal } from "../palette";
+import type { Pal, Ramp } from "../palette";
 import { polyPts, type Pix } from "../pix";
 import type { Obj, SceneDef } from "../types";
-import { label, landscape } from "./common";
+import { BAND_Y } from "../geometry";
+import { clouds, dataSky, label, meadow } from "./common";
 import { gatewayBox } from "./cabinet";
 
 const cell =
-  (
-    w: number,
-    color: keyof Pal,
-    light: boolean,
-    title: string,
-    lines: string[],
-  ) =>
+  (w: number, color: keyof Pal, title: string, lines: string[]) =>
   (g: Pix, p: Pal) => {
-    g.fill(0, 0, w, 44, p[color], p.outline);
-    const tc = light ? p.outline : p.white;
-    g.textC(w / 2, 4, title, tc);
-    g.r(2, 11, w - 4, 1, tc);
-    lines.forEach((l, i) => g.textC(w / 2, 16 + i * 7, l, tc));
+    const R = p[color] as Ramp;
+    g.slab(0, 0, w, 92, R);
+    g.r(2, 2, w - 4, 20, R[3]);
+    g.dither(2, 22, w - 4, 4, R[3], 0.4);
+    g.r(w - 2, 30, 4, 20, R[2]);
+    g.r(-2, 30, 4, 20, R[1]);
+    const light =
+      color === "yellow" || color === "concrete" || color === "metal";
+    const ink = light ? p.outline : p.white;
+    g.textC(w / 2, 8, title, ink);
+    g.r(6, 26, w - 12, 1, ink);
+    lines.forEach((l, i) => g.textC(w / 2, 36 + i * 14, l, ink));
   };
 
 interface CellDef {
   id: string;
   w: number;
   color: keyof Pal;
-  light: boolean;
   title: string;
   lines: string[];
   name: string;
@@ -34,9 +35,8 @@ interface CellDef {
 const CELLS: CellDef[] = [
   {
     id: "start",
-    w: 28,
+    w: 64,
     color: "metal",
-    light: true,
     title: "START",
     lines: ["7E"],
     name: "Start flag",
@@ -45,20 +45,18 @@ const CELLS: CellDef[] = [
   },
   {
     id: "addr",
-    w: 40,
+    w: 76,
     color: "purple",
-    light: false,
     title: "ADDR",
     lines: ["0003", "0021"],
     name: "Addresses",
     links: ["gw", "rx"],
-    text: "Who is talking to whom, the client and the meter logical device.",
+    text: "Who is talking to whom: the client and the meter logical device.",
   },
   {
     id: "ctrl",
-    w: 32,
-    color: "green2",
-    light: false,
+    w: 68,
+    color: "leaf",
     title: "CTRL",
     lines: ["C401"],
     name: "Control",
@@ -67,20 +65,18 @@ const CELLS: CellDef[] = [
   },
   {
     id: "obis",
-    w: 56,
-    color: "data",
-    light: false,
+    w: 100,
+    color: "cyan",
     title: "OBJECT",
     lines: ["010001", "0800FF"],
     name: "Object code",
     links: ["reading"],
-    text: "An OBIS identifier naming the register, here 1-0:1.8.0 total active energy imported.",
+    text: "An OBIS identifier naming the register, here 1-0:1.8.0, total active energy imported.",
   },
   {
     id: "value",
-    w: 56,
+    w: 104,
     color: "yellow",
-    light: true,
     title: "VALUE",
     lines: ["0001E240", "123456 WH"],
     name: "Value",
@@ -89,9 +85,8 @@ const CELLS: CellDef[] = [
   },
   {
     id: "sign",
-    w: 64,
+    w: 124,
     color: "red",
-    light: false,
     title: "SIGNATURE",
     lines: ["A91F 62C4", "7D03 E85B"],
     name: "Signature",
@@ -100,9 +95,8 @@ const CELLS: CellDef[] = [
   },
   {
     id: "crc",
-    w: 24,
+    w: 64,
     color: "concrete",
-    light: true,
     title: "CRC",
     lines: ["5B2E"],
     name: "Checksum",
@@ -111,19 +105,19 @@ const CELLS: CellDef[] = [
   },
 ];
 const cellObjs = (): Obj[] => {
-  let x = 10;
+  let x = 20;
   return CELLS.map((c) => {
     const o: Obj = {
       id: c.id,
       layer: "d",
       x,
-      y: 24,
+      y: 44,
       w: c.w,
-      h: 44,
+      h: 92,
       name: c.name,
       text: c.text,
       links: c.links,
-      paint: cell(c.w, c.color, c.light, c.title, c.lines),
+      paint: cell(c.w, c.color, c.title, c.lines),
     };
     x += c.w;
     return o;
@@ -131,31 +125,41 @@ const cellObjs = (): Obj[] => {
 };
 
 const gw = (g: Pix, p: Pal) => {
-  gatewayBox(g, p, 4, 0);
-  label(g, p, 60, 52, "GATEWAY");
+  gatewayBox(g, p, 8, 0);
+  label(g, p, 140, 120, "GATEWAY");
+};
+const gwAnim = (g: Pix, t: number, p: Pal) => {
+  g.r(16, 26, 5, 5, p.data);
+  g.r(24, 26, 5, 5, Math.sin(t * 5) > -0.3 ? p.leaf[4] : p.leaf[1]);
 };
 
 const reading = (g: Pix, p: Pal) => {
-  g.fill(0, 0, 100, 46, p.wall, p.outline);
-  g.fill(6, 5, 88, 24, p.green, p.outline);
-  g.text(14, 10, "123456", p.outline, 3);
-  g.text(80, 22, "WH", p.outline);
-  g.r(8, 34, 3, 3, p.data);
-  g.r(14, 34, 3, 3, p.power);
-  g.fill(70, 33, 24, 6, p.metal, p.outline);
-  label(g, p, 100, 52, "METER READING");
+  g.shadow(95, 122, 90, 4, p.outline, 0.5);
+  g.slab(0, 0, 190, 106, p.concrete);
+  g.slab(10, 10, 170, 60, p.leaf);
+  g.r(13, 13, 164, 54, p.leaf[0]);
+  g.text(26, 24, "123456", p.leaf[4], 4);
+  g.text(146, 50, "WH", p.leaf[3], 2);
+  g.disc(22, 88, 5, p.data);
+  g.disc(40, 88, 5, p.power);
+  g.slab(120, 80, 56, 16, p.metal);
+  label(g, p, 190, 114, "METER READING");
 };
 
 const rx = (g: Pix, p: Pal) => {
-  g.fill(6, 0, 48, 32, p.metalDark, p.outline);
-  g.fill(9, 3, 42, 26, p.bandA, p.outline);
-  g.line(18, 16, 24, 22, p.green);
-  g.line(24, 22, 40, 8, p.green);
-  g.line(18, 15, 24, 21, p.green);
-  g.line(24, 21, 40, 7, p.green);
-  g.r(26, 32, 8, 4, p.metal2);
-  g.r(18, 36, 24, 2, p.metal);
-  label(g, p, 60, 46, "RECEIVER");
+  g.shadow(66, 110, 56, 4, p.outline, 0.5);
+  g.slab(8, 0, 116, 78, p.dark);
+  g.r(14, 6, 104, 62, p.cyan[1]);
+  g.line(40, 36, 58, 54, p.leaf[4]);
+  g.line(58, 54, 100, 18, p.leaf[4]);
+  g.line(40, 37, 58, 55, p.leaf[3]);
+  g.line(58, 55, 100, 19, p.leaf[3]);
+  g.line(41, 36, 59, 54, p.leaf[3]);
+  g.slab(52, 78, 28, 10, p.metal);
+  g.slab(30, 88, 72, 6, p.metal);
+  g.slab(20, 98, 92, 10, p.dark);
+  for (let i = 0; i < 9; i++) g.r(24 + i * 10, 101, 7, 4, p.dark[3]);
+  label(g, p, 132, 118, "RECEIVER");
 };
 
 export const frame: SceneDef = {
@@ -163,31 +167,50 @@ export const frame: SceneDef = {
   name: "Protocol Frame",
   hint: "One reading as a protocol frame: every field has a job. Hover a field to see what it carries and who handles it.",
   bg(g, p) {
-    landscape(g, p, { seed: 33 });
-    g.text(10, 12, "SIMPLIFIED METER-READING FRAME", p.ink);
-    g.text(10, 72, "READS LEFT TO RIGHT", p.inkDim);
+    dataSky(g, p, 33);
+    meadow(g, p, { seed: 33, hills: false });
+    g.slab(0, BAND_Y + 4, 640, 4, p.dark);
+    g.textS(
+      20,
+      22,
+      "A SIMPLIFIED METER-READING FRAME",
+      p.ink,
+      p.night ? p.outline : p.white,
+      2,
+    );
+    g.textS(
+      20,
+      142,
+      "READS LEFT TO RIGHT",
+      p.inkDim,
+      p.night ? p.outline : p.white,
+    );
+  },
+  anim(g, t, p) {
+    clouds(g, p, t, 3, 2);
   },
   objects: [
     ...cellObjs(),
     {
       id: "gw",
       layer: "p",
-      x: 22,
-      y: 100,
-      w: 60,
-      h: 58,
+      x: 40,
+      y: 196,
+      w: 148,
+      h: 130,
       name: "Gateway",
       paint: gw,
+      anim: gwAnim,
       links: [],
       text: "Builds the frame, signs the reading and sends it on.",
     },
     {
       id: "reading",
       layer: "p",
-      x: 112,
-      y: 96,
-      w: 100,
-      h: 58,
+      x: 224,
+      y: 192,
+      w: 190,
+      h: 130,
       name: "Meter reading",
       paint: reading,
       links: [],
@@ -196,10 +219,10 @@ export const frame: SceneDef = {
     {
       id: "rx",
       layer: "p",
-      x: 238,
-      y: 98,
-      w: 60,
-      h: 50,
+      x: 452,
+      y: 196,
+      w: 150,
+      h: 130,
       name: "Receiver",
       paint: rx,
       links: [],
@@ -210,10 +233,10 @@ export const frame: SceneDef = {
     {
       kind: "d",
       pts: polyPts([
-        [52, 100],
-        [52, 90],
-        [268, 90],
-        [268, 98],
+        [104, 200],
+        [104, 174],
+        [524, 174],
+        [524, 196],
       ]),
     },
   ],

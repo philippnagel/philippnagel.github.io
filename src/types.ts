@@ -20,8 +20,19 @@ export interface Obj {
   links: string[];
   /** paints in object-local coordinates (0,0 = top-left) */
   paint: (g: Pix, pal: Pal) => void;
+  /** live-drawn animation in object-local coordinates, called every frame */
+  anim?: (g: Pix, t: number, pal: Pal) => void;
+  /** night-time glows in object-local coordinates */
+  lights?: Light[];
   /** when set, a child scene lives in a PORTAL_W x PORTAL_H window at (x+dx, y+dy) */
   portal?: { dx: number; dy: number };
+}
+
+export interface Light {
+  x: number;
+  y: number;
+  r: number;
+  color: string;
 }
 
 export interface Wire {
@@ -36,6 +47,8 @@ export interface SceneDef {
   /** caption shown when nothing is focused */
   hint: string;
   bg: (g: Pix, pal: Pal) => void;
+  /** live-drawn scenery animation in scene coordinates (clouds, traffic, birds) */
+  anim?: (g: Pix, t: number, pal: Pal) => void;
   objects: Obj[];
   wires: Wire[];
 }

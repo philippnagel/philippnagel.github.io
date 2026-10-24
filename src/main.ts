@@ -157,6 +157,7 @@ if (location.search.includes("debug"))
       camera.stop();
       camera.set(fit(l));
     },
+    view: (cx: number, cy: number, w: number) => camera.set({ cx, cy, w }),
     focus: (l: number, id: string) => setHover({ l, id }),
     portal: (l: number) => portalOf(scenes[l]!)?.id,
   };

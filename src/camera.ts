@@ -45,7 +45,7 @@ export class Camera {
 
   /** Zooms by factor `f` keeping the world point under (px, py) fixed. */
   zoomAt(px: number, py: number, f: number) {
-    const nw = Math.min(2600, Math.max(6, this.view.w * f));
+    const nw = Math.min(2000, Math.max(0.5, this.view.w * f));
     const [wx, wy] = this.toWorld(px, py);
     const r = nw / this.view.w;
     this.set({

@@ -8,7 +8,7 @@ import {
   portalOf,
   portalRect,
 } from "./geometry";
-import { routePts } from "./pix";
+import { Pix, routePts } from "./pix";
 import type { LayerMode, Obj, Ref, SceneDef, Size, View } from "./types";
 import type { World } from "./world";
 
@@ -98,7 +98,7 @@ export class Renderer {
     const { ctx } = this;
     const ps = (s.w / v.w) * dpr;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.fillStyle = this.world.pal.bandB;
+    ctx.fillStyle = this.world.pal.sky[4]!;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.imageSmoothingEnabled = false;
     const h = (v.w * s.h) / s.w;
@@ -144,13 +144,30 @@ export class Renderer {
     ctx.globalAlpha = alpha;
     ctx.drawImage(b.bg, 0, 0);
 
-    if (!this.reduceMotion) this.flows(def, alpha, st, t);
+    const px = new Pix(ctx);
+    if (!this.reduceMotion) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, SW, SH);
+      ctx.clip();
+      def.anim?.(px, t, world.pal);
+      ctx.restore();
+      ctx.globalAlpha = alpha;
+      this.flows(def, alpha, st, t);
+    }
 
     for (const o of def.objects) {
       const dim = focus && o.id !== focus.id && !related!.has(o.id) ? 0.3 : 1;
       ctx.globalAlpha = alpha * layerA(o.layer) * dim;
       ctx.drawImage(b.objs.get(o.id)!, o.x, o.y);
+      if (o.anim && !this.reduceMotion) {
+        ctx.save();
+        ctx.translate(o.x, o.y);
+        o.anim(px, t, world.pal);
+        ctx.restore();
+      }
     }
+    if (world.pal.night) this.lights(def, alpha, t);
     ctx.globalAlpha = alpha;
 
     if (focus) this.highlight(def, b.adj, focus, alpha, st, t);
@@ -173,6 +190,19 @@ export class Renderer {
     ctx.globalAlpha = 1;
   }
 
+  private lights(def: SceneDef, alpha: number, t: number) {
+    const { ctx, world } = this;
+    ctx.globalCompositeOperation = "lighter";
+    for (const o of def.objects)
+      for (const l of o.lights ?? []) {
+        const sprite = world.glow(l.color, l.r);
+        ctx.globalAlpha = alpha * (0.85 + 0.1 * Math.sin(t * 2 + l.x));
+        ctx.drawImage(sprite, o.x + l.x - l.r, o.y + l.y - l.r);
+      }
+    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha = alpha;
+  }
+
   private flows(def: SceneDef, alpha: number, st: RenderState, t: number) {
     const { ctx, world } = this;
     for (const w of def.wires) {
@@ -187,14 +217,17 @@ export class Renderer {
             (t * SPARK_SPEED + (k * n) / Math.max(2, Math.floor(n / 40))) % n,
           );
           const [x, y] = w.pts[i]!;
-          ctx.fillRect(x - 1, y - 1, 3, 3);
+          ctx.fillRect(x - 2, y - 2, 4, 4);
+          ctx.fillStyle = world.pal.white;
+          ctx.fillRect(x - 1, y - 1, 2, 2);
+          ctx.fillStyle = world.pal.power;
         }
       } else {
         const count = n > 160 ? 2 : 1;
         for (let k = 0; k < count; k++) {
           const i = Math.floor((t * ENV_SPEED + (k * n) / count) % n);
           const [x, y] = w.pts[i]!;
-          ctx.drawImage(world.env, x - 4, y - 7);
+          ctx.drawImage(world.env, x - 7, y - 12);
         }
       }
     }
@@ -224,10 +257,10 @@ export class Renderer {
       y = o.y - grow,
       w = o.w + grow * 2,
       h = o.h + grow * 2;
-    ctx.fillRect(x, y, w, 1);
-    ctx.fillRect(x, y + h - 1, w, 1);
-    ctx.fillRect(x, y, 1, h);
-    ctx.fillRect(x + w - 1, y, 1, h);
+    ctx.fillRect(x, y, w, 2);
+    ctx.fillRect(x, y + h - 2, w, 2);
+    ctx.fillRect(x, y, 2, h);
+    ctx.fillRect(x + w - 2, y, 2, h);
   }
 
   private highlight(
@@ -248,26 +281,26 @@ export class Renderer {
       const other = byId.get(rid)!;
       const pts = this.route(def, self, other);
       ctx.globalAlpha = alpha * 0.9;
-      ctx.fillStyle = world.pal.yellow;
+      ctx.fillStyle = world.pal.yellow[3];
       pts.forEach(([x, y], i) => {
-        if (i % 3 === 0) ctx.fillRect(x, y, 1, 1);
+        if (i % 4 < 2) ctx.fillRect(x, y, 2, 2);
       });
       ctx.globalAlpha = alpha * 0.35;
       pts.forEach(([x, y], i) => {
-        if (i % 3 !== 0) ctx.fillRect(x, y, 1, 1);
+        if (i % 4 >= 2) ctx.fillRect(x, y, 1, 1);
       });
       if (!this.reduceMotion) {
         ctx.globalAlpha = alpha;
         for (let k = 0; k < 2; k++) {
           const i = Math.floor((t * 38 + (k * pts.length) / 2) % pts.length);
           const [x, y] = pts[i]!;
-          ctx.drawImage(world.env, x - 4, y - 3);
+          ctx.drawImage(world.env, x - 7, y - 5);
         }
       }
-      this.outline(other, color(other), 1, alpha * pulse);
+      this.outline(other, color(other), 2, alpha * pulse);
     }
-    this.outline(self, color(self), 1, alpha);
-    this.outline(self, color(self), 2, alpha * 0.4 * pulse);
+    this.outline(self, color(self), 2, alpha);
+    this.outline(self, color(self), 4, alpha * 0.4 * pulse);
     ctx.globalAlpha = alpha;
   }
 
@@ -280,26 +313,26 @@ export class Renderer {
     if (a < 0.02) return;
     const { ctx, world } = this;
     ctx.globalAlpha = a * (focused ? 1 : 0.8);
-    ctx.fillStyle = world.pal.yellow;
-    for (let x = r.x; x < r.x + r.w; x += 2) {
-      ctx.fillRect(x, r.y - 1, 1, 1);
-      ctx.fillRect(x, r.y + r.h, 1, 1);
+    ctx.fillStyle = world.pal.yellow[3];
+    for (let x = r.x; x < r.x + r.w; x += 4) {
+      ctx.fillRect(x, r.y - 2, 2, 2);
+      ctx.fillRect(x, r.y + r.h, 2, 2);
     }
-    for (let y = r.y; y < r.y + r.h; y += 2) {
-      ctx.fillRect(r.x - 1, y, 1, 1);
-      ctx.fillRect(r.x + r.w, y, 1, 1);
+    for (let y = r.y; y < r.y + r.h; y += 4) {
+      ctx.fillRect(r.x - 2, y, 2, 2);
+      ctx.fillRect(r.x + r.w, y, 2, 2);
     }
     // magnifier
-    const mx = r.x + r.w - 9;
-    const my = r.y - 9;
+    const mx = r.x + r.w - 16;
+    const my = r.y - 18;
     ctx.globalAlpha = a * (0.6 + 0.4 * Math.sin(t * 4));
     ctx.fillStyle = world.pal.outline;
-    ctx.fillRect(mx, my, 7, 7);
+    ctx.fillRect(mx, my, 14, 14);
     ctx.fillStyle = world.pal.white;
-    ctx.fillRect(mx + 1, my + 1, 4, 1);
-    ctx.fillRect(mx + 1, my + 4, 4, 1);
-    ctx.fillRect(mx + 1, my + 1, 1, 4);
-    ctx.fillRect(mx + 4, my + 1, 1, 4);
-    ctx.fillRect(mx + 5, my + 5, 2, 2);
+    ctx.fillRect(mx + 2, my + 2, 8, 2);
+    ctx.fillRect(mx + 2, my + 8, 8, 2);
+    ctx.fillRect(mx + 2, my + 2, 2, 8);
+    ctx.fillRect(mx + 8, my + 2, 2, 8);
+    ctx.fillRect(mx + 10, my + 10, 4, 4);
   }
 }

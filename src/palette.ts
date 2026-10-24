@@ -1,106 +1,110 @@
+/** Five-tone material ramp: [outline/darkest, shadow, base, light, highlight]. */
+export type Ramp = [string, string, string, string, string];
+
 export interface Pal {
-  bandA: string;
-  bandB: string;
+  night: boolean;
+  /** vertical gradient stops for the data band, top to bottom */
+  sky: string[];
   dot: string;
-  ground: string;
-  ground2: string;
-  road: string;
-  outline: string;
   ink: string;
   inkDim: string;
-  wall: string;
-  wall2: string;
-  roof: string;
-  roof2: string;
-  wood: string;
-  concrete: string;
-  metal: string;
-  metal2: string;
-  metalDark: string;
-  glass: string;
-  pv: string;
-  pv2: string;
-  cable: string;
-  panel: string;
-  panel2: string;
-  green: string;
-  green2: string;
-  purple: string;
+  outline: string;
   power: string;
   data: string;
   white: string;
-  yellow: string;
-  red: string;
+  metal: Ramp;
+  steel: Ramp;
+  dark: Ramp;
+  concrete: Ramp;
+  wall: Ramp;
+  roof: Ramp;
+  wood: Ramp;
+  soil: Ramp;
+  grass: Ramp;
+  leaf: Ramp;
+  glass: Ramp;
+  pv: Ramp;
+  yellow: Ramp;
+  red: Ramp;
+  purple: Ramp;
+  cyan: Ramp;
+  amber: Ramp;
+  skin: Ramp;
+  road: Ramp;
+  paper: Ramp;
 }
 
-const day: Pal = {
-  bandA: "#d8ecf8",
-  bandB: "#cfe6f5",
-  dot: "#a5cde4",
-  ground: "#8fc46a",
-  ground2: "#7db35a",
-  road: "#6b7480",
-  outline: "#1b2430",
-  ink: "#1b2430",
-  inkDim: "#4a5a6c",
-  wall: "#ece0c6",
-  wall2: "#cfc19f",
-  roof: "#c05040",
-  roof2: "#92392f",
-  wood: "#8a5a35",
-  concrete: "#b9bfc7",
-  metal: "#a3afbd",
-  metal2: "#74828f",
-  metalDark: "#4b5865",
-  glass: "#9fd3ee",
-  pv: "#2b4a8c",
-  pv2: "#4468b8",
-  cable: "#2a2f3a",
-  panel: "#5f6b78",
-  panel2: "#4d5864",
-  green: "#3f9b4a",
-  green2: "#2d7a38",
-  purple: "#7a5ac8",
-  power: "#f59e0b",
-  data: "#0b9fc4",
-  white: "#ffffff",
-  yellow: "#f2c230",
-  red: "#d9453d",
-};
-
-const mix = (a: string, b: string, t: number) => {
-  const n = (h: string, i: number) =>
-    parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
+const hex = (h: string, i: number) =>
+  parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
+export const mix = (a: string, b: string, t: number) => {
   const c = (i: number) =>
-    Math.round(n(a, i) * (1 - t) + n(b, i) * t)
+    Math.round(hex(a, i) * (1 - t) + hex(b, i) * t)
       .toString(16)
       .padStart(2, "0");
   return `#${c(0)}${c(1)}${c(2)}`;
 };
 
-const NIGHT_TINT = "#0a1224";
-const keep = new Set<keyof Pal>(["power", "data", "white", "yellow", "red"]);
-
-function nightOf(d: Pal): Pal {
-  const out = { ...d };
-  for (const k of Object.keys(d) as (keyof Pal)[])
-    if (!keep.has(k)) out[k] = mix(d[k], NIGHT_TINT, 0.38);
-  Object.assign(out, {
-    bandA: "#0d1a30",
-    bandB: "#0b162a",
-    dot: "#1f3b63",
-    outline: "#03060c",
-    ink: "#cfe6f5",
-    inkDim: "#7f9bb5",
-    glass: "#ffd45a",
-    ground: "#14301f",
-    ground2: "#102a1a",
-    road: "#1a212c",
-    power: "#ffb020",
-    data: "#2ad4ff",
-  });
-  return out;
+/** Builds a ramp with hue-shifted shadows and highlights. */
+function ramp(base: string, shadow: string, light: string): Ramp {
+  return [
+    mix(base, shadow, 0.72),
+    mix(base, shadow, 0.38),
+    base,
+    mix(base, light, 0.32),
+    mix(base, light, 0.65),
+  ];
 }
 
-export const palettes = { day, night: nightOf(day) } as const;
+const BASES = {
+  metal: "#8e9bab",
+  steel: "#5d6f88",
+  dark: "#363d4a",
+  concrete: "#b8bcc4",
+  wall: "#eadcbf",
+  roof: "#c4503f",
+  wood: "#8b5a36",
+  soil: "#7a5636",
+  grass: "#74b85c",
+  leaf: "#3f9048",
+  glass: "#8fd0ee",
+  pv: "#2c4c96",
+  yellow: "#f2c230",
+  red: "#d8453c",
+  purple: "#7c5cc8",
+  cyan: "#14a8cc",
+  amber: "#f5a020",
+  skin: "#e8b890",
+  road: "#59616d",
+  paper: "#f4f1e8",
+} as const;
+
+function build(night: boolean): Pal {
+  const shadow = night ? "#04060f" : "#1d1438";
+  const light = night ? "#bfd8ff" : "#fff3cf";
+  const tint = (c: string) => (night ? mix(c, "#0b1630", 0.5) : c);
+  const R = (k: keyof typeof BASES) => {
+    let base = tint(BASES[k]);
+    if (night && k === "glass") base = "#ffcf5e";
+    return ramp(base, shadow, k === "glass" && night ? "#fff3c4" : light);
+  };
+  const ramps = Object.fromEntries(
+    (Object.keys(BASES) as (keyof typeof BASES)[]).map((k) => [k, R(k)]),
+  ) as Record<keyof typeof BASES, Ramp>;
+  return {
+    night,
+    sky: night
+      ? ["#050a1a", "#08122a", "#0d1c3c", "#14294f", "#1b3560"]
+      : ["#7fc0ee", "#9ad0f2", "#b8e0f6", "#d4ecf9", "#eaf6fc"],
+    dot: night ? "#27487a" : "#8dbfe0",
+    ink: night ? "#e4f1ff" : "#15202e",
+    inkDim: night ? "#86a2c0" : "#43566b",
+    outline: ramps.dark[0],
+    power: night ? "#ffb020" : "#f59e0b",
+    data: night ? "#2ad4ff" : "#0b9fc4",
+    white: night ? "#d7e6ff" : "#ffffff",
+    ...ramps,
+  };
+}
+
+export const palettes = { day: build(false), night: build(true) } as const;
 export type Theme = keyof typeof palettes;
