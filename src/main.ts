@@ -1,6 +1,7 @@
 import "./style.css";
+import { Sound } from "./audio";
 import { chapters } from "./chapters";
-import { palette } from "./palette";
+import { palette, type Theme } from "./palette";
 import { drawPhilipp } from "./philipp";
 import { currentTheme, initTheme } from "./theme";
 import {
@@ -23,6 +24,10 @@ const chapterEl = $("chapter");
 const railEl = $("rail");
 const trackEl = $("track");
 const hintEl = $("hint");
+const gateEl = $("gate");
+const soundEl = $("sound");
+const sound = new Sound();
+let started = false;
 
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const walker = new Walker(reduceMotion);
@@ -57,11 +62,13 @@ railEl.innerHTML = chapters
   .join("");
 railEl.addEventListener("click", (e) => {
   const b = (e.target as Element).closest<HTMLElement>("[data-i]");
-  if (b)
+  if (b) {
+    sound.click();
     scrollTo({
       top: scrollOf(STATIONS[+b.dataset.i!]!, s),
       behavior: reduceMotion ? "auto" : "smooth",
     });
+  }
 });
 // the same copy as real text, for screen readers and search
 trackEl.innerHTML = `<div class="sr">${chapters
@@ -79,10 +86,53 @@ function resize() {
   trackEl.style.height = `${scrollOf(END, s) + innerHeight}px`;
 }
 window.addEventListener("resize", resize);
-initTheme($("theme"), (t) => (pal = palette(t)));
+const themeChanged = (t: Theme) => {
+  pal = palette(t);
+  sound.night = t === "night";
+};
+initTheme($("theme"), (t) => {
+  sound.click();
+  themeChanged(t);
+});
+themeChanged(currentTheme());
+
+/* --- start gate and sound --- */
+function setSound(on: boolean) {
+  sound.setMuted(!on);
+  soundEl.setAttribute("aria-pressed", String(on));
+  soundEl.classList.toggle("muted", !on);
+}
+async function enter(withSound: boolean) {
+  if (started) return;
+  started = true;
+  sound.muted = !withSound;
+  try {
+    await sound.start();
+  } catch {
+    /* no audio support: carry on silently */
+  }
+  setSound(withSound);
+  soundEl.hidden = false;
+  gateEl.classList.add("gone");
+  document.documentElement.classList.remove("locked");
+  if (withSound) sound.click();
+  setTimeout(() => gateEl.remove(), 600);
+}
+document.documentElement.classList.add("locked");
+$("enter").addEventListener("click", () => void enter(true));
+$("enter-quiet").addEventListener("click", () => void enter(false));
+soundEl.addEventListener("click", () => {
+  setSound(sound.muted);
+  sound.click();
+});
+document.addEventListener("visibilitychange", () =>
+  sound.suspend(document.hidden),
+);
+$("enter").focus();
 resize();
 
 let last = performance.now();
+let lastFrame = 0;
 const loop = (now: number) => {
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
@@ -93,8 +143,18 @@ const loop = (now: number) => {
   if (i !== section) {
     section = i;
     renderChapter();
+    if (started) sound.chime(i);
   }
   hintEl.style.opacity = scrollY > 40 ? "0" : "";
+
+  if (
+    walker.moving &&
+    started &&
+    (walker.frame & 1) === 0 &&
+    walker.frame !== lastFrame
+  )
+    sound.footstep();
+  lastFrame = walker.frame;
 
   const charX = Math.round(W * CHAR_AT);
   const view = {

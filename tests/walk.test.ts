@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { bass, melody, noteHz } from "../src/audio";
 import { chapters } from "../src/chapters";
 import { hasGlyph } from "../src/font";
 import { palette } from "../src/palette";
@@ -85,5 +86,26 @@ describe("art", () => {
     expect(Object.keys(palette("day")).sort()).toEqual(
       Object.keys(palette("night")).sort(),
     );
+  });
+});
+
+describe("audio", () => {
+  test("noteHz uses concert pitch", () => {
+    expect(noteHz(69)).toBe(440);
+    expect(noteHz(81)).toBeCloseTo(880);
+  });
+
+  test("melody and bass loop and stay in a sane range", () => {
+    for (const night of [false, true])
+      for (let i = 0; i < 64; i++) {
+        expect(melody(i, night)).toBe(melody(i + 32, night));
+        const m = melody(i, night);
+        if (m !== null) {
+          expect(m).toBeGreaterThanOrEqual(60);
+          expect(m).toBeLessThanOrEqual(100);
+        }
+        const b = bass(i, night);
+        if (b !== null) expect(b).toBeLessThan(70);
+      }
   });
 });

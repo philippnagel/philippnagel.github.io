@@ -314,3 +314,115 @@ canvas {
     font-size: 12px;
   }
 }
+
+/* start gate */
+html.locked {
+  overflow: hidden;
+}
+#gate {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(2px);
+  transition: opacity 0.5s;
+}
+#gate.gone {
+  opacity: 0;
+  pointer-events: none;
+}
+.gate-card {
+  width: min(360px, 100%);
+  padding: 22px 20px 18px;
+  text-align: center;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.gate-card h1 {
+  margin: 14px 0 2px;
+  font-size: 26px;
+}
+.gate-card .sub {
+  margin: 0 0 18px;
+  font: 13px var(--mono);
+  color: var(--mute);
+}
+.gate-card .btn.pri {
+  width: 100%;
+  padding: 11px 12px;
+  font-size: 15px;
+}
+.quiet {
+  all: unset;
+  display: block;
+  margin: 12px auto 0;
+  cursor: pointer;
+  font: 12px var(--mono);
+  color: var(--mute);
+  text-decoration: underline;
+}
+.quiet:hover,
+.quiet:focus-visible {
+  color: var(--ink);
+}
+.remark {
+  margin: 14px 0 0;
+  font: 11px var(--mono);
+  color: var(--mute);
+}
+.squares {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+.squares i {
+  width: 14px;
+  height: 14px;
+  background: var(--red);
+  animation: rotate 1s steps(1, jump-end) infinite;
+}
+.squares i:nth-child(2) {
+  animation-delay: -0.75s;
+}
+.squares i:nth-child(3) {
+  animation-delay: -0.5s;
+}
+.squares i:nth-child(4) {
+  animation-delay: -0.25s;
+}
+@keyframes rotate {
+  0% {
+    background: var(--red);
+  }
+  25% {
+    background: var(--blue);
+  }
+  50% {
+    background: var(--green);
+  }
+  75% {
+    background: var(--yellow);
+  }
+}
+
+/* sound button */
+#sound {
+  width: 34px;
+  padding: 8px 0;
+  display: grid;
+  place-items: center;
+}
+#sound[hidden] {
+  display: none;
+}
+#sound .off,
+#sound.muted .on {
+  display: none;
+}
+#sound.muted .off {
+  display: inline;
+}
