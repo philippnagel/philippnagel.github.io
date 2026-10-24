@@ -581,12 +581,20 @@ export function drawMid(c: C, p: Pal, v: View) {
   c.restore();
 
   const wireCol = mix(mat(p, "#8d97a8", 0.2)[2], p.hill, 0.35);
-  const nearArt = (x: number) =>
-    STATIONS.some((st) => Math.abs(x - (st + ART_AHEAD - v.camX)) < 250);
+  // pylons fade out near a station instead of popping, so they never clash with its art
+  const gap = (x: number) =>
+    Math.min(...STATIONS.map((st) => Math.abs(x - (st + ART_AHEAD - v.camX))));
   cells(v, 0.55, 420, (i, x) => {
-    if (nearArt(x) || nearArt(x + 420)) return;
+    // span to the next pylon's rounded position so wire ends never drift off it
+    const span = Math.round((i + 1) * 420 - v.camX * 0.55) - x;
+    const a = Math.max(
+      0,
+      Math.min(1, (Math.min(gap(x), gap(x + span)) - 130) / 160),
+    );
+    if (a <= 0) return;
+    c.save();
+    c.globalAlpha = a;
     blit(c, set.pylon, x, v.gy);
-    const next = x + 420;
     for (const [dx, dy] of [
       [-22, -134],
       [22, -134],
@@ -594,9 +602,9 @@ export function drawMid(c: C, p: Pal, v: View) {
       [14, -109],
     ] as const) {
       const pts: [number, number][] = [];
-      for (let s = 0; s <= 420; s += 6) {
-        const u = s / 420;
-        pts.push([x + dx + s, v.gy + dy + 30 * 4 * u * (1 - u)]);
+      for (let k = 0; k <= 70; k++) {
+        const u = k / 70;
+        pts.push([x + dx + u * span, v.gy + dy + 30 * 4 * u * (1 - u)]);
       }
       for (let k = 1; k < pts.length; k++)
         line(
@@ -615,7 +623,7 @@ export function drawMid(c: C, p: Pal, v: View) {
         px(c, "#fff6c0", q[0] - 1, q[1] - 1, 3, 3);
       }
     }
-    void next;
+    c.restore();
   });
 }
 
