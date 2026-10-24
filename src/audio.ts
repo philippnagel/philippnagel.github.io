@@ -49,14 +49,16 @@ export class Sound {
 
   setMuted(m: boolean) {
     this.muted = m;
-    if (this.master && this.ctx)
+    if (this.master && this.ctx) {
+      if (!m) void this.ctx.resume();
       this.master.gain.setTargetAtTime(m ? 0 : 0.8, this.ctx.currentTime, 0.05);
+    }
   }
 
   suspend(hidden: boolean) {
     if (!this.ctx) return;
     if (hidden) void this.ctx.suspend();
-    else if (!this.muted) void this.ctx.resume();
+    else void this.ctx.resume();
   }
 
   private tone(
@@ -67,7 +69,7 @@ export class Sound {
     vol: number,
     slideTo?: number,
   ) {
-    if (!this.ctx || !this.master) return;
+    if (!this.ctx || !this.master || this.muted) return;
     const o = this.ctx.createOscillator();
     const g = this.ctx.createGain();
     o.type = type;

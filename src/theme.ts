@@ -5,14 +5,14 @@ const dark = () => matchMedia("(prefers-color-scheme: dark)");
 
 export function currentTheme(): Theme {
   const t = document.documentElement.dataset.theme;
-  return t === "dark" || (!t && dark().matches) ? "night" : "day";
+  return t === "dark" || (t !== "light" && dark().matches) ? "night" : "day";
 }
 
 export function initTheme(button: HTMLElement, onChange: (t: Theme) => void) {
   const root = document.documentElement;
   try {
     const t = localStorage.getItem(KEY);
-    if (t) root.dataset.theme = t;
+    if (t === "dark" || t === "light") root.dataset.theme = t;
   } catch {}
   button.addEventListener("click", () => {
     root.dataset.theme = currentTheme() === "night" ? "light" : "dark";

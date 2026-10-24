@@ -32,7 +32,7 @@ export class Walker {
   /** accumulated distance, drives the leg cycle */
   step = 0;
 
-  constructor(private readonly instant: boolean) {}
+  constructor(public instant: boolean) {}
 
   update(target: number, dt: number) {
     const prev = this.x;

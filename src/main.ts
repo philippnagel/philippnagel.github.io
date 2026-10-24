@@ -31,8 +31,13 @@ const soundEl = $("sound");
 const sound = new Sound();
 let started = false;
 
-const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
+let reduceMotion = motionQuery.matches;
 const walker = new Walker(reduceMotion);
+motionQuery.addEventListener("change", () => {
+  reduceMotion = motionQuery.matches;
+  walker.instant = reduceMotion;
+});
 let pal = palette(currentTheme());
 let s = 4;
 let W = 320;
@@ -87,6 +92,7 @@ trackEl.innerHTML = `<div class="sr">${chapters
 
 /* --- size, theme, loop --- */
 function resize() {
+  const walk = walkOf(scrollY, s);
   s = artScale(innerWidth);
   W = Math.ceil(innerWidth / s);
   H = Math.ceil(innerHeight / s);
@@ -94,6 +100,7 @@ function resize() {
   cv.height = H;
   ctx.imageSmoothingEnabled = false;
   trackEl.style.height = `${scrollOf(END, s) + innerHeight}px`;
+  scrollTo(0, scrollOf(walk, s)); // keep the same spot on the path
 }
 window.addEventListener("resize", resize);
 const themeChanged = (t: Theme) => {
@@ -126,10 +133,16 @@ async function enter(withSound: boolean) {
   soundEl.hidden = false;
   gateEl.classList.add("gone");
   document.documentElement.classList.remove("locked");
+  behindGate.forEach((el) => el.removeAttribute("inert"));
   if (withSound) sound.click();
   setTimeout(() => gateEl.remove(), 600);
 }
 document.documentElement.classList.add("locked");
+// keep keyboard and screen readers on the gate until it is dismissed
+const behindGate = [...document.body.children].filter(
+  (el) => el !== gateEl && el.tagName !== "SCRIPT",
+);
+behindGate.forEach((el) => el.setAttribute("inert", ""));
 $("enter").addEventListener("click", () => void enter(true));
 $("enter-quiet").addEventListener("click", () => void enter(false));
 soundEl.addEventListener("click", () => {
@@ -146,6 +159,7 @@ resize();
 const boardEls = [$("board-1"), $("board-2")] as HTMLAnchorElement[];
 function placeBoards(camX: number, gy: number) {
   const k = innerWidth / W;
+  const ky = innerHeight / H;
   const cx = END + ART_AHEAD - camX;
   const show = section === chapters.length - 1;
   boardEls.forEach((el, i) => {
@@ -154,9 +168,9 @@ function placeBoards(camX: number, gy: number) {
     if (!show) return;
     el.href = b.href;
     el.style.left = `${(cx + b.x) * k}px`;
-    el.style.top = `${(gy + b.y) * k}px`;
+    el.style.top = `${(gy + b.y) * ky}px`;
     el.style.width = `${b.w * k}px`;
-    el.style.height = `${b.h * k}px`;
+    el.style.height = `${b.h * ky}px`;
   });
 }
 

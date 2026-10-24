@@ -7,9 +7,9 @@
     "build": "bun run scripts/build.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "check": "bun run fmt:check && bun run typecheck && bun test",
-    "fmt": "bun fmt src tests scripts package.json tsconfig.json README.md",
-    "fmt:check": "bun fmt --check src tests scripts package.json tsconfig.json README.md"
+    "check": "bun run format:check && bun run typecheck && bun test",
+    "format": "bun fmt src tests scripts package.json tsconfig.json README.md",
+    "format:check": "bun fmt --check src tests scripts package.json tsconfig.json README.md"
   },
   "devDependencies": {
     "@types/bun": "^1.4.4",

@@ -28,7 +28,7 @@ bun run dev         # dev server with HMR (src/index.html)
 bun run build       # bundle + minify into dist/ (also copies CNAME)
 bun run test        # scene / geometry / template tests
 bun run typecheck   # tsc --noEmit
-bun run fmt         # bun fmt
+bun run format      # bun fmt
 bun run check       # fmt check + typecheck + tests (what CI runs)
 ```
 
