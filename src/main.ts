@@ -5,6 +5,7 @@ import { palette, type Theme } from "./palette";
 import { drawPhilipp } from "./philipp";
 import { currentTheme, initTheme } from "./theme";
 import {
+  ART_AHEAD,
   CHAR_AT,
   END,
   STATIONS,
@@ -14,6 +15,7 @@ import {
   scrollOf,
   walkOf,
 } from "./walk";
+import { BOARDS } from "./stations";
 import { drawForeground, drawWorld } from "./world";
 
 const $ = <T extends HTMLElement>(id: string) =>
@@ -39,10 +41,13 @@ let section = -1;
 
 function renderChapter() {
   const c = chapters[section]!;
-  chapterEl.classList.remove("in");
+  chapterEl.classList.remove("in", "min");
   chapterEl.querySelector("small")!.textContent = c.tag;
   chapterEl.querySelector("h1")!.textContent = c.title;
   chapterEl.querySelector("p")!.textContent = c.body;
+  chapterEl.querySelector(".terms")!.innerHTML = (c.terms ?? [])
+    .map(([a, b]) => `<b>${a}</b> ${b}`)
+    .join(" · ");
   chapterEl.querySelector<HTMLElement>(".cta")!.hidden =
     section !== chapters.length - 1;
   void chapterEl.offsetWidth; // restart the fade-in
@@ -57,6 +62,11 @@ function renderChapter() {
 }
 
 /* --- chrome --- */
+chapterEl.addEventListener("click", (e) => {
+  if ((e.target as Element).closest("a, button")) return;
+  if (matchMedia("(max-width: 720px)").matches)
+    chapterEl.classList.toggle("min");
+});
 railEl.innerHTML = chapters
   .map((c, i) => `<button data-i="${i}" aria-label="${c.tag}"></button>`)
   .join("");
@@ -107,7 +117,8 @@ async function enter(withSound: boolean) {
   started = true;
   sound.muted = !withSound;
   try {
-    await sound.start();
+    // never let a stalled audio context keep the gate up
+    await Promise.race([sound.start(), new Promise((r) => setTimeout(r, 800))]);
   } catch {
     /* no audio support: carry on silently */
   }
@@ -130,6 +141,24 @@ document.addEventListener("visibilitychange", () =>
 );
 $("enter").focus();
 resize();
+
+/** Lays real links over the contact signpost so the boards themselves are clickable. */
+const boardEls = [$("board-1"), $("board-2")] as HTMLAnchorElement[];
+function placeBoards(camX: number, gy: number) {
+  const k = innerWidth / W;
+  const cx = END + ART_AHEAD - camX;
+  const show = section === chapters.length - 1;
+  boardEls.forEach((el, i) => {
+    const b = BOARDS[i + 1]!;
+    el.hidden = !show;
+    if (!show) return;
+    el.href = b.href;
+    el.style.left = `${(cx + b.x) * k}px`;
+    el.style.top = `${(gy + b.y) * k}px`;
+    el.style.width = `${b.w * k}px`;
+    el.style.height = `${b.h * k}px`;
+  });
+}
 
 let last = performance.now();
 let lastFrame = 0;
@@ -156,12 +185,12 @@ const loop = (now: number) => {
     sound.footstep();
   lastFrame = walker.frame;
 
-  const charX = Math.round(W * CHAR_AT);
+  const charX = Math.round(W * (W < 500 ? 0.2 : CHAR_AT));
   const view = {
     camX: Math.round(walker.x) - charX,
     W,
     H,
-    gy: H > 500 ? Math.round(H * 0.72) : H - 94,
+    gy: H > 500 ? Math.round(H * 0.8) : H - 76,
     t,
     tk: s === 1 ? 2 : 1,
   };
@@ -178,6 +207,7 @@ const loop = (now: number) => {
     t,
   });
   drawForeground(ctx, pal, view);
+  placeBoards(view.camX, view.gy);
   requestAnimationFrame(loop);
 };
 requestAnimationFrame(loop);

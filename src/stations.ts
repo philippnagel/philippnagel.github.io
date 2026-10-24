@@ -37,6 +37,19 @@ const cyc = (p: Pal, i: number) => [p.red, p.blue, p.green, p.yellow][i & 3]!;
 
 function label(c: C, p: Pal, s: string, x: number, y: number, k: number) {
   const w = textWidth(s, k);
+  if (y > 0) {
+    // ground labels sit on a small plaque so they read on any grass
+    const pad = 2 * k;
+    const x0 = Math.round(x - w / 2) - pad;
+    const w0 = w + 2 * pad;
+    const h0 = 7 * k + 2 * pad;
+    c.fillStyle = p.ink;
+    c.fillRect(x0 - 1, y - pad - 1, w0 + 2, h0 + 2);
+    c.fillStyle = p.night ? "#0a1030" : "#fffbe8";
+    c.fillRect(x0, y - pad, w0, h0);
+    drawText(c, s, x - w / 2, y, p.ink, k);
+    return;
+  }
   drawText(c, s, x - w / 2 + k, y + k, p.night ? "#02041a" : "#ffffff55", k);
   drawText(c, s, x - w / 2, y, p.ink, k);
 }
@@ -545,7 +558,7 @@ const bess: Station = {
     label(c, p, "EMS", 110, -232, 2 * v.tk);
     label(c, p, "BESS", 100, 38, v.tk);
     label(c, p, "PCS", 254, 38, v.tk);
-    label(c, p, "TRAFO", 316, 50 - 12 + 12 * v.tk, v.tk);
+    label(c, p, "TRAFO", 316 + 20 * (v.tk - 1), 38, v.tk);
     const state = charging ? "CHARGING" : "DISCHARGING";
     drawText(c, state, -64, -92, charging ? p.green : p.yellow, 2);
     drawLamp(c, p, -88, 0);
@@ -677,7 +690,7 @@ const house: Station = {
     pulse(c, p.blue, mb, t, 2, 0.3, 6);
     label(c, p, "DSO", 76, -250, 2 * v.tk);
     label(c, p, "HOUSE", 10, 38, v.tk);
-    label(c, p, "METER", 49, 38 + 12 * v.tk, v.tk);
+    label(c, p, "METER", 49 + 34 * (v.tk - 1), 38, v.tk);
     label(c, p, "EV", 190, 38, v.tk);
   },
 };
@@ -951,6 +964,18 @@ const frame: Station = {
 
 /* ---------- 6: contact ---------- */
 
+/** Signpost boards in station space; the last two are links (see `main.ts`). */
+export const BOARDS = (
+  [
+    ["HELLO", -122, "#edcb1f", ""],
+    ["BOOK A CALL", -98, "#4398cd", "https://cal.com/nagel"],
+    ["LINKEDIN", -74, "#47a639", "https://www.linkedin.com/in/philippnagel/"],
+  ] as const
+).map(([text, y, color, href], i) => {
+  const w = textWidth(text, 2) + 16;
+  return { text, y, color, href, x: 70 - w / 2 + (i - 1) * 6, w, h: 20 };
+});
+
 const contact: Station = {
   bounds: [-200, -280, 300, 8],
   still(c, p) {
@@ -964,17 +989,9 @@ const contact: Station = {
     // signpost with boards
     const wood = mat(p, "#9a6a3e");
     slab(c, 66, -130, 8, 130, wood, 2);
-    const boards: [string, number, string][] = [
-      ["HELLO", -122, "#edcb1f"],
-      ["BOOK A CALL", -98, "#4398cd"],
-      ["LINKEDIN", -74, "#47a639"],
-    ];
-    boards.forEach(([s, y, col], i) => {
-      const w = textWidth(s, 2) + 16;
-      const r = mat(p, col, 0.2);
-      const x = 70 - w / 2 + (i - 1) * 6;
-      slab(c, x, y, w, 20, r, 2);
-      drawText(c, s, x + 8, y + 3, i === 0 ? "#2a1a08" : "#ffffff", 2);
+    BOARDS.forEach((b, i) => {
+      slab(c, b.x, b.y, b.w, b.h, mat(p, b.color, 0.2), 2);
+      drawText(c, b.text, b.x + 8, b.y + 3, i === 0 ? "#2a1a08" : "#ffffff", 2);
     });
     // bench
     slab(c, 120, -22, 70, 8, wood, 1);
@@ -1009,7 +1026,7 @@ const contact: Station = {
     if (p.night) {
       for (let k = 0; k < 3; k++) {
         const u = (t * 0.3 + k * 0.33) % 1;
-        const bx = [-30, 110, 220][k]!;
+        const bx = [-110, 110, 220][k]!;
         const by = [-210, -240, -200][k]!;
         const col = cyc(p, Math.floor(t * 0.3 + k * 0.33) + k);
         if (u < 0.2) {
@@ -1036,7 +1053,7 @@ const contact: Station = {
       }
     } else {
       for (let k = 0; k < 4; k++) {
-        const x = [-20, 40, 150, 230][k]! + Math.sin(t * 0.8 + k * 2) * 10;
+        const x = [-110, 30, 150, 230][k]! + Math.sin(t * 0.8 + k * 2) * 10;
         const y = -90 - ((t * 14 + k * 70) % 220);
         const col = tone(p, cyc(p, k), 0.1);
         line(c, "#4a5368", x, y + 14, x + Math.sin(t + k) * 3, y + 40);
@@ -1046,7 +1063,7 @@ const contact: Station = {
     }
     glow(c, p, 70, -50, 60);
     label(c, p, "SAY HELLO", 130, 38, v.tk);
-    drawLamp(c, p, 20, 0);
+    drawLamp(c, p, -20, 0);
   },
 };
 

@@ -1,3 +1,4 @@
+@import "@fontsource/pixelify-sans/latin-700.css";
 :root {
   --bg: #bfe4fa;
   --card: #ffffff;
@@ -10,6 +11,7 @@
   --yellow: #edcb1f;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --pix: "Pixelify Sans", var(--sans);
   --top: 64px;
 }
 @media (prefers-color-scheme: dark) {
@@ -74,8 +76,7 @@ header > * {
   image-rendering: auto;
 }
 .who b {
-  font-size: 15px;
-  font-weight: 650;
+  font: 700 17px var(--pix);
   white-space: nowrap;
 }
 .who span {
@@ -87,13 +88,14 @@ header > * {
   flex: 1;
 }
 .btn {
-  font: 600 13px var(--sans);
+  font: 700 14px var(--pix);
   text-decoration: none;
   padding: 7px 12px;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   background: var(--card);
   color: var(--ink);
-  border-radius: 8px;
+  border-radius: 0;
+  box-shadow: 2px 2px 0 var(--line);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -101,6 +103,10 @@ header > * {
 .btn:focus-visible {
   border-color: var(--blue);
   outline: none;
+}
+.btn:active {
+  translate: 2px 2px;
+  box-shadow: none;
 }
 .btn.pri {
   background: var(--ink);
@@ -155,8 +161,11 @@ canvas {
   left: 50%;
   bottom: 14px;
   transform: translateX(-50%);
-  font: 12px var(--mono);
-  color: var(--mute);
+  font: 700 12px var(--mono);
+  color: var(--ink);
+  padding: 3px 8px;
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  border: 2px solid var(--ink);
   transition: opacity 0.6s;
   animation: bob 1.6s ease-in-out infinite;
   pointer-events: none;
@@ -192,13 +201,24 @@ canvas {
 }
 #chapter h1 {
   margin: 4px 0 6px;
-  font-size: 22px;
-  line-height: 1.15;
+  font: 700 24px/1.1 var(--pix);
 }
 #chapter p {
   margin: 0;
   font: 13px/1.5 var(--mono);
+  color: var(--ink);
+}
+#chapter .terms {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.5;
   color: var(--mute);
+}
+#chapter .terms:empty {
+  display: none;
+}
+#chapter .terms b {
+  color: var(--ink);
 }
 #chapter .cta {
   display: flex;
@@ -235,6 +255,16 @@ canvas {
   }
 }
 
+/* clickable signpost boards, laid over the canvas */
+.board {
+  position: fixed;
+  z-index: 3;
+  cursor: pointer;
+}
+.board:hover {
+  outline: 2px solid var(--ink);
+}
+
 /* chapter rail */
 #rail {
   position: fixed;
@@ -244,14 +274,14 @@ canvas {
   translate: 0 -50%;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0;
 }
 #rail button {
   all: unset;
   box-sizing: content-box;
   width: 10px;
   height: 10px;
-  padding: 4px;
+  padding: 7px;
   cursor: pointer;
 }
 #rail button::after {
@@ -292,10 +322,18 @@ canvas {
     display: none;
   }
   #chapter h1 {
-    font-size: 18px;
+    font-size: 19px;
   }
   #chapter p {
     font-size: 12px;
+  }
+  #chapter {
+    cursor: pointer;
+  }
+  #chapter.min p,
+  #chapter.min .terms,
+  #chapter.min .cta {
+    display: none;
   }
 }
 @media (max-width: 520px) {
@@ -324,37 +362,39 @@ html.locked {
   inset: 0;
   z-index: 20;
   display: grid;
-  place-items: center;
-  padding: 16px;
-  background: color-mix(in srgb, var(--bg) 55%, transparent);
-  backdrop-filter: blur(2px);
+  place-items: end center;
+  padding: 16px 16px 48px;
+  pointer-events: none;
   transition: opacity 0.5s;
+}
+#gate .gate-card {
+  pointer-events: auto;
+}
+@media (min-width: 1000px) {
+  #gate {
+    place-items: end end;
+    padding-right: 64px;
+  }
 }
 #gate.gone {
   opacity: 0;
   pointer-events: none;
 }
 .gate-card {
-  width: min(360px, 100%);
+  width: min(300px, 100%);
   padding: 22px 20px 18px;
   text-align: center;
   background: var(--card);
   border: 2px solid var(--ink);
   box-shadow: 4px 4px 0 var(--ink);
 }
-.gate-card h1 {
-  margin: 14px 0 2px;
-  font-size: 26px;
-}
-.gate-card .sub {
-  margin: 0 0 18px;
-  font: 13px var(--mono);
-  color: var(--mute);
+.gate-card .squares {
+  margin-bottom: 14px;
 }
 .gate-card .btn.pri {
   width: 100%;
   padding: 11px 12px;
-  font-size: 15px;
+  font-size: 18px;
 }
 .quiet {
   all: unset;

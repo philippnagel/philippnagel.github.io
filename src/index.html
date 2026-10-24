@@ -28,7 +28,7 @@
   <body>
     <header>
       <div class="who">
-        <img src="./profile-circle-crop.png" alt="" />
+        <img src="./profile-circle-crop.png" alt="" width="30" height="30" />
         <b>Philipp Nagel</b><span>grid → packet</span>
       </div>
       <div class="sp"></div>
@@ -85,6 +85,7 @@
       <small></small>
       <h1></h1>
       <p></p>
+      <p class="terms"></p>
       <div class="cta" hidden>
         <a class="btn pri" href="https://cal.com/nagel">Book a call</a>
         <a class="btn" href="https://www.linkedin.com/in/philippnagel/" rel="me"
@@ -92,6 +93,8 @@
         >
       </div>
     </article>
+    <a class="board" id="board-1" tabindex="-1" aria-hidden="true" hidden></a>
+    <a class="board" id="board-2" tabindex="-1" aria-hidden="true" hidden></a>
     <nav id="rail" aria-label="Chapters"></nav>
     <div id="legend"><i class="p"></i>power <i class="d"></i>data</div>
     <div id="hint">scroll ↓</div>
@@ -101,8 +104,6 @@
         <div class="squares" aria-hidden="true">
           <i></i><i></i><i></i><i></i>
         </div>
-        <h1>Philipp Nagel</h1>
-        <p class="sub">Grid to Packet</p>
         <button class="btn pri" id="enter">Enter</button>
         <button class="quiet" id="enter-quiet">Enter without sound</button>
         <p class="remark">
