@@ -57,8 +57,13 @@ function renderChapter() {
   chapterEl.querySelector(".terms")!.innerHTML = (c.terms ?? [])
     .map(([a, b]) => `<b>${a}</b> ${b}`)
     .join(" · ");
-  chapterEl.querySelector<HTMLElement>(".cta")!.hidden =
-    section !== chapters.length - 1;
+  const last = section === chapters.length - 1;
+  chapterEl.querySelector<HTMLElement>(".cta")!.hidden = !last;
+  chapterEl.querySelector<HTMLElement>(".work")!.hidden = !last;
+  chapterEl.querySelector(".proof")!.textContent = c.proof ?? "";
+  chapterEl.querySelector("ul")!.innerHTML = (c.offers ?? [])
+    .map((o) => `<li>${o}</li>`)
+    .join("");
   void chapterEl.offsetWidth; // restart the fade-in
   chapterEl.classList.add("in");
   railEl

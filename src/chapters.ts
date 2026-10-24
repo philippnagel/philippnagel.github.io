@@ -7,25 +7,29 @@ export interface Chapter {
   body: string;
   /** canvas abbreviations spelled out */
   terms?: [string, string][];
+  /** one line of track record, shown on the contact card */
+  proof?: string;
+  /** what I can be hired for, shown on the contact card */
+  offers?: string[];
 }
 
 /** One chapter per station along the path. */
 export const chapters: Chapter[] = [
   {
     tag: "Hello",
-    title: "Smart metering, grid to packet",
-    body: "I work on the data behind the meter: market communication, grid data and protocols. Scroll to walk with me.",
+    title: "Smart energy infrastructure, built and run at scale",
+    body: "I build the platforms behind the meter: 500,000+ smart meters, about 10 million market messages a week. Scroll to walk the path with me.",
   },
   {
     tag: "Grid",
     title: "01. The grid",
-    body: "Generation, transmission, substation, transformer, and a house. Yellow squares are power, blue squares are data, and the markets float above.",
+    body: "Generation, transmission, substation, transformer, a house. Yellow squares are power, blue are data. Utilities run both, and the data side is where rollouts stall.",
     terms: [["TRAFO", "transformer"]],
   },
   {
     tag: "Storage",
     title: "02. The battery site",
-    body: "A grid-scale battery (BESS) soaks up surplus power and gives it back at the peak. Its energy management system takes orders from the market and the grid operator.",
+    body: "A grid-scale battery (BESS) soaks up surplus power and returns it at the peak. Its energy management system takes orders from the market and the grid operator. Every one of those links is an integration.",
     terms: [
       ["BESS", "battery energy storage system"],
       ["PCS", "power conversion system"],
@@ -36,7 +40,7 @@ export const chapters: Chapter[] = [
   {
     tag: "Metering point",
     title: "03. The metering point",
-    body: "Grid connection, meter cabinet, rooftop PV, home energy management and an EV charger. Every one of them also speaks data.",
+    body: "Meter cabinet, rooftop PV, home energy management, an EV charger. Regulation (§14a EnWG, MsbG) now expects all of it to be controllable and billable. I've worked on the rollout side of that.",
     terms: [
       ["DSO", "distribution system operator"],
       ["EV", "electric vehicle"],
@@ -45,7 +49,7 @@ export const chapters: Chapter[] = [
   {
     tag: "Meter cabinet",
     title: "04. The meter cabinet",
-    body: "Meter, gateway and sub-meters, joined by the meter, wide-area and home-area links. A security module signs it all.",
+    body: "Meter, gateway and sub-meters, signed by a security module. I run gateway lifecycle at scale on DLMS/COSEM (IEC 62056) and BSI TR-03109, from commissioning to certification per operator.",
     terms: [
       ["WAN", "wide-area network"],
       ["GW", "gateway"],
@@ -55,7 +59,7 @@ export const chapters: Chapter[] = [
   {
     tag: "Protocol frame",
     title: "05. One reading",
-    body: "A single meter reading, field by field. This is the smallest thing the grid says.",
+    body: "A single reading, field by field. The same standard sits under German gateways and Japanese AMI, and I've mapped ECHONET Lite to DLMS/COSEM for a client. Cross-border data access is a protocol problem first.",
     terms: [
       ["HDR", "header"],
       ["ADDR", "address"],
@@ -65,8 +69,16 @@ export const chapters: Chapter[] = [
   },
   {
     tag: "Contact",
-    title: "Let's talk",
-    body: "Working on metering, market communication or grid data? Say hello.",
+    title: "Work with me",
+    body: "Remote, or on-site when it's worth it. Bring me a metering, market-communication or grid-data problem. A first call is 30 minutes, no pitch.",
+    proof:
+      "9+ years · 500k+ meters · ~10M messages/week · BNetzA / BDEW / VDE FNN committees",
+    offers: [
+      "Smart metering platform architecture and rollout operations",
+      "Market communication (MaKo, EDIFACT/AS4) automation and regulatory mapping",
+      "Gateway (SMGW) lifecycle and DLMS/COSEM integration",
+      "Technical due diligence, and EU–Japan data-access studies",
+    ],
   },
 ];
 
@@ -79,6 +91,10 @@ export const srHtml = () =>
     .map(
       (c) =>
         `<h2>${c.title}</h2><p>${c.body}</p>` +
+        (c.proof ? `<p>${c.proof}</p>` : "") +
+        (c.offers?.length
+          ? `<ul>${c.offers.map((o) => `<li>${o}</li>`).join("")}</ul>`
+          : "") +
         (c.terms?.length
           ? `<p>${c.terms.map(([a, b]) => `${a}: ${b}`).join("; ")}</p>`
           : ""),

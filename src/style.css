@@ -247,6 +247,25 @@ canvas {
   gap: 8px;
   margin-top: 12px;
 }
+#chapter .work {
+  margin-top: 10px;
+}
+#chapter .work[hidden] {
+  display: none;
+}
+#chapter .proof {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--blue-text);
+}
+#chapter .work ul {
+  margin: 8px 0 0;
+  padding-left: 16px;
+  font: 12px/1.45 var(--mono);
+}
+#chapter .work li + li {
+  margin-top: 3px;
+}
 #chapter .cta[hidden] {
   display: none;
 }
@@ -396,6 +415,7 @@ canvas {
   }
   #chapter.min p,
   #chapter.min .terms,
+  #chapter.min .work,
   #chapter.min .cta {
     display: none;
   }
