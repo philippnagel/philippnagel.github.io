@@ -1,5 +1,5 @@
-import { ease, flyFrame } from './geometry';
-import type { Size, View } from './types';
+import { ease, flyFrame } from "./geometry";
+import type { Size, View } from "./types";
 
 /** View state plus animated transitions. Rendering is delegated through `onChange`. */
 export class Camera {
@@ -25,7 +25,9 @@ export class Camera {
   flyTo(to: View) {
     this.stop();
     const from = { ...this.view };
-    const dur = this.reduceMotion ? 0 : 900 + 250 * Math.abs(Math.log10(to.w / from.w));
+    const dur = this.reduceMotion
+      ? 0
+      : 900 + 250 * Math.abs(Math.log10(to.w / from.w));
     const t0 = performance.now();
     const step = (now: number) => {
       const u = dur ? Math.min(1, (now - t0) / dur) : 1;
@@ -46,11 +48,19 @@ export class Camera {
     const nw = Math.min(2600, Math.max(6, this.view.w * f));
     const [wx, wy] = this.toWorld(px, py);
     const r = nw / this.view.w;
-    this.set({ cx: wx - (wx - this.view.cx) * r, cy: wy - (wy - this.view.cy) * r, w: nw });
+    this.set({
+      cx: wx - (wx - this.view.cx) * r,
+      cy: wy - (wy - this.view.cy) * r,
+      w: nw,
+    });
   }
 
   panBy(dxPx: number, dyPx: number) {
     const ps = this.size().w / this.view.w;
-    this.set({ ...this.view, cx: this.view.cx - dxPx / ps, cy: this.view.cy - dyPx / ps });
+    this.set({
+      ...this.view,
+      cx: this.view.cx - dxPx / ps,
+      cy: this.view.cy - dyPx / ps,
+    });
   }
 }

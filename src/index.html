@@ -1,38 +1,80 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Philipp Nagel · Grid to Packet</title>
-<meta name="description" content="Interactive multi-scale map of German and Japanese smart metering: from the national grid down to the DLMS/COSEM frame, with the physical and protocol layers side by side.">
-<meta property="og:title" content="Philipp Nagel · Grid to Packet">
-<meta property="og:url" content="https://www.philippnagel.com">
-<meta property="og:description" content="Zoom from the national grid to the protocol frame: physical infrastructure and market/metering protocols, side by side.">
-<meta property="og:type" content="website">
-<link rel="me" href="https://www.linkedin.com/in/philippnagel/">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
-<link rel="stylesheet" href="./style.css">
-</head>
-<body>
-<header>
-  <div class="who">
-    <img src="./profile-circle-crop.png" alt="">
-    <b>Philipp Nagel</b><span>grid → packet</span>
-  </div>
-  <div class="sp"></div>
-  <div id="mk" role="group" aria-label="Market"><button data-m="de" aria-pressed="true">DE</button><button data-m="jp" aria-pressed="false">JP</button></div>
-  <a class="btn" href="https://www.linkedin.com/in/philippnagel/" rel="me">LinkedIn</a>
-  <a class="btn pri" href="https://cal.com/nagel">Book a call</a>
-  <button class="btn" id="theme" aria-label="Toggle light/dark theme"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 2a6 6 0 0 0 0 12z" fill="currentColor"/></svg></button>
-</header>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Philipp Nagel · Grid to Packet</title>
+    <meta
+      name="description"
+      content="Pixel-art map you can zoom from the power grid to a single smart-meter protocol frame, with the power layer and the data layer drawn together."
+    />
+    <meta property="og:title" content="Philipp Nagel · Grid to Packet" />
+    <meta property="og:url" content="https://www.philippnagel.com" />
+    <meta
+      property="og:description"
+      content="Zoom from the power grid to a protocol frame in a pixel-art world."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="me" href="https://www.linkedin.com/in/philippnagel/" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="who">
+        <img src="./profile-circle-crop.png" alt="" />
+        <b>Philipp Nagel</b><span>grid → packet</span>
+      </div>
+      <div class="sp"></div>
+      <div class="seg" id="layers" role="group" aria-label="Layer">
+        <button data-m="both" aria-pressed="true">BOTH</button
+        ><button data-m="p" aria-pressed="false">POWER</button
+        ><button data-m="d" aria-pressed="false">DATA</button>
+      </div>
+      <a class="btn" href="https://www.linkedin.com/in/philippnagel/" rel="me"
+        >LinkedIn</a
+      >
+      <a class="btn pri" href="https://cal.com/nagel">Book a call</a>
+      <button class="btn" id="theme" aria-label="Toggle light/dark theme">
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+          <circle
+            cx="8"
+            cy="8"
+            r="6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+          />
+          <path d="M8 2a6 6 0 0 0 0 12z" fill="currentColor" />
+        </svg>
+      </button>
+    </header>
 
-<nav id="crumbs" aria-label="Zoom level"></nav>
-<div id="stage"><svg id="svg" role="group" aria-label="Interactive map of physical grid infrastructure and protocol layers"></svg></div>
-<svg id="minimap" viewBox="0 0 120 120" aria-label="Zoom level map"></svg>
-<div id="hint">scroll / pinch to zoom · drag to pan · click a node · click a dashed thumbnail to dive in</div>
-<aside id="panel" aria-live="polite"></aside>
-<noscript><p style="position:fixed;inset:80px 20px;font:15px system-ui">This diagram needs JavaScript.</p></noscript>
+    <nav id="crumbs" aria-label="Zoom level"></nav>
+    <div id="hint">
+      scroll / pinch to zoom · drag to pan · click the house to dive in
+    </div>
+    <div id="stage">
+      <canvas
+        id="cv"
+        role="img"
+        aria-label="Pixel-art map of power infrastructure and the data layer above it, zoomable from the grid down to a protocol frame"
+      ></canvas>
+    </div>
+    <div id="caption" aria-live="polite"></div>
+    <ul id="a11y" class="sr"></ul>
+    <noscript
+      ><p style="position: fixed; inset: 80px 20px; font: 15px system-ui">
+        This diagram needs JavaScript.
+      </p></noscript
+    >
 
-<script type="module" src="./main.ts"></script>
-</body>
+    <script type="module" src="./main.ts"></script>
+  </body>
 </html>

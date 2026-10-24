@@ -1,24 +1,22 @@
-import { expect, test } from 'bun:test';
-import { markets } from '../src/data';
-import { crumbsHTML, esc, panelHTML } from '../src/templates';
+import { expect, test } from "bun:test";
+import { scenes } from "../src/scenes";
+import { a11yHTML, captionHTML, crumbsHTML, esc } from "../src/templates";
 
-test('esc neutralises markup', () => {
-  expect(esc('<b>&')).toBe('&lt;b&gt;&amp;');
+test("esc neutralises markup", () => {
+  expect(esc('<b>&"')).toBe("&lt;b&gt;&amp;&quot;");
 });
 
-test('panel shows frame and zoom-in only where applicable', () => {
-  const de = markets[0]!.levels;
-  const mscons = panelHTML(de, { l: 1, s: 'r', i: 1 });
-  expect(mscons).toContain('Protocol frame');
-  expect(mscons).not.toContain('data-act="in"');
-  expect(mscons).toContain('data-act="out"');
-  expect(panelHTML(de, { l: 0, s: 'p', i: 3 })).toContain('data-act="in"');
-  expect(panelHTML(de, { l: 2, s: 'p', i: 3 })).not.toContain('data-act="in"');
+test("breadcrumb grows with depth", () => {
+  expect(crumbsHTML(scenes, 0)).not.toContain("Metering Point");
+  expect(crumbsHTML(scenes, 3)).toContain("Protocol Frame");
 });
 
-test('breadcrumb grows with depth and appends the frame crumb', () => {
-  const de = markets[0]!.levels;
-  expect(crumbsHTML(de, 0, null)).not.toContain('Metering Point');
-  expect(crumbsHTML(de, 2, null)).toContain('Edge Devices');
-  expect(crumbsHTML(de, 2, { l: 2, s: 'r', i: 1 })).toContain('Protocol Frame · DLMS/COSEM');
+test("caption falls back to the scene hint", () => {
+  expect(captionHTML(scenes, 0, null)).toContain("Hover or click");
+  expect(captionHTML(scenes, 0, { l: 0, id: "tso" })).toContain("Transmission");
+});
+
+test("a11y list has one button per object", () => {
+  const html = a11yHTML(scenes[0]!, 0);
+  expect(html.match(/<button/g)!.length).toBe(scenes[0]!.objects.length);
 });

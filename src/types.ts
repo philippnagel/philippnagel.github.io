@@ -1,37 +1,48 @@
-export type Side = 'p' | 'r';
-export type Frame = [code: string, note: string | null][];
+import type { Pal } from "./palette";
+import type { Pix } from "./pix";
 
-export interface NodeData {
-  /** title */
-  t: string;
-  /** mono tag line */
-  tag: string;
-  /** sub lines shown on the node */
-  l: string[];
-  /** description shown in the side panel */
-  i: string;
-  /** key into the frames table */
-  f?: string;
-}
+/** 'p' = physical power layer, 'd' = data / protocol layer. */
+export type Layer = "p" | "d";
+export type LayerMode = "both" | Layer;
 
-export interface Level {
-  name: string;
-  p: NodeData[];
-  r: NodeData[];
-  /** [physical index, protocol index] pairs */
-  links: [number, number][];
-}
-
-export interface Market {
+export interface Obj {
   id: string;
-  label: string;
-  levels: Level[];
+  layer: Layer;
+  /** top-left and size in scene art pixels */
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  name: string;
+  /** one-line caption shown on hover / selection */
+  text: string;
+  /** ids of objects on the other layer that this one acts on */
+  links: string[];
+  /** paints in object-local coordinates (0,0 = top-left) */
+  paint: (g: Pix, pal: Pal) => void;
+  /** when set, a child scene lives in a PORTAL_W x PORTAL_H window at (x+dx, y+dy) */
+  portal?: { dx: number; dy: number };
+}
+
+export interface Wire {
+  kind: Layer;
+  pts: [number, number][];
+}
+
+export interface SceneDef {
+  id: string;
+  /** breadcrumb name */
+  name: string;
+  /** caption shown when nothing is focused */
+  hint: string;
+  bg: (g: Pix, pal: Pal) => void;
+  objects: Obj[];
+  wires: Wire[];
 }
 
 export interface Ref {
   l: number;
-  s: Side;
-  i: number;
+  id: string;
 }
 
 export interface View {
@@ -51,8 +62,8 @@ export interface Origin {
   k: number;
 }
 
-export interface Related {
-  n: number;
-  s: Side;
-  i: number;
+export interface Insets {
+  top: number;
+  right: number;
+  bottom: number;
 }

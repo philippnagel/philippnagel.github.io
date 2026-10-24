@@ -1,10 +1,10 @@
-import { cp, rm } from 'node:fs/promises';
+import { cp, rm } from "node:fs/promises";
 
-await rm('dist', { recursive: true, force: true });
+await rm("dist", { recursive: true, force: true });
 
 const result = await Bun.build({
-  entrypoints: ['src/index.html'],
-  outdir: 'dist',
+  entrypoints: ["src/index.html"],
+  outdir: "dist",
   minify: true,
 });
 if (!result.success) {
@@ -13,6 +13,10 @@ if (!result.success) {
 }
 
 // GitHub Pages custom domain
-await cp('CNAME', 'dist/CNAME');
+await cp("CNAME", "dist/CNAME");
 
-for (const o of result.outputs) console.log(o.path.replace(process.cwd() + '/', ''), `${(o.size / 1024).toFixed(1)} KB`);
+for (const o of result.outputs)
+  console.log(
+    o.path.replace(process.cwd() + "/", ""),
+    `${(o.size / 1024).toFixed(1)} KB`,
+  );
