@@ -4,7 +4,7 @@ export const CHAR_AT = 0.38;
 export const ART_AHEAD = 100;
 
 /** Distance along the path (art px) at which each chapter is in focus. */
-export const STATIONS = [0, 960, 1920, 2880, 3840, 4800];
+export const STATIONS = [0, 960, 1920, 2880, 3840, 4800, 5760];
 export const END = STATIONS[STATIONS.length - 1]!;
 
 /** Index of the station closest to walk distance `x`. */

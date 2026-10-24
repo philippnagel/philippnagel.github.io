@@ -2,14 +2,15 @@
 
 Personal site: one scrolling pixel-art page, "Grid to Packet".
 
-Scroll to walk Philipp (the pixel character is him) along a path through six stations, in a side-scrolling world with parallax layers (sky, far skyline, hills, pylons, path, foreground grass):
+Scroll to walk Philipp (the pixel character is him) along a path through seven stations, in a side-scrolling world with parallax layers (sky, far skyline, hills, pylons, path, foreground grass):
 
 1. **Hello**: the title as a block-pixel logo.
 2. **Grid**: wind turbines, substation, transformer. Yellow squares are power, blue squares are data, and the market cloud floats above.
-3. **Metering point**: a house with rooftop PV, meter box, EV and charger, and a link up to the DSO.
-4. **Meter cabinet**: meter, gateway and sub-meter, with a live kWh counter and the WAN link.
-5. **Protocol frame**: one meter reading, field by field (header, address, OBIS, value, CRC).
-6. **Contact**: fireworks, a signpost and a mailbox.
+3. **Battery site (BESS)**: three battery containers with live state-of-charge bars and fans, a power conversion cabinet and a transformer. Power flows in while charging and out while discharging, and the energy management system talks to the market.
+4. **Metering point**: a house with rooftop PV, meter box, EV and charger, and a link up to the DSO.
+5. **Meter cabinet**: meter, gateway and sub-meter, with a live kWh counter and the WAN link.
+6. **Protocol frame**: one meter reading, field by field (header, address, OBIS, value, CRC).
+7. **Contact**: fireworks, a signpost and a mailbox.
 
 A start gate (Enter / Enter without sound) unlocks audio and the page. Sound is synthesised in the browser with Web Audio (no audio files): a small chiptune loop that changes key between day and night, footsteps, an arrival chime per station and UI clicks; the speaker button in the header mutes it.
 

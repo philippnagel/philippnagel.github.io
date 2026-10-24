@@ -109,3 +109,10 @@ describe("audio", () => {
       }
   });
 });
+
+describe("station art", () => {
+  test("one scene per station", async () => {
+    const { STATION_ART } = await import("../src/stations");
+    expect(STATION_ART.length).toBe(STATIONS.length);
+  });
+});

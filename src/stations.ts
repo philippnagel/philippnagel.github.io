@@ -404,7 +404,155 @@ const grid: Station = {
   },
 };
 
-/* ---------- 2: house ---------- */
+/* ---------- 2: battery site (BESS) ---------- */
+
+const UNITS = [-40, 52, 144];
+
+/** Charge cycle: 0..1 over a few seconds; first half charging, second half discharging. */
+const cyclePhase = (t: number) => (t * 0.12) % 1;
+const soc = (phase: number) => (phase < 0.5 ? phase * 2 : 2 - phase * 2);
+
+const bess: Station = {
+  bounds: [-230, -260, 380, 8],
+  still(c, p) {
+    const gravel = mix(p.ground, p.path, 0.5);
+    px(c, gravel, -64, -6, 330, 8);
+    fence(c, p, -64, 264, 30);
+    const white = mat(p, "#e8ecf2", 0.2);
+    const band = mat(p, "#47a639", 0.16);
+    UNITS.forEach((x, k) => {
+      slab(c, x - 4, -6, 92, 6, mat(p, "#8d949f", 0.2), 1);
+      slab(c, x, -62, 84, 56, white, 2);
+      for (let rx = x + 3; rx < x + 82; rx += 4)
+        px(c, white[1], rx, -58, 1, 48);
+      px(c, white[3], x, -62, 84, 3);
+      slab(c, x, -36, 84, 8, band, 1);
+      // double door on the right half, battery panel on the left
+      slab(c, x + 46, -56, 34, 46, mat(p, "#cfd5de", 0.2), 1);
+      px(c, white[1], x + 63, -56, 2, 46);
+      px(c, mat(p, "#6f7a90", 0.2)[2], x + 59, -34, 2, 10);
+      px(c, mat(p, "#6f7a90", 0.2)[2], x + 67, -34, 2, 10);
+      slab(c, x + 6, -56, 34, 18, mat(p, "#10131a", 0), 1);
+      // roof HVAC unit with a fan grille
+      slab(c, x + 8, -76, 34, 14, mat(p, "#aab4c6", 0.2), 1);
+      ball(c, x + 25, -69, 5, mat(p, "#4a5368", 0.2));
+      px(c, mat(p, "#6f7a90", 0.2)[1], x + 12, -72, 3, 8);
+      if (k === 1) {
+        line(c, mat(p, "#8d97a8", 0.2)[2], x + 60, -62, x + 60, -96, 2);
+        ball(c, x + 60, -98, 3, mat(p, "#d82d17", 0.2));
+      }
+      // bolt badge
+      px(c, mat(p, "#edcb1f", 0.2)[2], x + 18, -30, 3, 4);
+      px(c, mat(p, "#edcb1f", 0.2)[2], x + 15, -27, 5, 3);
+    });
+    // power conversion cabinet
+    const pcs = mat(p, "#3f7fb8", 0.2);
+    slab(c, 236, -70, 36, 70, pcs, 2);
+    for (let y = -64; y < -28; y += 4) px(c, pcs[1], 240, y, 28, 1);
+    slab(c, 242, -22, 24, 16, mat(p, "#10131a", 0), 1);
+    // medium-voltage transformer
+    const tank = mat(p, "#8a8f9c", 0.2);
+    slab(c, 292, -46, 48, 46, tank, 2);
+    for (let x = 296; x < 336; x += 5) px(c, tank[1], x, -42, 1, 38);
+    const ins = mat(p, "#c98a3c", 0.2);
+    for (const bx of [298, 314, 330]) {
+      cyl(c, bx, -62, 6, 18, ins);
+      px(c, mat(p, "#6f7a90", 0.2)[3], bx - 1, -64, 8, 3);
+    }
+    const wood = mat(p, "#9a6a3e", 0.2);
+    slab(c, 360, -112, 6, 112, wood, 1);
+    slab(c, 348, -108, 30, 4, wood, 1);
+    for (const bx of [350, 361, 373]) px(c, ins[3], bx, -116, 3, 8);
+    cloudData(c, p, 110, -190);
+  },
+  live(c, p, v) {
+    const t = v.t;
+    const phase = cyclePhase(t);
+    const charging = phase < 0.5;
+    shadow(c, p, 100, 0, 150, 6);
+    shadow(c, p, 254, 0, 24);
+    shadow(c, p, 316, 0, 30);
+    UNITS.forEach((x, k) => {
+      // state-of-charge bars on the panel
+      const level = Math.max(0, Math.min(1, soc(phase) + (k - 1) * 0.06));
+      for (let i = 0; i < 6; i++) {
+        const lit = i < Math.round(level * 6);
+        const col = i < 2 ? p.red : i < 4 ? p.yellow : p.green;
+        px(c, lit ? col : mix(col, "#10131a", 0.8), x + 9 + i * 5, -52, 4, 10);
+        if (lit) px(c, "#ffffff", x + 9 + i * 5, -52, 1, 1);
+      }
+      px(c, charging ? p.green : p.yellow, x + 9, -40, 3, 2);
+      // spinning fan
+      const a = t * 9 + k;
+      const fx = x + 25;
+      for (let b = 0; b < 2; b++)
+        line(
+          c,
+          "#10131a",
+          fx + Math.cos(a + b * Math.PI) * 4,
+          -69 + Math.sin(a + b * Math.PI) * 4,
+          fx,
+          -69,
+        );
+      // status LED
+      px(
+        c,
+        Math.floor(t * 2 + k) & 1 ? p.green : mat(p, "#4a5368")[2],
+        x + 74,
+        -58,
+        3,
+        3,
+      );
+    });
+    // power flows in while charging, out while discharging
+    const route: Pt[] = [
+      [364, -108],
+      [322, -64],
+      [300, -30],
+      [272, -30],
+      [254, -6],
+      [254, 2],
+      [-40, 2],
+    ];
+    const cm = mat(p, "#8d97a8", 0.2)[1];
+    wire(c, cm, route);
+    wire(c, cm, [
+      [364, -108],
+      [448, -92],
+    ]);
+    const rev = charging ? route : [...route].reverse();
+    pulse(c, p.yellow, rev, t, 6, 0.18, 5);
+    glow(c, p, 100, -40, 120, p.glow, 0.02);
+    // energy management system and market link
+    const link: Pt[] = [
+      [112, -98],
+      [110, -172],
+    ];
+    dotted(c, p.blue, link[0]![0], link[0]![1], link[1]![0], link[1]![1]);
+    pulse(c, p.blue, link, t, 2, 0.35, 6);
+    pulse(
+      c,
+      p.blue,
+      [
+        [110, -172],
+        [112, -98],
+      ],
+      t + 0.4,
+      1,
+      0.3,
+      6,
+    );
+    label(c, p, "EMS", 110, -232, 2 * v.tk);
+    label(c, p, "BESS", 100, 38, v.tk);
+    label(c, p, "PCS", 254, 38, v.tk);
+    label(c, p, "TRAFO", 316, 50 - 12 + 12 * v.tk, v.tk);
+    const state = charging ? "CHARGING" : "DISCHARGING";
+    drawText(c, state, -64, -92, charging ? p.green : p.yellow, 2);
+    drawLamp(c, p, -88, 0);
+  },
+};
+
+/* ---------- 3: house ---------- */
 
 const house: Station = {
   bounds: [-230, -260, 330, 8],
@@ -534,7 +682,7 @@ const house: Station = {
   },
 };
 
-/* ---------- 3: meter cabinet ---------- */
+/* ---------- 4: meter cabinet ---------- */
 
 const cabinet: Station = {
   bounds: [-190, -270, 260, 8],
@@ -702,7 +850,7 @@ const cabinet: Station = {
   },
 };
 
-/* ---------- 4: protocol frame ---------- */
+/* ---------- 5: protocol frame ---------- */
 
 const FIELDS: [
   string,
@@ -801,7 +949,7 @@ const frame: Station = {
   },
 };
 
-/* ---------- 5: contact ---------- */
+/* ---------- 6: contact ---------- */
 
 const contact: Station = {
   bounds: [-200, -280, 300, 8],
@@ -905,6 +1053,7 @@ const contact: Station = {
 export const STATION_ART: Station[] = [
   hello,
   grid,
+  bess,
   house,
   cabinet,
   frame,
