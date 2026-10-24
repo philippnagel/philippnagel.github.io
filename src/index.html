@@ -11,18 +11,43 @@
       name="description"
       content="Walk with Philipp Nagel from the power grid down to a single smart-meter protocol frame, in a pixel-art world that follows your scroll."
     />
+    <link rel="canonical" href="https://philippnagel.com/" />
     <meta property="og:title" content="Philipp Nagel · Grid to Packet" />
-    <meta property="og:url" content="https://www.philippnagel.com" />
+    <meta property="og:url" content="https://philippnagel.com/" />
     <meta
       property="og:description"
       content="Scroll to walk from the power grid to a protocol frame."
     />
     <meta property="og:type" content="website" />
-    <link rel="me" href="https://www.linkedin.com/in/philippnagel/" />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>"
+    <meta property="og:image" content="https://philippnagel.com/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Pixel-art scene of Philipp walking past pylons toward a house under a blue sky"
     />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="theme-color"
+      content="#bfe4fa"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#0f1a46"
+      media="(prefers-color-scheme: dark)"
+    />
+    <script>
+      /* apply a stored theme before first paint, so there is no flash */
+      try {
+        var t = localStorage.getItem("theme");
+        if (t === "dark" || t === "light")
+          document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+    <link rel="me" href="https://www.linkedin.com/in/philippnagel/" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
@@ -81,9 +106,15 @@
       role="img"
       aria-label="Pixel-art world: Philipp walks along a path from the power grid to a house, a meter cabinet and a protocol frame as you scroll"
     ></canvas>
-    <article id="chapter" aria-live="polite">
+    <article id="chapter">
+      <button
+        class="fold"
+        type="button"
+        aria-expanded="true"
+        aria-label="Collapse"
+      ></button>
       <small></small>
-      <h1></h1>
+      <h1 aria-live="polite"></h1>
       <p></p>
       <p class="terms"></p>
       <div class="cta" hidden>

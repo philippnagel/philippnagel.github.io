@@ -1,4 +1,12 @@
-@import "@fontsource/pixelify-sans/latin-700.css";
+/* woff2 only: every browser that can run the page reads it */
+@font-face {
+  font-family: "Pixelify Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("@fontsource/pixelify-sans/files/pixelify-sans-latin-700-normal.woff2")
+    format("woff2");
+}
 :root {
   --bg: #bfe4fa;
   --card: #ffffff;
@@ -7,6 +15,8 @@
   --line: #10131a;
   --red: #d82d17;
   --blue: #4398cd;
+  /* blue for small text: 5.8:1 on white */
+  --blue-text: #1f6a9c;
   --green: #47a639;
   --yellow: #edcb1f;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -21,6 +31,7 @@
     --ink: #e6edf3;
     --mute: #8b98c0;
     --line: #e6edf3;
+    --blue-text: var(--blue);
   }
 }
 :root[data-theme="dark"] {
@@ -29,6 +40,7 @@
   --ink: #e6edf3;
   --mute: #8b98c0;
   --line: #e6edf3;
+  --blue-text: var(--blue);
 }
 * {
   box-sizing: border-box;
@@ -52,12 +64,14 @@ a {
 header {
   position: fixed;
   inset: 0 0 auto 0;
-  height: var(--top);
+  height: calc(var(--top) + env(safe-area-inset-top));
   z-index: 5;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 16px;
+  padding: 0 max(16px, env(safe-area-inset-right)) 0
+    max(16px, env(safe-area-inset-left));
+  padding-top: env(safe-area-inset-top);
   pointer-events: none;
 }
 header > * {
@@ -99,10 +113,13 @@ header > * {
   cursor: pointer;
   white-space: nowrap;
 }
-.btn:hover,
+.btn:hover {
+  border-color: var(--blue);
+}
 .btn:focus-visible {
   border-color: var(--blue);
-  outline: none;
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
 }
 .btn:active {
   translate: 2px 2px;
@@ -131,12 +148,12 @@ canvas {
 #legend {
   position: fixed;
   z-index: 4;
-  left: 16px;
-  bottom: 14px;
+  left: max(16px, env(safe-area-inset-left));
+  bottom: max(14px, env(safe-area-inset-bottom));
   display: flex;
   align-items: center;
   gap: 6px;
-  font: 700 11px var(--mono);
+  font: 700 12px var(--mono);
   text-transform: uppercase;
   color: var(--ink);
   text-shadow: 0 0 3px var(--bg);
@@ -159,7 +176,7 @@ canvas {
   position: fixed;
   z-index: 4;
   left: 50%;
-  bottom: 14px;
+  bottom: max(14px, env(safe-area-inset-bottom));
   transform: translateX(-50%);
   font: 700 12px var(--mono);
   color: var(--ink);
@@ -185,19 +202,24 @@ canvas {
 #chapter {
   position: fixed;
   z-index: 4;
-  left: 16px;
-  top: calc(var(--top) + 8px);
+  left: max(16px, env(safe-area-inset-left));
+  top: calc(var(--top) + 8px + env(safe-area-inset-top));
   width: min(344px, calc(100vw - 80px));
+  /* hidden until the first chapter is written in, so no empty box flashes */
+  visibility: hidden;
   padding: 14px 16px;
   background: color-mix(in srgb, var(--card) 94%, transparent);
   border: 2px solid var(--ink);
   box-shadow: 4px 4px 0 var(--ink);
 }
+#chapter.in {
+  visibility: visible;
+}
 #chapter small {
   font: 700 12px var(--mono);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--blue);
+  color: var(--blue-text);
 }
 #chapter h1 {
   margin: 4px 0 6px;
@@ -205,12 +227,12 @@ canvas {
 }
 #chapter p {
   margin: 0;
-  font: 13px/1.5 var(--mono);
+  font: 14px/1.5 var(--mono);
   color: var(--ink);
 }
 #chapter .terms {
   margin-top: 8px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
   color: var(--mute);
 }
@@ -230,6 +252,10 @@ canvas {
 }
 #chapter.in {
   animation: pop 0.35s steps(5) both;
+}
+/* fold button: phones only */
+#chapter .fold {
+  display: none;
 }
 @keyframes pop {
   from {
@@ -269,7 +295,7 @@ canvas {
 #rail {
   position: fixed;
   z-index: 4;
-  right: 14px;
+  right: max(14px, env(safe-area-inset-right));
   top: 50%;
   translate: 0 -50%;
   display: flex;
@@ -296,7 +322,22 @@ canvas {
   background: var(--ink);
 }
 #rail button:focus-visible {
-  outline: 2px solid var(--blue);
+  outline: 3px solid var(--blue);
+  outline-offset: -2px;
+}
+/* fingers: 44px targets, same look */
+@media (pointer: coarse) {
+  #rail button {
+    padding: 17px;
+  }
+  .btn {
+    min-height: 44px;
+  }
+  #theme,
+  #sound {
+    width: 44px;
+    padding: 0;
+  }
 }
 
 .sr {
@@ -323,12 +364,35 @@ canvas {
   }
   #chapter h1 {
     font-size: 19px;
+    padding-right: 36px;
   }
   #chapter p {
-    font-size: 12px;
+    font-size: 13px;
   }
   #chapter {
     cursor: pointer;
+  }
+  #chapter .fold {
+    all: unset;
+    display: grid;
+    place-items: center;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    font: 700 18px var(--pix);
+  }
+  #chapter .fold:focus-visible {
+    outline: 3px solid var(--blue);
+    outline-offset: -4px;
+  }
+  #chapter .fold::before {
+    content: "–";
+  }
+  #chapter.min .fold::before {
+    content: "+";
   }
   #chapter.min p,
   #chapter.min .terms,
@@ -363,7 +427,9 @@ html.locked {
   z-index: 20;
   display: grid;
   place-items: end center;
-  padding: 16px 16px 48px;
+  padding: 16px max(16px, env(safe-area-inset-right))
+    max(48px, calc(env(safe-area-inset-bottom) + 24px))
+    max(16px, env(safe-area-inset-left));
   pointer-events: none;
   transition: opacity 0.5s;
 }
@@ -399,7 +465,8 @@ html.locked {
 .quiet {
   all: unset;
   display: block;
-  margin: 12px auto 0;
+  margin: 2px auto 0;
+  padding: 10px 0;
   cursor: pointer;
   font: 12px var(--mono);
   color: var(--mute);
@@ -411,7 +478,7 @@ html.locked {
 }
 .remark {
   margin: 14px 0 0;
-  font: 11px var(--mono);
+  font: 12px var(--mono);
   color: var(--mute);
 }
 .squares {
@@ -477,7 +544,7 @@ html.locked {
   color: var(--ink);
   border: 2px solid var(--ink);
   box-shadow: 3px 3px 0 var(--ink);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.4;
   pointer-events: none;
 }

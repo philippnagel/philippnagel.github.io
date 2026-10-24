@@ -1,6 +1,6 @@
 import "./style.css";
 import { Sound } from "./audio";
-import { chapters } from "./chapters";
+import { chapters, srHtml } from "./chapters";
 import { palette, type Theme } from "./palette";
 import { drawPhilipp } from "./philipp";
 import { currentTheme, initTheme } from "./theme";
@@ -49,7 +49,8 @@ let section = -1;
 
 function renderChapter() {
   const c = chapters[section]!;
-  chapterEl.classList.remove("in", "min");
+  chapterEl.classList.remove("in");
+  fold(false);
   chapterEl.querySelector("small")!.textContent = c.tag;
   chapterEl.querySelector("h1")!.textContent = c.title;
   chapterEl.querySelector("p")!.textContent = c.body;
@@ -70,10 +71,19 @@ function renderChapter() {
 }
 
 /* --- chrome --- */
+const foldEl = chapterEl.querySelector<HTMLElement>(".fold")!;
+function fold(min: boolean) {
+  chapterEl.classList.toggle("min", min);
+  foldEl.setAttribute("aria-expanded", String(!min));
+  foldEl.setAttribute("aria-label", min ? "Expand" : "Collapse");
+}
+foldEl.addEventListener("click", () =>
+  fold(!chapterEl.classList.contains("min")),
+);
 chapterEl.addEventListener("click", (e) => {
   if ((e.target as Element).closest("a, button")) return;
   if (matchMedia("(max-width: 720px)").matches)
-    chapterEl.classList.toggle("min");
+    fold(!chapterEl.classList.contains("min"));
 });
 railEl.innerHTML = chapters
   .map((c, i) => `<button data-i="${i}" aria-label="${c.tag}"></button>`)
@@ -89,20 +99,29 @@ railEl.addEventListener("click", (e) => {
   }
 });
 // the same copy as real text, for screen readers and search
-trackEl.innerHTML = `<div class="sr">${chapters
-  .map((c) => `<h2>${c.title}</h2><p>${c.body}</p>`)
-  .join("")}</div>`;
+// (the build writes it into the HTML already, so crawlers get it without running this)
+if (!trackEl.firstElementChild) trackEl.innerHTML = srHtml();
 
 /* --- size, theme, loop --- */
 let sized = false;
+let sizeKey = "";
+/** Layout width, without a classic scrollbar: what the fixed canvas is measured against. */
+const viewW = () => document.documentElement.clientWidth;
 function resize() {
+  const dpr = devicePixelRatio || 1;
+  const key = `${viewW()}x${innerHeight}@${dpr}`;
+  if (key === sizeKey) return; // mobile toolbars fire resize while scrolling
+  sizeKey = key;
   const prev = s;
   const walk = walkOf(scrollY, s);
-  s = artScale(innerWidth);
-  W = Math.ceil(innerWidth / s);
+  s = artScale(viewW(), dpr);
+  W = Math.ceil(viewW() / s);
   H = Math.ceil(innerHeight / s);
   cv.width = W;
   cv.height = H;
+  // an exact multiple of the art size, so every art pixel is the same square on screen
+  cv.style.width = `${W * s}px`;
+  cv.style.height = `${H * s}px`;
   ctx.imageSmoothingEnabled = false;
   trackEl.style.height = `${scrollOf(END, s) + innerHeight}px`;
   // keep the same spot on the path when the scale changes (not on first load, where `s` is a placeholder)
@@ -140,6 +159,7 @@ async function enter(withSound: boolean) {
   soundEl.hidden = false;
   gateEl.classList.add("gone");
   document.documentElement.classList.remove("locked");
+  resize(); // a classic scrollbar has just taken some width
   behindGate.forEach((el) => el.removeAttribute("inert"));
   if (withSound) sound.click();
   setTimeout(() => gateEl.remove(), 600);
@@ -167,20 +187,22 @@ resize();
 
 /** Lays real links over the contact signpost so the boards themselves are clickable. */
 const boardEls = [$("board-1"), $("board-2")] as HTMLAnchorElement[];
+let boardKey = "";
 function placeBoards(camX: number, gy: number) {
-  const k = innerWidth / W;
-  const ky = innerHeight / H;
   const cx = END + ART_AHEAD - camX;
   const show = section === chapters.length - 1;
+  const key = show ? `${cx}|${gy}|${s}` : "";
+  if (key === boardKey) return;
+  boardKey = key;
   boardEls.forEach((el, i) => {
     const b = BOARDS[i + 1]!;
     el.hidden = !show;
     if (!show) return;
     el.href = b.href;
-    el.style.left = `${(cx + b.x) * k}px`;
-    el.style.top = `${(gy + b.y) * ky}px`;
-    el.style.width = `${b.w * k}px`;
-    el.style.height = `${b.h * ky}px`;
+    el.style.left = `${(cx + b.x) * s}px`;
+    el.style.top = `${(gy + b.y) * s}px`;
+    el.style.width = `${b.w * s}px`;
+    el.style.height = `${b.h * s}px`;
   });
 }
 
@@ -188,10 +210,7 @@ function placeBoards(camX: number, gy: number) {
 let lastView = { camX: 0, gy: 0 };
 let clock = 0;
 let tipTimer = 0;
-const toArt = (e: PointerEvent) => [
-  (e.clientX * W) / innerWidth,
-  (e.clientY * H) / innerHeight,
-];
+const toArt = (e: PointerEvent) => [e.clientX / s, e.clientY / s];
 function hideTip() {
   tipEl.hidden = true;
 }
@@ -205,7 +224,7 @@ function showTip(e: PointerEvent, ax: number, ay: number) {
   tipEl.innerHTML = `<b>${hs.name}</b>${hs.text}`;
   tipEl.hidden = false;
   const w = tipEl.offsetWidth;
-  tipEl.style.left = `${Math.max(8, Math.min(innerWidth - w - 8, e.clientX + 14))}px`;
+  tipEl.style.left = `${Math.max(8, Math.min(viewW() - w - 8, e.clientX + 14))}px`;
   tipEl.style.top = `${Math.min(innerHeight - tipEl.offsetHeight - 8, e.clientY + 14)}px`;
 }
 cv.addEventListener("pointermove", (e) => {
@@ -236,10 +255,19 @@ cv.addEventListener("pointerdown", (e) => {
 let lastStrike = strikeId(0);
 let last = performance.now();
 let lastFrame = 0;
+let lastDraw = 0;
+let hintHidden = false;
 const loop = (now: number) => {
+  const target = walkOf(scrollY, s);
+  // standing still: the ambient life only needs 30 fps
+  if (walker.x === target && now - lastDraw < 33) {
+    requestAnimationFrame(loop);
+    return;
+  }
+  lastDraw = now;
   const dt = Math.min(0.1, (now - last) / 1000);
   last = now;
-  walker.update(walkOf(scrollY, s), dt);
+  walker.update(target, dt);
   const t = reduceMotion ? 0 : now / 1000;
   clock = t;
   const strike = strikeId(t);
@@ -254,7 +282,10 @@ const loop = (now: number) => {
     renderChapter();
     if (started) sound.chime(i);
   }
-  hintEl.style.opacity = scrollY > 40 ? "0" : "";
+  if (hintHidden !== scrollY > 40) {
+    hintHidden = !hintHidden;
+    hintEl.style.opacity = hintHidden ? "0" : "";
+  }
 
   if (
     walker.moving &&
@@ -272,7 +303,7 @@ const loop = (now: number) => {
     H,
     gy: H > 500 ? Math.round(H * 0.8) : H - 76,
     t,
-    tk: s === 1 ? 2 : 1,
+    tk: s < 1.5 ? 2 : 1,
   };
   lastView = view;
   drawWorld(ctx, pal, view);

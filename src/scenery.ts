@@ -58,6 +58,8 @@ interface Set {
   decor: Sprite[];
   tufts: Sprite[];
   lamp: Sprite;
+  /** six wires between two pylons, by span in px */
+  wires: Map<number, Sprite>;
   sky?: { key: string; cv: HTMLCanvasElement };
   tiles?: { key: string; grass: HTMLCanvasElement; path: HTMLCanvasElement };
 }
@@ -246,7 +248,42 @@ function buildSet(p: Pal): Set {
     ],
     tufts: [0, 1, 2, 3].map((i) => tuft(p, i)),
     lamp: lampPost(p),
+    wires: new Map(),
   };
+}
+
+const WIRES = [
+  [-22, -134],
+  [22, -134],
+  [-14, -109],
+  [14, -109],
+  [-7, -85],
+  [7, -85],
+] as const;
+const SAG = 30 * 4;
+
+/** The wires from one pylon to the next, drawn once per span (they never change). */
+function wireSprite(col: string, span: number): Sprite {
+  return bake(
+    -22,
+    -134,
+    22 + span,
+    -85 + SAG / 4,
+    (c) => {
+      for (const [dx, dy] of WIRES) {
+        let px0: number = dx;
+        let py0: number = dy;
+        for (let k = 1; k <= 70; k++) {
+          const u = k / 70;
+          const [x1, y1] = [dx + u * span, dy + SAG * u * (1 - u)];
+          line(c, col, px0, py0, x1, y1, 1);
+          px0 = x1;
+          py0 = y1;
+        }
+      }
+    },
+    false,
+  );
 }
 
 function tuft(p: Pal, seed: number): Sprite {
@@ -591,8 +628,12 @@ export function drawMid(c: C, p: Pal, v: View) {
 
   const wireCol = mix(mat(p, "#8d97a8", 0.2)[2], p.hill, 0.35);
   // pylons fade out near a station instead of popping, so they never clash with its art
-  const gap = (x: number) =>
-    Math.min(...STATIONS.map((st) => Math.abs(x - (st + ART_AHEAD - v.camX))));
+  const gap = (x: number) => {
+    let d = Infinity;
+    for (const st of STATIONS)
+      d = Math.min(d, Math.abs(x - (st + ART_AHEAD - v.camX)));
+    return d;
+  };
   cells(v, 0.55, 420, (i, x) => {
     // span to the next pylon's rounded position so wire ends never drift off it
     const span = Math.round((i + 1) * 420 - v.camX * 0.55) - x;
@@ -604,36 +645,16 @@ export function drawMid(c: C, p: Pal, v: View) {
     c.save();
     c.globalAlpha = a;
     blit(c, set.pylon, x, v.gy);
-    for (const [dx, dy] of [
-      [-22, -134],
-      [22, -134],
-      [-14, -109],
-      [14, -109],
-      [-7, -85],
-      [7, -85],
-    ] as const) {
-      const pts: [number, number][] = [];
-      for (let k = 0; k <= 70; k++) {
-        const u = k / 70;
-        pts.push([x + dx + u * span, v.gy + dy + 30 * 4 * u * (1 - u)]);
-      }
-      for (let k = 1; k < pts.length; k++)
-        line(
-          c,
-          wireCol,
-          pts[k - 1]![0],
-          pts[k - 1]![1],
-          pts[k]![0],
-          pts[k]![1],
-          1,
-        );
-      if (dx === -22 && dy === -134) {
-        const q =
-          pts[Math.floor(((v.t * 0.18 + hash(i) * 3) % 1) * (pts.length - 1))]!;
-        px(c, p.yellow, q[0] - 2, q[1] - 2, 5, 5);
-        px(c, "#fff6c0", q[0] - 1, q[1] - 1, 3, 3);
-      }
-    }
+    let wires = set.wires.get(span);
+    if (!wires) set.wires.set(span, (wires = wireSprite(wireCol, span)));
+    blit(c, wires, x, v.gy);
+    // a spark of power travelling along the top wire
+    const f = (v.t * 0.18 + hash(i) * 3) % 1;
+    const u = Math.floor(f * 70) / 70;
+    const qx = x - 22 + u * span;
+    const qy = v.gy - 134 + SAG * u * (1 - u);
+    px(c, p.yellow, qx - 2, qy - 2, 5, 5);
+    px(c, "#fff6c0", qx - 1, qy - 1, 3, 3);
     if (p.night) owl(c, v, i, x);
     else perched(c, v, i, x, span);
     c.restore();

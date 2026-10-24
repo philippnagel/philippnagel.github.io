@@ -43,6 +43,15 @@ describe("scroll mapping", () => {
       expect(k).toBeLessThanOrEqual(3);
     }
   });
+
+  test("art scale is a whole number of device pixels", () => {
+    for (const dpr of [1, 1.25, 1.5, 2, 3])
+      for (const w of [320, 390, 1280, 1920, 5000]) {
+        const dev = artScale(w, dpr) * dpr;
+        expect(Math.abs(dev - Math.round(dev))).toBeLessThan(1e-9);
+        expect(dev).toBeGreaterThanOrEqual(1);
+      }
+  });
 });
 
 describe("Walker", () => {

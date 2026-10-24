@@ -72,3 +72,15 @@ export const chapters: Chapter[] = [
 
 if (chapters.length !== STATIONS.length)
   throw new Error("one chapter per station");
+
+/** The chapters as real text, visually hidden: for screen readers and search, and written into the HTML at build time. */
+export const srHtml = () =>
+  `<div class="sr">${chapters
+    .map(
+      (c) =>
+        `<h2>${c.title}</h2><p>${c.body}</p>` +
+        (c.terms?.length
+          ? `<p>${c.terms.map(([a, b]) => `${a}: ${b}`).join("; ")}</p>`
+          : ""),
+    )
+    .join("")}</div>`;

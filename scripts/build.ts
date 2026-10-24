@@ -1,4 +1,5 @@
-import { cp, rm } from "node:fs/promises";
+import { cp, readFile, rm, writeFile } from "node:fs/promises";
+import { srHtml } from "../src/chapters";
 
 await rm("dist", { recursive: true, force: true });
 
@@ -11,6 +12,19 @@ if (!result.success) {
   for (const log of result.logs) console.error(log);
   process.exit(1);
 }
+
+// the chapter text in the HTML itself, so it is there before (and without) any script
+const page = "dist/index.html";
+const html = await readFile(page, "utf8");
+const track = '<main id="track"></main>';
+if (!html.includes(track)) throw new Error("#track not found in built HTML");
+await writeFile(
+  page,
+  html.replace(track, `<main id="track">${srHtml()}</main>`),
+);
+
+// social preview image, referenced by an absolute URL so it is copied as is
+await cp("src/og.png", "dist/og.png");
 
 // GitHub Pages custom domain
 await cp("CNAME", "dist/CNAME");

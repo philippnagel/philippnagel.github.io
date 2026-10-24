@@ -15,9 +15,14 @@ export function nearest(x: number): number {
   return best;
 }
 
-/** Art-pixel zoom: whole numbers so pixels stay square. */
-export const artScale = (cssWidth: number) =>
-  Math.max(1, Math.min(3, Math.round(cssWidth / 640)));
+/**
+ * CSS pixels per art pixel. The zoom is a whole number of *device* pixels, so
+ * every art pixel covers the same square of the screen at any pixel ratio.
+ */
+export const artScale = (cssWidth: number, dpr = 1) => {
+  const css = Math.max(1, Math.min(3, Math.round(cssWidth / 640)));
+  return Math.max(1, Math.round(css * dpr)) / dpr;
+};
 
 /** Walk distance for a page scroll offset, and back. */
 export const walkOf = (scrollY: number, s: number) =>
