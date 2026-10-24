@@ -49,7 +49,9 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--sans);
-  overflow: hidden;
+}
+html {
+  height: auto;
 }
 a {
   color: inherit;
@@ -146,50 +148,10 @@ header > * {
   place-items: center;
 }
 
-#crumbs {
-  position: fixed;
-  z-index: 4;
-  top: var(--top);
-  left: 16px;
-  right: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 2px;
-  font: 12px var(--mono);
-}
-#crumbs button {
-  all: unset;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  color: var(--mute);
-  border: 1px solid transparent;
-}
-#crumbs button:hover,
-#crumbs button:focus-visible {
-  color: var(--ink);
-  border-color: var(--line);
-}
-#crumbs button[aria-current] {
-  color: var(--ink);
-  background: var(--card);
-  border-color: var(--line);
-  cursor: default;
-}
-#crumbs i {
-  color: var(--line);
-  font-style: normal;
-}
-
 #stage {
   position: fixed;
   inset: 0;
-  touch-action: none;
-  cursor: grab;
-}
-#stage.drag {
-  cursor: grabbing;
+  touch-action: pan-y;
 }
 #stage.over {
   cursor: pointer;
@@ -230,12 +192,121 @@ canvas {
 #hint {
   position: fixed;
   z-index: 4;
-  left: 16px;
-  top: calc(var(--top) + 32px);
+  left: 50%;
+  bottom: 84px;
+  transform: translateX(-50%);
   font: 12px var(--mono);
   color: var(--mute);
   transition: opacity 0.6s;
-  max-width: 640px;
+  animation: bob 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes bob {
+  50% {
+    translate: 0 5px;
+  }
+}
+#track {
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* chapter card */
+#chapter {
+  position: fixed;
+  z-index: 4;
+  left: 16px;
+  top: calc(var(--top) + 8px);
+  width: min(344px, calc(100vw - 80px));
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--card) 94%, transparent);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+#chapter small {
+  font: 12px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--proto);
+}
+#chapter h1 {
+  margin: 4px 0 6px;
+  font-size: 22px;
+  line-height: 1.15;
+}
+#chapter p {
+  margin: 0;
+  font: 13px/1.5 var(--mono);
+  color: var(--mute);
+}
+#chapter .cta {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+#chapter .cta[hidden] {
+  display: none;
+}
+#chapter.in {
+  animation: pop 0.35s steps(5) both;
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+@media (min-width: 1000px) {
+  #chapter {
+    top: 50%;
+    translate: 0 -50%;
+    left: 28px;
+    width: 324px;
+  }
+  #chapter.in {
+    animation-name: pop-wide;
+  }
+  @keyframes pop-wide {
+    from {
+      opacity: 0;
+      translate: -10px -50%;
+    }
+  }
+}
+
+/* chapter rail */
+#rail {
+  position: fixed;
+  z-index: 4;
+  right: 14px;
+  top: 50%;
+  translate: 0 -50%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+#rail button {
+  all: unset;
+  box-sizing: content-box;
+  width: 10px;
+  height: 10px;
+  padding: 4px;
+  cursor: pointer;
+}
+#rail button::after {
+  content: "";
+  display: block;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--ink);
+  background: var(--card);
+}
+#rail button[aria-current]::after {
+  background: var(--ink);
+}
+#rail button:focus-visible {
+  outline: 2px solid var(--proto);
 }
 
 .sr {
@@ -257,12 +328,20 @@ canvas {
   }
 }
 @media (max-width: 720px) {
-  .who span,
-  #hint {
+  .who span {
     display: none;
   }
   #caption {
     font-size: 12px;
+  }
+  #chapter h1 {
+    font-size: 18px;
+  }
+  #chapter p {
+    font-size: 12px;
+  }
+  #hint {
+    bottom: 76px;
   }
 }
 @media (max-width: 520px) {

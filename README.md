@@ -1,15 +1,15 @@
 # philippnagel.com
 
-Personal site: one interactive pixel-art page, "Grid to Packet".
+Personal site: one scrolling pixel-art page, "Grid to Packet".
 
-One shared isometric scene with two layers drawn together: the **power layer** (a floating terrain island) and the **data layer** (a glass deck hovering above it). Zoom through four nested scales, each a full pixel-art scene:
+One shared isometric scene with two layers drawn together: the **power layer** (a floating terrain island) and the **data layer** (a glass deck hovering above it). Scroll once, top to bottom: the camera flies through four nested scales, each a full pixel-art scene, with a chapter card per stop:
 
 1. **Grid**: generation, transmission, substation, local transformer, a house. Regulator, standards, security and market roles above.
 2. **Metering Point**: the house with its grid connection, meter cabinet, rooftop PV, home energy management and EV charger. Trust chain, master data, market messages and gateway admin above.
 3. **Meter Cabinet**: meter, gateway, sub-meter and local devices. The meter-to-gateway, wide-area and home-area links and the security module above.
 4. **Protocol Frame**: one meter reading as a frame, field by field.
 
-Hover or click anything to light up what it is linked to on the other layer; a caption explains it. Click the glowing hologram window (next to the house, the meter cabinet and the WAN packet), which previews the next level, to dive in. `BOTH / POWER / DATA` switches which layer is emphasised. The scene follows light/dark mode (day / night).
+Hover or click anything to light up what it is linked to on the other layer; a caption explains it. Click the glowing hologram window (next to the house, the meter cabinet and the WAN packet), which previews the next level, to scroll there; the dots on the right jump between chapters. `BOTH / POWER / DATA` switches which layer is emphasised. The scene follows light/dark mode (day / night).
 
 ## Stack
 
@@ -40,7 +40,7 @@ bun run check       # fmt check + typecheck + tests (what CI runs)
 | `src/scenes.ts`                            | Scene order (outermost first)                                                                |
 | `src/geometry.ts`                          | Scene size, portal nesting, camera fit / fly maths (pure)                                    |
 | `src/world.ts`, `src/renderer.ts`          | Pre-rendered bitmaps; canvas drawing, level-of-detail fades, highlights, hit testing         |
-| `src/camera.ts`, `src/input.ts`            | Animated camera; wheel / drag / pinch                                                        |
+| `src/camera.ts`, `src/chapters.ts`         | Current view; chapter copy (one per section, matching `STOPS` in `geometry.ts`)              |
 | `src/templates.ts`                         | Caption, breadcrumb and screen-reader markup                                                 |
 | `src/main.ts`                              | App state and event wiring                                                                   |
 | `tests/`                                   | `bun test` suites                                                                            |

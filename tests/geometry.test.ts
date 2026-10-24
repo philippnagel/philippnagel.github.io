@@ -7,6 +7,8 @@ import {
   flyFrame,
   lodOpacity,
   origins,
+  scrollView,
+  STOPS,
 } from "../src/geometry";
 import { scenes } from "../src/scenes";
 
@@ -63,4 +65,21 @@ test("lodOpacity clamps and ramps", () => {
   expect(lodOpacity(1e6, 900)).toBe(1);
   expect(lodOpacity(0.5 * 900, 900)).toBeGreaterThan(0.3);
   expect(lodOpacity(0.2 * 900, 900)).toBe(0);
+});
+
+describe("scrollView", () => {
+  const fit = (l: number) => fitView(origins(scenes)[l]!, size, ins);
+
+  test("holds each stop, then flies to the next", () => {
+    expect(scrollView(2, fit).w).toBeCloseTo(fit(1).w);
+    expect(scrollView(2.1, fit).w).toBeCloseTo(fit(1).w);
+    expect(scrollView(2.9, fit).w).toBeCloseTo(fit(2).w);
+    const mid = scrollView(2.5, fit);
+    expect(mid.w).toBeLessThan(fit(1).w);
+    expect(mid.w).toBeGreaterThan(fit(2).w);
+  });
+
+  test("clamps past the last section", () => {
+    expect(scrollView(99, fit).w).toBeCloseTo(fit(STOPS[STOPS.length - 1]!).w);
+  });
 });

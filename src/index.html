@@ -9,13 +9,13 @@
     <title>Philipp Nagel · Grid to Packet</title>
     <meta
       name="description"
-      content="Pixel-art map you can zoom from the power grid to a single smart-meter protocol frame, with the power layer and the data layer drawn together."
+      content="Scroll from the power grid down to a single smart-meter protocol frame in a pixel-art world, with the power layer and the data layer drawn together."
     />
     <meta property="og:title" content="Philipp Nagel · Grid to Packet" />
     <meta property="og:url" content="https://www.philippnagel.com" />
     <meta
       property="og:description"
-      content="Zoom from the power grid to a protocol frame in a pixel-art world."
+      content="Scroll from the power grid to a protocol frame in a pixel-art world."
     />
     <meta property="og:type" content="website" />
     <link rel="me" href="https://www.linkedin.com/in/philippnagel/" />
@@ -37,9 +37,6 @@
         ><button data-m="p" aria-pressed="false">POWER</button
         ><button data-m="d" aria-pressed="false">DATA</button>
       </div>
-      <a class="btn" href="https://www.linkedin.com/in/philippnagel/" rel="me"
-        >LinkedIn</a
-      >
       <a class="btn pri" href="https://cal.com/nagel">Book a call</a>
       <button class="btn" id="theme" aria-label="Toggle light/dark theme">
         <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
@@ -56,17 +53,27 @@
       </button>
     </header>
 
-    <nav id="crumbs" aria-label="Zoom level"></nav>
-    <div id="hint">
-      scroll / pinch to zoom · drag to pan · click the house to dive in
-    </div>
     <div id="stage">
       <canvas
         id="cv"
         role="img"
-        aria-label="Pixel-art map of power infrastructure and the data layer above it, zoomable from the grid down to a protocol frame"
+        aria-label="Pixel-art map of power infrastructure and the data layer above it, zoomed from the grid down to a protocol frame as you scroll"
       ></canvas>
     </div>
+    <article id="chapter" aria-live="polite">
+      <small></small>
+      <h1></h1>
+      <p></p>
+      <div class="cta" hidden>
+        <a class="btn pri" href="https://cal.com/nagel">Book a call</a>
+        <a class="btn" href="https://www.linkedin.com/in/philippnagel/" rel="me"
+          >LinkedIn</a
+        >
+      </div>
+    </article>
+    <nav id="rail" aria-label="Chapters"></nav>
+    <div id="hint">scroll ↓</div>
+    <main id="track" aria-hidden="true"></main>
     <div id="caption" aria-live="polite"></div>
     <ul id="a11y" class="sr"></ul>
     <noscript

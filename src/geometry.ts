@@ -40,11 +40,12 @@ export function origins(scenes: SceneDef[]): Origin[] {
 export function fitView(o: Origin, size: Size, ins: Insets): View {
   const fw = SW * o.k;
   const fh = SH * o.k;
-  const aw = size.w - ins.right;
+  const left = ins.left ?? 0;
+  const aw = size.w - left - ins.right;
   const ah = size.h - ins.top - ins.bottom;
   const ps = Math.min(aw / fw, ah / fh) / 1.04;
   return {
-    cx: o.x + fw / 2 - (aw / 2 - size.w / 2) / ps,
+    cx: o.x + fw / 2 - (left + aw / 2 - size.w / 2) / ps,
     cy: o.y + fh / 2 - (ins.top + ah / 2 - size.h / 2) / ps,
     w: size.w / ps,
   };
@@ -70,4 +71,17 @@ export function flyFrame(from: View, to: View, u: number): View {
     cy: from.cy + (to.cy - from.cy) * s,
     w,
   };
+}
+
+/** Section stops along the scroll track: the level each one frames. */
+export const STOPS = [0, 0, 1, 2, 3, 3];
+
+/** Share of each section during which the camera holds still at either end. */
+const HOLD = 0.3;
+
+/** Scroll position `t` (in sections) to a camera view between consecutive stops. */
+export function scrollView(t: number, fit: (level: number) => View): View {
+  const k = Math.max(0, Math.min(STOPS.length - 2, Math.floor(t)));
+  const f = Math.max(0, Math.min(1, (t - k - HOLD) / (1 - 2 * HOLD)));
+  return flyFrame(fit(STOPS[k]!), fit(STOPS[k + 1]!), ease(f));
 }
