@@ -1,43 +1,32 @@
 :root {
-  --bg: #f5f6f8;
+  --bg: #bfe4fa;
   --card: #ffffff;
-  --ink: #0f172a;
-  --mute: #5b6779;
-  --line: #c4ccd8;
-  --grid: rgba(15, 23, 42, .055);
-  --phys: #b45309;
-  --proto: #0e7490;
-  --glow-p: rgba(180, 83, 9, .35);
-  --glow-r: rgba(14, 116, 144, .35);
+  --ink: #10131a;
+  --mute: #4a5568;
+  --line: #10131a;
+  --red: #d82d17;
+  --blue: #4398cd;
+  --green: #47a639;
+  --yellow: #edcb1f;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
   --top: 64px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0a0e14;
-    --card: #111823;
+    --bg: #0f1a46;
+    --card: #0a1030;
     --ink: #e6edf3;
-    --mute: #8b98a9;
-    --line: #263143;
-    --grid: rgba(148, 163, 184, .07);
-    --phys: #fbbf24;
-    --proto: #22d3ee;
-    --glow-p: rgba(251, 191, 36, .55);
-    --glow-r: rgba(34, 211, 238, .55);
+    --mute: #8b98c0;
+    --line: #e6edf3;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0a0e14;
-  --card: #111823;
+  --bg: #0f1a46;
+  --card: #0a1030;
   --ink: #e6edf3;
-  --mute: #8b98a9;
-  --line: #263143;
-  --grid: rgba(148, 163, 184, .07);
-  --phys: #fbbf24;
-  --proto: #22d3ee;
-  --glow-p: rgba(251, 191, 36, .55);
-  --glow-r: rgba(34, 211, 238, .55);
+  --mute: #8b98c0;
+  --line: #e6edf3;
 }
 * {
   box-sizing: border-box;
@@ -67,7 +56,6 @@ header {
   align-items: center;
   gap: 10px;
   padding: 0 16px;
-  background: linear-gradient(var(--bg) 55%, transparent);
   pointer-events: none;
 }
 header > * {
@@ -111,35 +99,13 @@ header > * {
 }
 .btn:hover,
 .btn:focus-visible {
-  border-color: var(--proto);
+  border-color: var(--blue);
   outline: none;
 }
 .btn.pri {
   background: var(--ink);
   color: var(--bg);
   border-color: var(--ink);
-}
-.seg {
-  display: flex;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--card);
-}
-.seg button {
-  all: unset;
-  cursor: pointer;
-  padding: 7px 10px;
-  font: 600 12px var(--mono);
-  color: var(--mute);
-}
-.seg button[aria-pressed="true"] {
-  background: var(--ink);
-  color: var(--bg);
-}
-.seg button:focus-visible {
-  outline: 2px solid var(--proto);
-  outline-offset: -2px;
 }
 #theme {
   width: 34px;
@@ -148,52 +114,46 @@ header > * {
   place-items: center;
 }
 
-#stage {
+canvas {
   position: fixed;
   inset: 0;
-  touch-action: pan-y;
-}
-#stage.over {
-  cursor: pointer;
-}
-canvas {
   width: 100%;
   height: 100%;
   display: block;
   image-rendering: pixelated;
 }
-
-#caption {
+#legend {
   position: fixed;
   z-index: 4;
-  left: 50%;
-  bottom: 16px;
-  transform: translateX(-50%);
-  width: min(720px, calc(100vw - 32px));
-  min-height: 52px;
-  padding: 10px 14px;
-  background: color-mix(in srgb, var(--card) 94%, transparent);
-  border: 2px solid var(--ink);
-  box-shadow: 4px 4px 0 var(--ink);
-  font: 13px/1.45 var(--mono);
-  pointer-events: none;
-}
-#caption b {
-  margin-right: 6px;
+  left: 16px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 700 11px var(--mono);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: var(--ink);
+  text-shadow: 0 0 3px var(--bg);
 }
-#caption b.p {
-  color: var(--phys);
+#legend i {
+  width: 10px;
+  height: 10px;
+  margin-left: 8px;
 }
-#caption b.d {
-  color: var(--proto);
+#legend i:first-child {
+  margin-left: 0;
+}
+#legend .p {
+  background: var(--yellow);
+}
+#legend .d {
+  background: var(--blue);
 }
 #hint {
   position: fixed;
   z-index: 4;
   left: 50%;
-  bottom: 84px;
+  bottom: 14px;
   transform: translateX(-50%);
   font: 12px var(--mono);
   color: var(--mute);
@@ -225,10 +185,10 @@ canvas {
   box-shadow: 4px 4px 0 var(--ink);
 }
 #chapter small {
-  font: 12px var(--mono);
+  font: 700 12px var(--mono);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--proto);
+  color: var(--blue);
 }
 #chapter h1 {
   margin: 4px 0 6px;
@@ -306,7 +266,7 @@ canvas {
   background: var(--ink);
 }
 #rail button:focus-visible {
-  outline: 2px solid var(--proto);
+  outline: 2px solid var(--blue);
 }
 
 .sr {
@@ -331,21 +291,18 @@ canvas {
   .who span {
     display: none;
   }
-  #caption {
-    font-size: 12px;
-  }
   #chapter h1 {
     font-size: 18px;
   }
   #chapter p {
     font-size: 12px;
   }
-  #hint {
-    bottom: 76px;
-  }
 }
 @media (max-width: 520px) {
   .who {
+    display: none;
+  }
+  header a[rel="me"] {
     display: none;
   }
   header {
@@ -355,9 +312,5 @@ canvas {
   .btn {
     padding: 7px 9px;
     font-size: 12px;
-  }
-  .seg button {
-    padding: 7px 7px;
-    font-size: 11px;
   }
 }

@@ -1,4 +1,4 @@
-import { STOPS } from "./geometry";
+import { STATIONS } from "./walk";
 
 export interface Chapter {
   /** short label for the rail */
@@ -7,17 +7,17 @@ export interface Chapter {
   body: string;
 }
 
-/** One chapter per scroll section; `STOPS[i]` is the scene level it frames. */
+/** One chapter per station along the path. */
 export const chapters: Chapter[] = [
   {
     tag: "Hello",
     title: "Philipp Nagel",
-    body: "Smart metering, from the power grid down to a single protocol frame. Scroll to zoom in.",
+    body: "Smart metering, from the power grid down to a single protocol frame. Scroll to walk with me.",
   },
   {
     tag: "Grid",
     title: "01. The grid",
-    body: "Generation, transmission, substation, transformer, and one house. Rules, roles and markets float above as the data layer.",
+    body: "Generation, transmission, substation, transformer, and a house. Yellow squares are power, blue squares are data, and the markets float above.",
   },
   {
     tag: "Metering point",
@@ -41,5 +41,5 @@ export const chapters: Chapter[] = [
   },
 ];
 
-if (chapters.length !== STOPS.length)
-  throw new Error("chapters and STOPS must be the same length");
+if (chapters.length !== STATIONS.length)
+  throw new Error("one chapter per station");

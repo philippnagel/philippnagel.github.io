@@ -9,13 +9,13 @@
     <title>Philipp Nagel · Grid to Packet</title>
     <meta
       name="description"
-      content="Scroll from the power grid down to a single smart-meter protocol frame in a pixel-art world, with the power layer and the data layer drawn together."
+      content="Walk with Philipp Nagel from the power grid down to a single smart-meter protocol frame, in a pixel-art world that follows your scroll."
     />
     <meta property="og:title" content="Philipp Nagel · Grid to Packet" />
     <meta property="og:url" content="https://www.philippnagel.com" />
     <meta
       property="og:description"
-      content="Scroll from the power grid to a protocol frame in a pixel-art world."
+      content="Scroll to walk from the power grid to a protocol frame."
     />
     <meta property="og:type" content="website" />
     <link rel="me" href="https://www.linkedin.com/in/philippnagel/" />
@@ -32,13 +32,11 @@
         <b>Philipp Nagel</b><span>grid → packet</span>
       </div>
       <div class="sp"></div>
-      <div class="seg" id="layers" role="group" aria-label="Layer">
-        <button data-m="both" aria-pressed="true">BOTH</button
-        ><button data-m="p" aria-pressed="false">POWER</button
-        ><button data-m="d" aria-pressed="false">DATA</button>
-      </div>
+      <a class="btn" href="https://www.linkedin.com/in/philippnagel/" rel="me"
+        >LinkedIn</a
+      >
       <a class="btn pri" href="https://cal.com/nagel">Book a call</a>
-      <button class="btn" id="theme" aria-label="Toggle light/dark theme">
+      <button class="btn" id="theme" aria-label="Toggle day / night">
         <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
           <circle
             cx="8"
@@ -53,13 +51,11 @@
       </button>
     </header>
 
-    <div id="stage">
-      <canvas
-        id="cv"
-        role="img"
-        aria-label="Pixel-art map of power infrastructure and the data layer above it, zoomed from the grid down to a protocol frame as you scroll"
-      ></canvas>
-    </div>
+    <canvas
+      id="cv"
+      role="img"
+      aria-label="Pixel-art world: Philipp walks along a path from the power grid to a house, a meter cabinet and a protocol frame as you scroll"
+    ></canvas>
     <article id="chapter" aria-live="polite">
       <small></small>
       <h1></h1>
@@ -72,13 +68,12 @@
       </div>
     </article>
     <nav id="rail" aria-label="Chapters"></nav>
+    <div id="legend"><i class="p"></i>power <i class="d"></i>data</div>
     <div id="hint">scroll ↓</div>
-    <main id="track" aria-hidden="true"></main>
-    <div id="caption" aria-live="polite"></div>
-    <ul id="a11y" class="sr"></ul>
+    <main id="track"></main>
     <noscript
       ><p style="position: fixed; inset: 80px 20px; font: 15px system-ui">
-        This diagram needs JavaScript.
+        This page needs JavaScript.
       </p></noscript
     >
 

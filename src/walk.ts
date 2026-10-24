@@ -1,0 +1,53 @@
+/** Where the character stands on screen, as a share of the width. */
+export const CHAR_AT = 0.38;
+/** Station art is centred this far ahead of the character's focus point. */
+export const ART_AHEAD = 50;
+
+/** Distance along the path (art px) at which each chapter is in focus. */
+export const STATIONS = [0, 480, 960, 1440, 1920, 2400];
+export const END = STATIONS[STATIONS.length - 1]!;
+
+/** Index of the station closest to walk distance `x`. */
+export function nearest(x: number): number {
+  let best = 0;
+  for (let i = 1; i < STATIONS.length; i++)
+    if (Math.abs(STATIONS[i]! - x) < Math.abs(STATIONS[best]! - x)) best = i;
+  return best;
+}
+
+/** Art-pixel zoom: whole numbers so pixels stay square. */
+export const artScale = (cssWidth: number) =>
+  Math.max(2, Math.min(6, Math.round(cssWidth / 320)));
+
+/** Walk distance for a page scroll offset, and back. */
+export const walkOf = (scrollY: number, s: number) =>
+  Math.max(0, Math.min(END, scrollY / s));
+export const scrollOf = (walk: number, s: number) => walk * s;
+
+/** Smooths the walk distance and derives walking state for the animation. */
+export class Walker {
+  x = 0;
+  facing: 1 | -1 = 1;
+  moving = false;
+  /** accumulated distance, drives the leg cycle */
+  step = 0;
+
+  constructor(private readonly instant: boolean) {}
+
+  update(target: number, dt: number) {
+    const prev = this.x;
+    this.x = this.instant
+      ? target
+      : this.x + (target - this.x) * Math.min(1, dt * 7);
+    if (Math.abs(target - this.x) < 0.05) this.x = target;
+    const dx = this.x - prev;
+    this.step += Math.abs(dx);
+    this.moving = dt > 0 && Math.abs(dx) / dt > 6;
+    if (dx > 0.01) this.facing = 1;
+    else if (dx < -0.01) this.facing = -1;
+  }
+
+  get frame() {
+    return Math.floor(this.step / 4) & 3;
+  }
+}
