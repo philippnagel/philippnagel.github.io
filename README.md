@@ -9,7 +9,7 @@ One shared isometric scene with two layers drawn together: the **power layer** (
 3. **Meter Cabinet**: meter, gateway, sub-meter and local devices. The meter-to-gateway, wide-area and home-area links and the security module above.
 4. **Protocol Frame**: one meter reading as a frame, field by field.
 
-Hover or click anything to light up what it is linked to on the other layer; a caption explains it. Click the dashed window (house, meter cabinet, WAN packet) to dive in. `BOTH / POWER / DATA` switches which layer is emphasised. The scene follows light/dark mode (day / night).
+Hover or click anything to light up what it is linked to on the other layer; a caption explains it. Click the glowing hologram window (next to the house, the meter cabinet and the WAN packet), which previews the next level, to dive in. `BOTH / POWER / DATA` switches which layer is emphasised. The scene follows light/dark mode (day / night).
 
 ## Stack
 
@@ -29,28 +29,29 @@ bun run check       # fmt check + typecheck + tests (what CI runs)
 
 ## Layout
 
-| Path                              | Purpose                                                                                      |
-| --------------------------------- | -------------------------------------------------------------------------------------------- |
-| `src/index.html`, `src/style.css` | Page shell and UI styling                                                                    |
-| `src/art/*.ts`                    | The four scenes: background, objects (sprites), links, wires                                 |
-| `src/iso.ts`                      | Isometric primitives: boxes, cylinders, gable roofs, face quads, shadows                     |
-| `src/pix.ts`                      | Pixel painter: shaded slabs, cylinders, spheres, polygons, dithering, 5x7 font, wire helpers |
-| `src/palette.ts`                  | Day and night palettes built from five-tone material ramps                                   |
-| `src/scenes.ts`                   | Scene order (outermost first)                                                                |
-| `src/geometry.ts`                 | Scene size, portal nesting, camera fit / fly maths (pure)                                    |
-| `src/world.ts`, `src/renderer.ts` | Pre-rendered bitmaps; canvas drawing, level-of-detail fades, highlights, hit testing         |
-| `src/camera.ts`, `src/input.ts`   | Animated camera; wheel / drag / pinch                                                        |
-| `src/templates.ts`                | Caption, breadcrumb and screen-reader markup                                                 |
-| `src/main.ts`                     | App state and event wiring                                                                   |
-| `tests/`                          | `bun test` suites                                                                            |
-| `.github/workflows/pages.yml`     | Check, build and deploy to GitHub Pages                                                      |
+| Path                                       | Purpose                                                                                      |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `src/index.html`, `src/style.css`          | Page shell and UI styling                                                                    |
+| `src/art/{grid,house,cabinet,frame}.ts`    | The four scenes: background, objects, links, wires                                           |
+| `src/art/kit.ts`, `common.ts`, `shared.ts` | Shared scenery: sky, island, deck, trees, fences, cars, people, clouds, gateway sprite       |
+| `src/iso.ts`                               | Isometric primitives: boxes, cylinders, gable roofs, face quads, shadows                     |
+| `src/pix.ts`                               | Pixel painter: shaded slabs, cylinders, spheres, polygons, dithering, 5x7 font, wire helpers |
+| `src/palette.ts`                           | Day and night palettes built from five-tone material ramps                                   |
+| `src/scenes.ts`                            | Scene order (outermost first)                                                                |
+| `src/geometry.ts`                          | Scene size, portal nesting, camera fit / fly maths (pure)                                    |
+| `src/world.ts`, `src/renderer.ts`          | Pre-rendered bitmaps; canvas drawing, level-of-detail fades, highlights, hit testing         |
+| `src/camera.ts`, `src/input.ts`            | Animated camera; wheel / drag / pinch                                                        |
+| `src/templates.ts`                         | Caption, breadcrumb and screen-reader markup                                                 |
+| `src/main.ts`                              | App state and event wiring                                                                   |
+| `tests/`                                   | `bun test` suites                                                                            |
+| `.github/workflows/pages.yml`              | Check, build and deploy to GitHub Pages                                                      |
 
 ## Editing a scene
 
 - Each scene is a 960x540 pixel canvas holding an isometric terrain island (power layer) and a glass deck (data layer). `place(iso, [gx, gy, gz], fitBox(...), draw)` positions an object by grid coordinates.
-- An object has a rectangle, a `paint(g, pal)` function in local coordinates (static), optional `anim(g, t, pal)` (drawn live every frame) and `lights` (night glows), a name, a caption and `links` to objects on the other layer (links are symmetric).
+- An object has a rectangle, a `paint(g, pal)` function in local coordinates (static), optional `anim(g, t, pal)` (drawn live every frame) and `lights` (night glows), a name, a caption (`text`) and `links` to objects on the other layer (links are symmetric).
 - Exactly one object per scene has a `portal`: the 144x81 hologram window (given in scene coordinates) in which the next scene appears.
-- `bun test` checks bounds, layer placement, overlaps, link targets, drawable glyphs and portal nesting.
+- `bun test` checks unique ids, bounds, link targets (and that links cross layers), drawable glyphs, wires inside the scene and portal nesting.
 
 ## Deploy
 
