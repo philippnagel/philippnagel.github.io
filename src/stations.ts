@@ -54,6 +54,22 @@ function label(c: C, p: Pal, s: string, x: number, y: number, k: number) {
   drawText(c, s, x - w / 2, y, p.ink, k);
 }
 
+/** A meter has just sent a reading: a ring grows from it every few seconds. */
+function readingPing(c: C, p: Pal, t: number, x: number, y: number) {
+  const ph = (t % 5) / 5;
+  if (ph > 0.3) return;
+  const u = ph / 0.3;
+  c.save();
+  c.globalAlpha = 0.8 * (1 - u);
+  c.strokeStyle = p.blue;
+  c.lineWidth = 2;
+  c.beginPath();
+  c.arc(Math.round(x), Math.round(y), 6 + u * 22, 0, Math.PI * 2);
+  c.stroke();
+  c.restore();
+  if (u < 0.35) px(c, "#ffffff", x - 2, y - 2, 4, 4);
+}
+
 function taper(
   c: C,
   cx: number,
@@ -667,6 +683,7 @@ const house: Station = {
       1,
     );
     px(c, Math.floor(t * 2) & 1 ? p.red : mat(p, "#4a5368")[2], 53, -38, 3, 3);
+    readingPing(c, p, t, 49, -38);
     // charger
     px(c, "#0b1030", 265, -68, 8, 12);
     px(c, p.green, 267, -66, 4, 3);
@@ -784,6 +801,7 @@ const cabinet: Station = {
     drawText(c, kwh, -86, -134, "#c8e8a8", 3);
     drawText(c, "KWH", -86, -108, "#a8c888", 1);
     px(c, Math.floor(t * 2) & 1 ? p.red : mat(p, "#4a5368")[2], -92, -72, 5, 5);
+    readingPing(c, p, t, -61, -100);
     px(c, p.green, -80, -72, 5, 5);
     // gateway LEDs
     for (let i = 0; i < 4; i++)
@@ -955,6 +973,7 @@ const frame: Station = {
         link[i]![1],
       );
     pulse(c, p.blue, link, t, 2, 0.4, 6);
+    readingPing(c, p, t, -165, -25);
     glow(c, p, 20, -170, 150, p.blue, 0.015);
     label(c, p, "ONE READING", 20, 38, v.tk);
     label(c, p, "METER", -165, 38, v.tk);
@@ -1022,7 +1041,6 @@ const contact: Station = {
       px(c, x % 8 < 4 ? flag[2] : flag[3], -58 + x, y, 1, 30);
       px(c, flag[1], -58 + x, y + 28, 1, 2);
     }
-    drawText(c, "N", -44, -186, "#ffffff", 2);
     if (p.night) {
       for (let k = 0; k < 3; k++) {
         const u = (t * 0.3 + k * 0.33) % 1;
@@ -1076,6 +1094,179 @@ export const STATION_ART: Station[] = [
   frame,
   contact,
 ];
+
+/** A part of a station that explains itself on hover or tap. Station space, like the art. */
+export interface Hotspot {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  name: string;
+  text: string;
+}
+
+const HOTSPOTS: Hotspot[][] = [
+  [],
+  [
+    {
+      x: -24,
+      y: -72,
+      w: 72,
+      h: 72,
+      name: "Control building",
+      text: "Protection and remote control for the substation.",
+    },
+    {
+      x: 78,
+      y: -68,
+      w: 80,
+      h: 68,
+      name: "Transformer (TRAFO)",
+      text: "Steps high voltage down for the local network.",
+    },
+    {
+      x: 66,
+      y: -98,
+      w: 89,
+      h: 98,
+      name: "Gantry",
+      text: "Where the high-voltage lines enter the yard.",
+    },
+    {
+      x: 208,
+      y: -124,
+      w: 30,
+      h: 124,
+      name: "Pole line",
+      text: "Carries power on to the neighbourhood.",
+    },
+  ],
+  [
+    ...UNITS.map((x): Hotspot => ({
+      x,
+      y: -76,
+      w: 84,
+      h: 76,
+      name: "Battery container",
+      text: "Racks of cells that charge at the surplus and discharge at the peak.",
+    })),
+    {
+      x: 236,
+      y: -70,
+      w: 36,
+      h: 70,
+      name: "Power conversion (PCS)",
+      text: "Converts DC from the battery to AC for the grid, and back.",
+    },
+    {
+      x: 292,
+      y: -66,
+      w: 48,
+      h: 66,
+      name: "Transformer (TRAFO)",
+      text: "Lifts the site's output to medium voltage.",
+    },
+  ],
+  [
+    {
+      x: -26,
+      y: -122,
+      w: 86,
+      h: 36,
+      name: "Rooftop PV",
+      text: "Makes power at home, and sometimes sends it back.",
+    },
+    {
+      x: 40,
+      y: -52,
+      w: 18,
+      h: 28,
+      name: "Meter",
+      text: "Counts what the house takes and gives. The reading goes out as data.",
+    },
+    {
+      x: 130,
+      y: -56,
+      w: 108,
+      h: 56,
+      name: "Electric vehicle (EV)",
+      text: "A flexible load: it can charge when power is cheap.",
+    },
+    {
+      x: 262,
+      y: -76,
+      w: 14,
+      h: 76,
+      name: "Charger",
+      text: "Talks to the car and the home energy manager.",
+    },
+    {
+      x: -70,
+      y: -154,
+      w: 190,
+      h: 154,
+      name: "Home",
+      text: "One metering point on the distribution network (DSO).",
+    },
+  ],
+  [
+    {
+      x: -98,
+      y: -146,
+      w: 74,
+      h: 94,
+      name: "Smart meter",
+      text: "Measures consumption and hands the values to the gateway.",
+    },
+    {
+      x: -2,
+      y: -148,
+      w: 100,
+      h: 94,
+      name: "Gateway (GW)",
+      text: "Signs and encrypts readings, then sends them over the wide-area link.",
+    },
+    {
+      x: -90,
+      y: -40,
+      w: 252,
+      h: 30,
+      name: "Breakers",
+      text: "Protect each circuit in the cabinet.",
+    },
+  ],
+  [
+    {
+      x: -184,
+      y: -50,
+      w: 38,
+      h: 50,
+      name: "Meter",
+      text: "The source of the reading shown in the frame.",
+    },
+    {
+      x: FX - 8,
+      y: -232,
+      w: FW + 16,
+      h: 132,
+      name: "Protocol frame",
+      text: "One reading, field by field: header, address, OBIS code, value, checksum.",
+    },
+  ],
+  [],
+];
+
+/** The explainer under a point in station `i`'s space, if any. Later (smaller, nested) entries win. */
+export function hotspotAt(
+  i: number,
+  x: number,
+  y: number,
+): Hotspot | undefined {
+  const hits = (HOTSPOTS[i] ?? []).filter(
+    (h) => x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h,
+  );
+  return hits.sort((a, b) => a.w * a.h - b.w * b.h)[0];
+}
 
 const baked = new WeakMap<Pal, Sprite[]>();
 

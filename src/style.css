@@ -466,3 +466,25 @@ html.locked {
 #sound.muted .off {
   display: inline;
 }
+
+/* hover and tap explainers for the equipment in the scene */
+#tip {
+  position: fixed;
+  z-index: 6;
+  max-width: 240px;
+  padding: 8px 10px;
+  background: var(--bg);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+#tip[hidden] {
+  display: none;
+}
+#tip b {
+  display: block;
+  margin-bottom: 2px;
+}

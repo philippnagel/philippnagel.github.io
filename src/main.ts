@@ -15,7 +15,9 @@ import {
   scrollOf,
   walkOf,
 } from "./walk";
-import { BOARDS } from "./stations";
+import { critterAt, startle } from "./critters";
+import { BOARDS, hotspotAt } from "./stations";
+import { strikeId } from "./weather";
 import { drawForeground, drawWorld } from "./world";
 
 const $ = <T extends HTMLElement>(id: string) =>
@@ -28,6 +30,7 @@ const trackEl = $("track");
 const hintEl = $("hint");
 const gateEl = $("gate");
 const soundEl = $("sound");
+const tipEl = $("tip");
 const sound = new Sound();
 let started = false;
 
@@ -91,7 +94,9 @@ trackEl.innerHTML = `<div class="sr">${chapters
   .join("")}</div>`;
 
 /* --- size, theme, loop --- */
+let sized = false;
 function resize() {
+  const prev = s;
   const walk = walkOf(scrollY, s);
   s = artScale(innerWidth);
   W = Math.ceil(innerWidth / s);
@@ -100,7 +105,9 @@ function resize() {
   cv.height = H;
   ctx.imageSmoothingEnabled = false;
   trackEl.style.height = `${scrollOf(END, s) + innerHeight}px`;
-  scrollTo(0, scrollOf(walk, s)); // keep the same spot on the path
+  // keep the same spot on the path when the scale changes (not on first load, where `s` is a placeholder)
+  if (sized && s !== prev) scrollTo(0, scrollOf(walk, s));
+  sized = true;
 }
 window.addEventListener("resize", resize);
 const themeChanged = (t: Theme) => {
@@ -137,6 +144,9 @@ async function enter(withSound: boolean) {
   if (withSound) sound.click();
   setTimeout(() => gateEl.remove(), 600);
 }
+// always open at the start of the path, not wherever the browser last left the page
+history.scrollRestoration = "manual";
+scrollTo(0, 0);
 document.documentElement.classList.add("locked");
 // keep keyboard and screen readers on the gate until it is dismissed
 const behindGate = [...document.body.children].filter(
@@ -174,6 +184,56 @@ function placeBoards(camX: number, gy: number) {
   });
 }
 
+/* --- poking the world: animals react, equipment explains itself --- */
+let lastView = { camX: 0, gy: 0 };
+let clock = 0;
+let tipTimer = 0;
+const toArt = (e: PointerEvent) => [
+  (e.clientX * W) / innerWidth,
+  (e.clientY * H) / innerHeight,
+];
+function hideTip() {
+  tipEl.hidden = true;
+}
+function showTip(e: PointerEvent, ax: number, ay: number) {
+  const hs = hotspotAt(
+    section,
+    ax - Math.round(STATIONS[section]! + ART_AHEAD - lastView.camX),
+    ay - lastView.gy,
+  );
+  if (!hs) return hideTip();
+  tipEl.innerHTML = `<b>${hs.name}</b>${hs.text}`;
+  tipEl.hidden = false;
+  const w = tipEl.offsetWidth;
+  tipEl.style.left = `${Math.max(8, Math.min(innerWidth - w - 8, e.clientX + 14))}px`;
+  tipEl.style.top = `${Math.min(innerHeight - tipEl.offsetHeight - 8, e.clientY + 14)}px`;
+}
+cv.addEventListener("pointermove", (e) => {
+  if (!started || e.pointerType === "touch") return;
+  const [ax, ay] = toArt(e) as [number, number];
+  cv.style.cursor = critterAt(ax, ay) ? "pointer" : "";
+  showTip(e, ax, ay);
+});
+cv.addEventListener("pointerleave", hideTip);
+cv.addEventListener("pointerdown", (e) => {
+  if (!started) return;
+  const [ax, ay] = toArt(e) as [number, number];
+  const hit = critterAt(ax, ay);
+  if (hit) {
+    startle(hit.i, clock);
+    if (hit.kind === "cat" || hit.kind === "fox") sound.meow();
+    else sound.squeak();
+    hideTip();
+    return;
+  }
+  if (e.pointerType === "touch") {
+    showTip(e, ax, ay);
+    clearTimeout(tipTimer);
+    tipTimer = window.setTimeout(hideTip, 3500);
+  }
+});
+
+let lastStrike = strikeId(0);
 let last = performance.now();
 let lastFrame = 0;
 const loop = (now: number) => {
@@ -181,6 +241,12 @@ const loop = (now: number) => {
   last = now;
   walker.update(walkOf(scrollY, s), dt);
   const t = reduceMotion ? 0 : now / 1000;
+  clock = t;
+  const strike = strikeId(t);
+  if (strike !== lastStrike) {
+    lastStrike = strike;
+    if (strike >= 0 && started) sound.thunder(0.4 + (strike % 3) * 0.5);
+  }
 
   const i = nearest(walker.x);
   if (i !== section) {
@@ -208,6 +274,7 @@ const loop = (now: number) => {
     t,
     tk: s === 1 ? 2 : 1,
   };
+  lastView = view;
   drawWorld(ctx, pal, view);
   drawPhilipp(ctx, pal, {
     x: charX,

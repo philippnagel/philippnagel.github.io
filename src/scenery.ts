@@ -16,6 +16,7 @@ import {
   vnoise,
 } from "./gfx";
 import { mix, rgb, type Pal } from "./palette";
+import { drawBird } from "./skylife";
 import { ART_AHEAD, STATIONS } from "./walk";
 
 export interface View {
@@ -138,8 +139,16 @@ function pylonSprite(p: Pal): Sprite {
     px(c, col, -24, -138, 49, 3);
     px(c, col, -16, -112, 33, 3);
     px(c, col, -9, -88, 19, 2);
-    for (const x of [-22, 22, -14, 14])
-      px(c, mat(p, "#e8dcc0")[3], x - 1, x < -18 || x > 18 ? -134 : -108, 3, 6);
+    // three phases per side: one insulator per arm end
+    for (const [x, y] of [
+      [-22, -134],
+      [22, -134],
+      [-14, -108],
+      [14, -108],
+      [-7, -84],
+      [7, -84],
+    ] as const)
+      px(c, mat(p, "#e8dcc0")[3], x - 1, y, 3, 6);
   });
 }
 
@@ -600,6 +609,8 @@ export function drawMid(c: C, p: Pal, v: View) {
       [22, -134],
       [-14, -109],
       [14, -109],
+      [-7, -85],
+      [7, -85],
     ] as const) {
       const pts: [number, number][] = [];
       for (let k = 0; k <= 70; k++) {
@@ -623,8 +634,54 @@ export function drawMid(c: C, p: Pal, v: View) {
         px(c, "#fff6c0", q[0] - 1, q[1] - 1, 3, 3);
       }
     }
+    if (p.night) owl(c, v, i, x);
+    else perched(c, v, i, x, span);
     c.restore();
   });
+}
+
+/** Some pylons have an owl on the top arm at night: it blinks and glances about. */
+function owl(c: C, v: View, i: number, x: number) {
+  if (hash(i + 41) < 0.55) return;
+  const ox = x + (hash(i + 42) < 0.5 ? -17 : 15);
+  const oy = v.gy - 139;
+  const body = "#6b5a48";
+  px(c, body, ox - 2, oy - 7, 5, 7);
+  px(c, body, ox - 2, oy - 9, 1, 2);
+  px(c, body, ox + 2, oy - 9, 1, 2);
+  px(c, "#8a7660", ox - 1, oy - 4, 3, 3);
+  const blink = (v.t * 0.5 + hash(i) * 9) % 1 < 0.05;
+  const look = Math.floor(v.t * 0.35 + hash(i + 7) * 5) % 3 === 0 ? 1 : 0;
+  if (!blink) {
+    px(c, "#ffd84a", ox - 2 + look, oy - 7, 1, 1);
+    px(c, "#ffd84a", ox + 1 + look, oy - 7, 1, 1);
+  }
+}
+
+/** By day, starlings sit on the top wire and now and then all take off together. */
+function perched(c: C, v: View, i: number, x: number, span: number) {
+  const n = Math.floor(hash(i + 31) * 5);
+  if (!n) return;
+  const period = 26 + hash(i + 32) * 12;
+  const ph = (v.t + hash(i + 33) * period) % period;
+  const away = Math.max(0, ph - (period - 5)) / 5; // 0 perched, then 0..1 flying off
+  const dir =
+    hash(Math.floor((v.t + hash(i + 33) * period) / period) + i) < 0.5 ? 1 : -1;
+  for (let k = 0; k < n; k++) {
+    const u = 0.18 + 0.64 * hash(i * 9 + k);
+    const bx = x - 22 + u * span;
+    const by = v.gy - 134 + 120 * u * (1 - u) - 1;
+    if (away > 0) {
+      const lag = Math.max(0, away - k * 0.04);
+      c.globalAlpha *= 1 - lag * 0.8;
+      drawBird(c, "#2d3548", bx + dir * lag * 90, by - lag * 40, v.t * 12 + k);
+      c.globalAlpha /= 1 - lag * 0.8;
+    } else {
+      px(c, "#2d3548", bx - 1, by - 2, 3, 2);
+      px(c, "#2d3548", bx + (k & 1 ? 2 : -2), by - 1, 1, 1);
+      px(c, "#3d4a68", bx, by - 3, 1, 1);
+    }
+  }
 }
 
 /* ---------- ground ---------- */

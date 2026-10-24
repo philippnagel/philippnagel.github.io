@@ -116,3 +116,25 @@ describe("station art", () => {
     expect(STATION_ART.length).toBe(STATIONS.length);
   });
 });
+
+describe("world life", () => {
+  test("first weather block is clear, later ones are deterministic", async () => {
+    const { weatherAt, strikeId } = await import("../src/weather");
+    expect(weatherAt(5).kind).toBe("clear");
+    expect(weatherAt(350)).toEqual(weatherAt(350));
+    for (let t = 0; t < 5000; t += 37) {
+      const w = weatherAt(t);
+      expect(w.k).toBeGreaterThanOrEqual(0);
+      expect(w.k).toBeLessThanOrEqual(1);
+      if (w.kind !== "storm") expect(strikeId(t)).toBe(-1);
+    }
+  });
+
+  test("hotspots resolve to the smallest part under the point", async () => {
+    const { hotspotAt } = await import("../src/stations");
+    expect(hotspotAt(3, 49, -38)?.name).toBe("Meter");
+    expect(hotspotAt(3, 0, -30)?.name).toBe("Home");
+    expect(hotspotAt(3, 5000, 5000)).toBeUndefined();
+    expect(hotspotAt(0, 0, 0)).toBeUndefined();
+  });
+});

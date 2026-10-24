@@ -112,6 +112,28 @@ export class Sound {
     this.tone("square", 990, t + 0.05, 0.08, 0.06);
   }
 
+  /** A short two-note meow. */
+  meow() {
+    if (!this.ctx || this.muted) return;
+    const t = this.ctx.currentTime;
+    this.tone("sawtooth", 520, t, 0.16, 0.05, 760);
+    this.tone("sawtooth", 760, t + 0.15, 0.22, 0.05, 430);
+  }
+
+  /** A tiny squeak for small animals. */
+  squeak() {
+    if (!this.ctx || this.muted) return;
+    this.tone("square", 1500, this.ctx.currentTime, 0.07, 0.04, 2300);
+  }
+
+  /** Distant thunder, `delay` seconds after the flash. */
+  thunder(delay: number) {
+    if (!this.ctx || this.muted) return;
+    const t = this.ctx.currentTime + delay;
+    this.tone("sawtooth", 90, t, 1.4, 0.09, 38);
+    this.tone("triangle", 60, t + 0.1, 1.6, 0.1, 30);
+  }
+
   /** Arrival chime for station `i`: a rising arpeggio, longer for later stations. */
   chime(i: number) {
     if (!this.ctx || this.muted) return;
