@@ -1,6 +1,6 @@
 import { palettes, type Pal, type Theme } from "./palette";
 import { Pix } from "./pix";
-import { envelope } from "./art/common";
+import { envelope } from "./art/kit";
 import { SH, SW } from "./geometry";
 import { adjacencyOf } from "./graph";
 import type { SceneDef } from "./types";
@@ -14,6 +14,14 @@ export interface BuiltScene {
 }
 
 export interface World {
+  /** alpha (0-255) of an object bitmap at a local pixel */
+  alphaAt: (c: HTMLCanvasElement, x: number, y: number) => number;
+  /** coloured silhouette of a bitmap grown by `g` px, for outlines */
+  silhouette: (
+    c: HTMLCanvasElement,
+    color: string,
+    g: number,
+  ) => HTMLCanvasElement;
   pal: Pal;
   scenes: BuiltScene[];
   env: HTMLCanvasElement;
@@ -57,6 +65,37 @@ export function buildWorld(defs: SceneDef[], theme: Theme): World {
   });
   const env = canvas(15, 10);
   envelope(pixOf(env), pal, 0, 0);
+  const alphas = new WeakMap<HTMLCanvasElement, Uint8ClampedArray>();
+  const alphaAt = (c: HTMLCanvasElement, x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= c.width || y >= c.height) return 0;
+    let d = alphas.get(c);
+    if (!d) {
+      d = c
+        .getContext("2d", { willReadFrequently: true })!
+        .getImageData(0, 0, c.width, c.height).data;
+      alphas.set(c, d);
+    }
+    return d[(Math.floor(y) * c.width + Math.floor(x)) * 4 + 3]!;
+  };
+  const sil = new Map<string, HTMLCanvasElement>();
+  const ids = new WeakMap<HTMLCanvasElement, number>();
+  let nextId = 1;
+  const silhouette = (c: HTMLCanvasElement, color: string, g: number) => {
+    if (!ids.has(c)) ids.set(c, nextId++);
+    const key = `${ids.get(c)}:${color}:${g}`;
+    let out = sil.get(key);
+    if (!out) {
+      out = canvas(c.width + g * 2, c.height + g * 2);
+      const cx = out.getContext("2d")!;
+      for (let dy = -g; dy <= g; dy++)
+        for (let dx = -g; dx <= g; dx++) cx.drawImage(c, g + dx, g + dy);
+      cx.globalCompositeOperation = "source-in";
+      cx.fillStyle = color;
+      cx.fillRect(0, 0, out.width, out.height);
+      sil.set(key, out);
+    }
+    return out;
+  };
   const glows = new Map<string, HTMLCanvasElement>();
   const glow = (color: string, r: number) => {
     const key = `${color}:${r}`;
@@ -74,5 +113,5 @@ export function buildWorld(defs: SceneDef[], theme: Theme): World {
     }
     return c;
   };
-  return { pal, scenes, env, glow };
+  return { pal, scenes, env, glow, alphaAt, silhouette };
 }

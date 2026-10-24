@@ -1,532 +1,589 @@
 import type { Pal } from "../palette";
-import { polyPts, sagPts, type Pix } from "../pix";
+import { Iso } from "../iso";
+import { sagPts, type Pix } from "../pix";
 import type { SceneDef } from "../types";
 import {
   bush,
-  clouds,
-  dataSky,
-  envelope,
-  key,
+  car,
+  deck,
+  fence,
+  fitBox,
+  island,
+  isoAnim,
   label,
-  meadow,
-  plate,
-  pole,
+  lamp,
+  personS,
+  place,
+  sky,
+  strip,
   tree,
-} from "./common";
+  envelope,
+} from "./kit";
+import { clouds } from "./common";
 
-export const cabinetOutside = (g: Pix, p: Pal, x: number, y: number) => {
-  g.shadow(x + 50, y + 56, 52, 3, p.outline, 0.5);
-  g.slab(x, y, 96, 54, p.metal);
-  g.slab(x + 6, y + 6, 54, 42, p.steel);
-  g.slab(x + 10, y + 10, 46, 34, p.paper);
-  // meter inside the window
-  g.slab(x + 14, y + 13, 38, 28, p.concrete);
-  g.slab(x + 17, y + 16, 32, 10, p.leaf);
-  g.r(x + 19, y + 18, 5, 6, p.leaf[3]);
-  g.r(x + 26, y + 18, 5, 6, p.leaf[3]);
-  g.r(x + 33, y + 18, 5, 6, p.leaf[3]);
-  g.r(x + 40, y + 18, 5, 6, p.leaf[3]);
-  g.disc(x + 24, y + 33, 3, p.data);
-  g.disc(x + 34, y + 33, 3, p.power);
-  g.r(x + 14, y + 12, 38, 2, p.glass[4]);
-  // gateway compartment
-  g.slab(x + 64, y + 6, 26, 42, p.dark);
-  for (let i = 0; i < 4; i++) g.r(x + 68, y + 12 + i * 4, 18, 1, p.dark[3]);
-  g.r(x + 68, y + 30, 3, 3, p.data);
-  g.r(x + 74, y + 30, 3, 3, p.power);
-  g.r(x + 80, y + 30, 3, 3, p.leaf[3]);
-  g.r(x + 68, y + 38, 18, 5, p.dark[1]);
-  // hinges and seal
-  for (const hy of [10, 40]) g.slab(x + 1, y + hy, 4, 6, p.dark);
-  g.ball(x + 58, y + 49, 2, p.red);
+const ISL = new Iso(undefined as unknown as Pix, 330, 190);
+const DEC = new Iso(undefined as unknown as Pix, 640, 80);
+const NX = 48,
+  NY = 30;
+const LAB = (I: Iso, p: Pal, sx: number, sy: number, text: string) =>
+  label(
+    I.g,
+    p,
+    I.ox + (((sx - sy) * 8) / 2) * 1,
+    I.oy + (sx + sy) * 4 + 8,
+    text,
+  );
+
+// ---- grid connection pole ----
+const poleBox = fitBox(5, 4, 9);
+const poleDraw = (I: Iso, p: Pal) => {
+  I.shadow(0.3, 0.3, 4, 3, 0.3);
+  I.cyl(2, 2, 0, 0.2, 8.4, p.wood);
+  I.box(0.6, 1.85, 7.4, 2.8, 0.3, 0.25, p.wood);
+  for (let k = 0; k < 3; k++)
+    I.cyl(1 + k * 1.0, 2, 7.65, 0.07, 0.5, p.concrete, p.concrete[4]);
+  I.cyl(3, 2.4, 4.4, 0.5, 1.6, p.steel);
+  I.box(0.9, 2.1, 4.6, 0.5, 0.3, 0.9, p.metal);
+  I.line3([2, 2, 4.5], [2, 2, 0.4], p.dark[2]);
+  LAB(I, p, 5, 4, "CONNECTION");
 };
 
-const grid = (g: Pix, p: Pal) => {
-  pole(g, p, 40, 4, 112, 8);
-  g.slab(14, 10, 60, 6, p.wood);
-  for (const x of [16, 38, 68]) g.r(x, 4, 3, 7, p.concrete[3]);
-  g.cylV(52, 40, 14, 28, p.steel);
-  g.slab(51, 36, 16, 4, p.metal);
-  g.r(46, 72, 2, 36, p.dark[2]);
-  label(g, p, 100, 118, "CONNECTION");
+// ---- meter cabinet (portal) ----
+const cabBox = fitBox(4, 3, 4, { top: 30, left: 60 });
+const cabDraw = (I: Iso, p: Pal) => {
+  I.shadow(0.2, 0.2, 3.4, 2.6, 0.3);
+  I.box(0, 0, 0, 3.4, 2.2, 0.35, p.concrete, { tex: true });
+  I.box(0.3, 0.2, 0.35, 2.8, 1.8, 3.4, p.metal);
+  // interior (front +y face): meter + gateway
+  I.qL(2.0, 0.45, 2.95, 0.55, 3.55, p.dark[1]);
+  I.qL(2.0, 0.6, 1.6, 2.1, 3.4, p.paper[2]);
+  I.qL(2.0, 0.7, 1.5, 2.8, 3.3, p.leaf[2]);
+  I.qL(2.0, 0.7, 1.5, 2.2, 2.6, p.metal[2]);
+  I.qL(2.0, 1.8, 2.8, 1.5, 3.4, p.dark[2]);
+  for (let k = 0; k < 5; k++)
+    I.line3([1.9, 2.0, 1.7 + k * 0.28], [2.7, 2.0, 1.7 + k * 0.28], p.dark[3]);
+  for (let k = 0; k < 3; k++) {
+    const [lx, ly] = I.p(2.0 + k * 0.25, 2.0, 3.1);
+    I.g.r(lx, ly, 2, 2, [p.data, p.power, p.leaf[4]][k]!);
+  }
+  I.qL(2.0, 0.6, 2.8, 0.7, 1.2, p.dark[2]);
+  // open door
+  I.poly3(
+    [
+      [0.3, 2.2, 0.4],
+      [-1.1, 3.4, 0.4],
+      [-1.1, 3.4, 3.7],
+      [0.3, 2.2, 3.7],
+    ],
+    p.metal[2],
+  );
+  I.poly3(
+    [
+      [0.3, 2.2, 0.4],
+      [-1.1, 3.4, 0.4],
+      [-1.1, 3.4, 3.7],
+      [0.3, 2.2, 3.7],
+    ].map(([a, b, c]) => [a! + 0, b! + 0, c!] as [number, number, number]),
+    p.metal[2],
+  );
+  I.line3([-1.1, 3.4, 3.7], [0.3, 2.2, 3.7], p.metal[4]);
+  I.cyl(1.7, 1.1, 3.75, 0.5, 0.15, p.metal);
+  const [wx, wy] = I.p(1.3, 2.0, 0.2);
+  I.g.slab(wx - 6, wy - 2, 12, 9, p.yellow);
+  // cable into the ground and hologram beam
+  I.line3([1.7, 2.2, 0.35], [1.7, 6.5, 0.0], p.dark[2]);
+  LAB(I, p, 3.4, 2.2, "METER CABINET");
 };
+const cabAnim = isoAnim(cabBox, (I, t, p) => {
+  const [lx, ly] = I.p(2.0, 2.0, 3.1);
+  if (Math.sin(t * 3) > 0) I.g.r(lx + 9, ly, 2, 2, p.white);
+  const [x, y] = I.p(1, 2, 3.0);
+  I.g.r(x, y + Math.round(Math.sin(t * 4) * 1), 2, 1, p.leaf[4]);
+});
 
-const cabinet = (g: Pix, p: Pal) => {
-  cabinetOutside(g, p, 8, 0);
-  label(g, p, 112, 62, "METER CABINET");
-};
-
-const pv = (g: Pix, p: Pal) => {
-  const s = (x: number) => 168 + (x - 265) * 0.353 - 170;
-  for (let i = 0; i < 5; i++) {
-    const x0 = 290 - 278 + i * 25,
-      x1 = x0 + 23;
-    const wx0 = x0 + 278,
-      wx1 = x1 + 278;
-    const q: [number, number][] = [
-      [x0, s(wx0) + 7],
-      [x1, s(wx1) + 7],
-      [x1, s(wx1) + 24],
-      [x0, s(wx0) + 24],
-    ];
-    g.poly(q, p.pv[0]);
-    g.poly(
-      q
-        .map(([x, y]) => [x, y] as [number, number])
-        .map(
-          ([x, y], j) =>
-            [x + (j === 0 || j === 3 ? 1 : -1), y + (j < 2 ? 1 : -1)] as [
-              number,
-              number,
-            ],
-        ),
-      p.pv[2],
-    );
-    for (let k = 1; k < 4; k++)
-      g.line(
-        x0 + k * 6,
-        s(wx0 + k * 6) + 8,
-        x0 + k * 6,
-        s(wx0 + k * 6) + 23,
+// ---- roof with PV (floating) ----
+const roofBox = fitBox(14, 10, 4, { top: 30 });
+const roofDraw = (I: Iso, p: Pal) => {
+  I.shadow(0.4, 0.4, 13, 9, 0.12);
+  I.gable(0, 0, 0, 13, 9, 3.2, p.roof, p.wall, "x");
+  const my = 4.5,
+    zz = (yy: number) => ((9 - yy) / my) * 3.2;
+  for (let i = 0; i < 3; i++)
+    for (let j = 0; j < 2; j++) {
+      const xa = 1 + i * 3.8,
+        xb = xa + 3.4,
+        ya = 8.5 - j * 1.9,
+        yb = ya - 1.7;
+      I.poly3(
+        [
+          [xa, ya, zz(ya)],
+          [xb, ya, zz(ya)],
+          [xb, yb, zz(yb)],
+          [xa, yb, zz(yb)],
+        ],
+        p.pv[0],
+      );
+      I.poly3(
+        [
+          [xa + 0.07, ya - 0.06, zz(ya - 0.06)],
+          [xb - 0.07, ya - 0.06, zz(ya - 0.06)],
+          [xb - 0.07, yb + 0.06, zz(yb + 0.06)],
+          [xa + 0.07, yb + 0.06, zz(yb + 0.06)],
+        ],
+        p.pv[2],
+      );
+      for (let k = 1; k < 5; k++)
+        I.line3(
+          [xa + k * 0.68, ya, zz(ya)],
+          [xa + k * 0.68, yb, zz(yb)],
+          p.pv[1],
+        );
+      I.line3(
+        [xa, (ya + yb) / 2, zz((ya + yb) / 2)],
+        [xb, (ya + yb) / 2, zz((ya + yb) / 2)],
         p.pv[1],
       );
-    g.line(
-      x0 + 2,
-      (s(wx0) + s(wx1)) / 2 + 15,
-      x1 - 2,
-      (s(wx0) + s(wx1)) / 2 + 15,
-      p.pv[1],
+      const [gx, gy] = I.p(xa + 0.5, ya - 0.3, zz(ya - 0.3));
+      I.g.p(gx, gy, p.white);
+    }
+  I.box(10.4, 1.2, 2.3, 0.9, 0.9, 2.2, p.roof, { tex: true });
+  I.box(10.3, 1.1, 4.5, 1.1, 1.1, 0.2, p.concrete);
+  label(I.g, p, I.ox + 52, I.oy - 6, "ROOF PV");
+};
+const roofAnim = isoAnim(roofBox, (I, t, p) => {
+  for (let i = 0; i < 5; i++) {
+    const u = (t * 0.4 + i / 5) % 1;
+    const [x, y] = I.p(10.8, 1.6, 4.8);
+    I.g.ell(
+      Math.round(x + Math.sin(u * 7 + i) * 3 + u * 14),
+      Math.round(y - u * 26),
+      2 + Math.round(u * 3),
+      2 + Math.round(u * 3),
+      p.night
+        ? `rgba(170,180,200,${0.3 * (1 - u)})`
+        : `rgba(240,242,248,${0.85 * (1 - u)})`,
     );
-    g.line(x0 + 3, s(wx0 + 3) + 9, x0 + 9, s(wx0 + 9) + 9, p.pv[4]);
   }
-  label(g, p, 134, 66, "ROOF PV");
-};
+});
 
-const hems = (g: Pix, p: Pal) => {
-  g.slab(8, 4, 66, 40, p.dark);
-  g.r(11, 7, 60, 34, p.dark[1]);
-  const bars = [10, 18, 14, 24, 16, 20];
+// ---- HEMS on the back wall ----
+const hemsBox = fitBox(4, 1, 4);
+const hemsDraw = (I: Iso, p: Pal) => {
+  I.box(0, 0, 0.6, 3.6, 0.3, 2.6, p.dark);
+  I.qL(0.3, 0.2, 3.4, 0.8, 3.0, p.dark[1]);
+  const bars = [0.8, 1.4, 1.0, 1.7, 1.2, 1.5];
   bars.forEach((b, i) =>
-    g.r(15 + i * 9, 36 - b, 6, b, i % 2 ? p.amber[2] : p.leaf[3]),
+    I.qL(
+      0.3,
+      0.4 + i * 0.5,
+      0.75 + i * 0.5,
+      0.9,
+      0.9 + b,
+      i % 2 ? p.amber[2] : p.leaf[3],
+    ),
   );
-  g.line(14, 20, 70, 14, p.cyan[3]);
-  g.r(38, 44, 6, 6, p.metal[2]);
-  g.slab(30, 50, 22, 3, p.metal);
-  // plant and speaker
-  g.slab(86, 30, 14, 20, p.wall);
-  g.cylV(88, 34, 10, 16, p.metal);
-  g.ball(93, 26, 7, p.leaf);
-  label(g, p, 110, 54, "HEMS");
+  I.line3([0.3, 0.3, 2.3], [3.3, 0.3, 2.7], p.cyan[3]);
+  LAB(I, p, 4, 1, "HEMS");
 };
-const hemsAnim = (g: Pix, t: number, p: Pal) => {
+const hemsAnim = isoAnim(hemsBox, (I, t, p) => {
   const k = Math.floor(t * 2) % 6;
-  g.r(15 + k * 9, 36 - 8, 6, 2, p.white);
-};
+  const [x, y] = I.p(0.4 + k * 0.5, 0.3, 2.4);
+  I.g.r(x, y, 3, 2, p.white);
+});
 
-const wallbox = (g: Pix, p: Pal) => {
-  g.slab(10, 20, 30, 52, p.dark);
-  g.slab(14, 26, 22, 16, p.dark);
-  g.r(16, 28, 18, 12, p.leaf[2]);
-  g.r(20, 46, 10, 3, p.leaf[3]);
-  g.disc(25, 58, 4, p.metal[2]);
-  g.disc(25, 58, 2, p.dark[0]);
+// ---- carport: wallbox + EV ----
+const evBox = fitBox(12, 8, 4);
+const evDraw = (I: Iso, p: Pal) => {
+  I.shadow(0.3, 0.3, 12, 8, 0.2);
+  I.box(0, 0, 0, 12, 8, 0.25, p.concrete, { tex: true });
+  for (const [x, y] of [
+    [0.4, 0.4],
+    [11.2, 0.4],
+    [0.4, 7.2],
+    [11.2, 7.2],
+  ] as const)
+    I.cyl(x, y, 0.25, 0.18, 3.6, p.steel);
   // EV
-  g.shadow(122, 80, 76, 4, p.outline, 0.55);
-  g.poly(
-    [
-      [48, 62],
-      [52, 50],
-      [76, 46],
-      [90, 28],
-      [140, 28],
-      [160, 46],
-      [190, 52],
-      [194, 62],
-      [194, 74],
-      [48, 74],
-    ],
-    p.cyan[0],
-  );
-  g.poly(
-    [
-      [50, 62],
-      [54, 52],
-      [78, 48],
-      [92, 30],
-      [138, 30],
-      [158, 48],
-      [188, 54],
-      [192, 62],
-      [192, 72],
-      [50, 72],
-    ],
-    p.cyan[2],
-  );
-  g.poly(
-    [
-      [92, 30],
-      [138, 30],
-      [136, 34],
-      [94, 34],
-    ],
-    p.cyan[4],
-  );
-  g.poly(
-    [
-      [96, 36],
-      [114, 36],
-      [114, 48],
-      [84, 48],
-    ],
-    p.glass[2],
-  );
-  g.poly(
-    [
-      [118, 36],
-      [135, 36],
-      [152, 48],
-      [118, 48],
-    ],
-    p.glass[2],
-  );
-  g.r(115, 36, 2, 12, p.cyan[0]);
-  g.r(52, 70, 138, 2, p.cyan[1]);
-  g.r(184, 56, 8, 4, p.yellow[3]);
-  g.r(50, 56, 4, 4, p.red[2]);
-  for (const wx of [78, 160]) {
-    g.disc(wx, 74, 11, p.outline);
-    g.disc(wx, 74, 9, p.dark[2]);
-    g.disc(wx, 74, 5, p.metal[3]);
-    g.disc(wx, 74, 2, p.metal[1]);
+  I.box(3, 2.4, 0.6, 6.0, 3.0, 1.2, p.cyan);
+  I.box(4.2, 2.6, 1.8, 3.4, 2.6, 1.0, p.cyan);
+  I.qL(5.4, 4.3, 7.5, 1.9, 2.7, p.glass[2]);
+  I.qR(7.6, 2.7, 5.3, 1.9, 2.7, p.glass[1]);
+  I.qL(5.4, 3.1, 3.9, 1.05, 1.5, p.glass[2]);
+  for (const [wx, wy] of [
+    [4.0, 5.45],
+    [7.6, 5.45],
+    [4.0, 2.45],
+    [7.6, 2.45],
+  ] as const) {
+    const [sx, sy] = I.p(wx, wy, 0.6);
+    I.g.ball(sx, sy, 6, p.dark);
+    I.g.disc(sx, sy, 2, p.metal[3]);
   }
-  for (const [x, y] of sagPts(36, 62, 54, 62, 10)) g.r(x, y, 2, 2, p.dark[1]);
-  g.r(46, 60, 8, 4, p.yellow[2]);
-  label(g, p, 208, 8, "WALLBOX + EV");
+  const [hx, hy] = I.p(9.0, 3.6, 1.2);
+  I.g.r(hx - 2, hy, 4, 3, p.yellow[4]);
+  // wallbox post
+  I.box(1.2, 5.6, 0.25, 0.8, 0.7, 2.6, p.dark);
+  I.qL(6.3, 1.3, 1.9, 1.8, 2.6, p.leaf[2]);
+  I.box(1.3, 5.7, 2.9, 0.6, 0.5, 0.3, p.metal);
+  const cable = sagPts(...I.p(1.6, 6.3, 1.2), ...I.p(3.2, 5.3, 1.4), 10);
+  for (const [x, y] of cable) I.g.r(x, y, 2, 2, p.dark[1]);
+  LAB(I, p, 12, 8, "WALLBOX + EV");
 };
-const wallboxAnim = (g: Pix, t: number, p: Pal) => {
+const evAnim = isoAnim(evBox, (I, t, p) => {
+  const [x, y] = I.p(1.3, 6.3, 2.0);
   const k = (Math.sin(t * 3) + 1) / 2;
-  g.r(16, 46, Math.round(14 * k) + 2, 3, p.leaf[4]);
-};
+  I.g.r(x, y, Math.round(8 * k) + 2, 2, p.leaf[4]);
+});
 
-const pki = (g: Pix, p: Pal) => {
-  plate(g, p, 124, 112);
-  g.slab(14, 12, 76, 56, p.paper);
-  g.box(18, 16, 68, 48, p.yellow[2]);
-  g.r(24, 24, 40, 3, p.metal[2]);
-  for (const y of [32, 38, 44]) g.r(24, y, y === 44 ? 34 : 52, 2, p.metal[3]);
-  g.ball(76, 56, 11, p.red);
-  g.poly(
+// ---- data deck objects ----
+const pkiBox = fitBox(5, 3, 6);
+const pkiDraw = (I: Iso, p: Pal) => {
+  I.shadow(0.3, 0.3, 5, 3, 0.2);
+  I.box(0.3, 0.6, 0, 3.8, 0.5, 4.6, p.paper);
+  I.qL(1.1, 0.6, 3.8, 0.4, 4.4, p.yellow[2]);
+  I.qL(1.1, 0.8, 3.6, 0.6, 4.2, p.paper[3]);
+  for (let k = 0; k < 5; k++)
+    I.line3(
+      [1.1, 1.1, 3.8 - k * 0.5],
+      [3.4 - (k % 2) * 0.9, 1.1, 3.8 - k * 0.5],
+      p.metal[3],
+    );
+  const [sx, sy] = I.p(2.9, 1.1, 1.4);
+  I.g.ball(sx, sy, 7, p.red);
+  I.g.poly(
     [
-      [70, 64],
-      [66, 82],
-      [72, 76],
-      [76, 84],
-      [76, 66],
+      [sx - 5, sy + 4],
+      [sx - 8, sy + 16],
+      [sx - 3, sy + 11],
+      [sx, sy + 17],
+      [sx, sy + 5],
     ],
     p.red[1],
   );
-  g.poly(
+  I.g.poly(
     [
-      [78, 66],
-      [80, 84],
-      [84, 76],
-      [90, 82],
-      [86, 64],
+      [sx + 2, sy + 5],
+      [sx + 3, sy + 17],
+      [sx + 8, sy + 11],
+      [sx + 11, sy + 15],
+      [sx + 7, sy + 4],
     ],
     p.red[2],
   );
-  key(g, p, 12, 76);
-  label(g, p, 124, 94, "TRUST CHAIN");
+  const [kx, ky] = I.p(3.6, 2.2, 3.4);
+  I.g.ball(kx, ky, 4, p.yellow);
+  I.g.r(kx + 3, ky - 1, 14, 3, p.yellow[2]);
+  I.g.r(kx + 11, ky + 2, 3, 4, p.yellow[1]);
+  LAB(I, p, 5, 3, "TRUST CHAIN");
 };
 
-const master = (g: Pix, p: Pal) => {
-  plate(g, p, 124, 108);
-  g.slab(10, 24, 66, 52, p.yellow);
-  g.slab(10, 16, 28, 10, p.yellow);
-  g.slab(34, 34, 62, 40, p.paper);
-  g.slab(40, 40, 18, 22, p.skin);
-  g.ball(49, 48, 5, p.skin);
-  g.slab(42, 56, 14, 8, p.cyan);
-  for (const y of [42, 49, 56]) g.r(64, y, 26, 2, p.metal[2]);
-  for (let i = 0; i < 12; i++) g.r(64 + i * 2, 64, i % 3 ? 1 : 2, 6, p.outline);
-  label(g, p, 124, 90, "MASTER DATA");
+const masterBox = fitBox(5, 3, 5);
+const masterDraw = (I: Iso, p: Pal) => {
+  I.shadow(0.3, 0.3, 5, 3, 0.2);
+  I.box(0.4, 0.5, 0, 2.6, 2.0, 3.0, p.yellow);
+  for (let k = 0; k < 3; k++) {
+    I.qL(2.5, 0.6, 2.8, 0.2 + k * 1.0, 0.2 + k * 1.0 + 0.8, p.yellow[3]);
+    I.qL(2.5, 1.3, 2.1, 0.4 + k * 1.0, 0.5 + k * 1.0, p.dark[1]);
+  }
+  const [cx, cy] = I.p(3.7, 1.6, 2.4);
+  I.g.slab(cx - 12, cy - 8, 26, 18, p.paper);
+  I.g.slab(cx - 9, cy - 5, 9, 11, p.skin);
+  I.g.r(cx + 2, cy - 4, 10, 2, p.metal[2]);
+  I.g.r(cx + 2, cy, 10, 2, p.metal[2]);
+  for (let k = 0; k < 8; k++)
+    I.g.r(cx - 9 + k * 3, cy + 7, k % 3 ? 1 : 2, 3, p.outline);
+  LAB(I, p, 5, 3, "MASTER DATA");
 };
 
-const msgs = (g: Pix, p: Pal) => {
-  plate(g, p, 170, 108);
-  envelope(g, p, 12, 20);
-  envelope(g, p, 56, 42, p.yellow);
-  envelope(g, p, 100, 20, p.cyan);
-  for (let x = 30; x < 54; x += 4) g.r(x, 36, 2, 2, p.data);
-  for (let x = 74; x < 98; x += 4) g.r(x, 40, 2, 2, p.data);
-  g.poly(
+const msgsBox = fitBox(9, 3, 3);
+const msgsDraw = (I: Iso, p: Pal) => {
+  I.shadow(0.3, 0.3, 9, 3, 0.2);
+  I.box(0.2, 0.8, 0, 8, 1.4, 0.35, p.dark);
+  for (let k = 0; k < 8; k++)
+    I.qT(0.36, 0.5 + k, 1.0 + k, 1.1, 1.9, k % 2 ? p.dark[2] : p.dark[1]);
+  const [ax, ay] = I.p(8.2, 1.5, 0.6);
+  I.g.poly(
     [
-      [132, 24],
-      [152, 36],
-      [132, 48],
+      [ax, ay - 7],
+      [ax + 12, ay],
+      [ax, ay + 7],
     ],
     p.data,
   );
-  g.r(120, 33, 14, 6, p.data);
-  label(g, p, 170, 90, "MARKET MESSAGES");
+  LAB(I, p, 9, 3, "MARKET MESSAGES");
 };
-const msgsAnim = (g: Pix, t: number, p: Pal) => {
-  const u = (t * 0.35) % 1;
-  envelope(
-    g,
-    p,
-    Math.round(12 + u * 110),
-    Math.round(60 - Math.sin(u * 3.14) * 8),
-    p.paper,
-  );
-};
+const msgsAnim = isoAnim(msgsBox, (I, t, p) => {
+  for (let k = 0; k < 3; k++) {
+    const u = (t * 0.22 + k / 3) % 1;
+    const [x, y] = I.p(0.6 + u * 7, 1.5, 0.5);
+    envelope(I.g, p, x - 7, y - 10, [p.paper, p.yellow, p.cyan][k]);
+  }
+});
 
-const backend = (g: Pix, p: Pal) => {
-  plate(g, p, 140, 112);
-  for (const [x, y, r] of [
-    [40, 40, 16],
-    [62, 32, 20],
-    [88, 40, 16],
-    [64, 44, 18],
-  ] as const)
-    g.ball(x, y, r, p.paper);
-  g.slab(52, 26, 36, 56, p.dark);
-  for (let i = 0; i < 4; i++) {
-    g.slab(55, 30 + i * 12, 30, 10, p.dark);
-    g.r(58, 33 + i * 12, 10, 3, p.dark[3]);
+const backBox = fitBox(4, 4, 9);
+const backDraw = (I: Iso, p: Pal) => {
+  I.shadow(0.3, 0.3, 4, 4, 0.25);
+  for (const [x, y, z, r] of [
+    [1.5, 1.5, 6.5, 14],
+    [3, 1, 7.2, 17],
+    [2.5, 2.6, 6.8, 15],
+    [0.8, 2.4, 6.6, 12],
+  ] as const) {
+    const [bx, by] = I.p(x, y, z);
+    I.g.ball(bx, by, r, p.paper);
   }
-  label(g, p, 140, 94, "GATEWAY ADMIN");
+  I.box(0.9, 0.9, 0, 2.2, 2.2, 5.6, p.dark);
+  for (let k = 0; k < 6; k++) {
+    I.qL(3.1, 1.0, 3.0, 0.2 + k * 0.9, 0.2 + k * 0.9 + 0.7, p.dark[2]);
+    I.qL(3.1, 1.15, 1.9, 0.4 + k * 0.9, 0.5 + k * 0.9, p.dark[3]);
+  }
+  LAB(I, p, 4, 4, "GATEWAY ADMIN");
 };
-const backendAnim = (g: Pix, t: number, p: Pal) => {
-  for (let i = 0; i < 4; i++) {
-    g.r(
-      76,
-      34 + i * 12,
+const backAnim = isoAnim(backBox, (I, t, p) => {
+  for (let k = 0; k < 6; k++) {
+    const [x, y] = I.p(2.2, 3.1, 0.3 + k * 0.9);
+    I.g.r(
+      x,
+      y - 5,
       3,
-      3,
-      Math.sin(t * 4 + i * 1.7) > 0 ? p.leaf[4] : p.leaf[1],
+      2,
+      Math.sin(t * 4 + k * 1.7) > 0 ? p.leaf[4] : p.leaf[1],
     );
-    g.r(80, 34 + i * 12, 3, 3, Math.sin(t * 3 + i) > 0.3 ? p.data : p.cyan[1]);
+    I.g.r(x + 5, y - 5, 3, 2, Math.sin(t * 3 + k) > 0.3 ? p.data : p.cyan[1]);
   }
-};
+});
+
+/** Interior of the cutaway house, drawn into the background. */
+function houseShell(I: Iso, p: Pal) {
+  const x0 = 14,
+    y0 = 6,
+    sx = 12,
+    sy = 8,
+    H = 4.6;
+  I.shadow(x0 - 0.2, y0 - 0.2, sx + 1, sy + 1, 0.3);
+  I.box(x0 - 0.3, y0 - 0.3, 0, sx + 0.6, sy + 0.6, 0.3, p.concrete, {
+    tex: true,
+  });
+  for (let k = 0; k < sy; k++)
+    I.qT(0.31, x0, x0 + sx, y0 + k, y0 + k + 1, k % 2 ? p.wood[2] : p.wood[3]);
+  // rug
+  I.qT(0.33, x0 + 3, x0 + 8, y0 + 3.2, y0 + 6.2, p.red[2]);
+  I.qT(0.34, x0 + 3.3, x0 + 7.7, y0 + 3.5, y0 + 5.9, p.red[3]);
+  // back walls
+  I.box(x0, y0, 0.3, sx, 0.4, H, p.wall, { tex: true });
+  I.box(x0, y0, 0.3, 0.4, sy, H, p.wall, { tex: true });
+  for (let k = 0; k < sx; k += 1)
+    I.line3([x0 + k, y0 + 0.4, 0.3], [x0 + k, y0 + 0.4, 0.3 + H], p.wall[3]);
+  I.box(x0, y0, 0.3 + H, sx, 0.4, 0.3, p.wood);
+  I.box(x0, y0, 0.3 + H, 0.4, sy, 0.3, p.wood);
+  // baseboards
+  I.qL(y0 + 0.4, x0, x0 + sx, 0.3, 0.7, p.wood[3]);
+  I.qR(x0 + 0.4, y0, y0 + sy, 0.3, 0.7, p.wood[2]);
+  // windows on back wall A
+  for (const wx of [x0 + 1.5, x0 + 8.0]) {
+    I.qL(y0 + 0.4, wx - 0.15, wx + 2.45, 1.6, 4.45, p.paper[3]);
+    I.qL(y0 + 0.4, wx, wx + 2.3, 1.75, 4.3, p.glass[2]);
+    I.qL(y0 + 0.4, wx, wx + 2.3, 3.3, 4.3, p.glass[3]);
+    I.line3(
+      [wx + 1.15, y0 + 0.4, 1.75],
+      [wx + 1.15, y0 + 0.4, 4.3],
+      p.paper[2],
+    );
+    I.line3([wx, y0 + 0.4, 3.0], [wx + 2.3, y0 + 0.4, 3.0], p.paper[2]);
+    I.poly3(
+      [
+        [wx - 0.1, y0 + 0.45, 4.5],
+        [wx + 0.5, y0 + 0.45, 4.5],
+        [wx + 0.2, y0 + 0.45, 1.8],
+        [wx - 0.1, y0 + 0.45, 1.8],
+      ],
+      p.red[2],
+    );
+    I.poly3(
+      [
+        [wx + 2.4, y0 + 0.45, 4.5],
+        [wx + 1.8, y0 + 0.45, 4.5],
+        [wx + 2.1, y0 + 0.45, 1.8],
+        [wx + 2.4, y0 + 0.45, 1.8],
+      ],
+      p.red[2],
+    );
+  }
+  // pictures
+  I.qL(y0 + 0.4, x0 + 5.1, x0 + 6.7, 2.4, 3.6, p.wood[1]);
+  I.qL(y0 + 0.4, x0 + 5.25, x0 + 6.55, 2.55, 3.45, p.cyan[2]);
+  I.qL(y0 + 0.4, x0 + 5.25, x0 + 6.55, 2.55, 2.9, p.leaf[2]);
+  // door and shelf on the right wall B
+  I.qR(x0 + 0.4, y0 + 1.0, y0 + 2.6, 0.3, 3.7, p.wood[1]);
+  I.qR(x0 + 0.4, y0 + 1.1, y0 + 2.5, 0.3, 3.6, p.wood[2]);
+  for (let k = 0; k < 3; k++)
+    I.qR(x0 + 0.4, y0 + 4.2, y0 + 7, 1.3 + k * 1.1, 1.4 + k * 1.1, p.wood[3]);
+  for (let k = 0; k < 3; k++)
+    for (let j = 0; j < 7; j++)
+      I.qR(
+        x0 + 0.4,
+        y0 + 4.3 + j * 0.38,
+        y0 + 4.3 + j * 0.38 + 0.28,
+        1.4 + k * 1.1,
+        2.0 + k * 1.1 - (j % 3) * 0.1,
+        [p.red[2], p.cyan[2], p.yellow[2], p.purple[2]][(j + k) % 4]!,
+      );
+  // sofa
+  I.box(x0 + 3.2, y0 + 5.8, 0.3, 4.6, 1.6, 0.8, p.purple);
+  I.box(x0 + 3.2, y0 + 7.0, 0.3, 4.6, 0.6, 1.9, p.purple);
+  I.box(x0 + 3.0, y0 + 5.8, 0.3, 0.5, 1.8, 1.4, p.purple);
+  I.box(x0 + 7.9, y0 + 5.8, 0.3, 0.5, 1.8, 1.4, p.purple);
+  // coffee table + items
+  I.box(x0 + 4.2, y0 + 3.6, 0.3, 2.4, 1.2, 0.8, p.wood);
+  I.box(x0 + 4.5, y0 + 3.9, 1.1, 0.6, 0.5, 0.3, p.paper);
+  // TV unit against the right wall
+  I.box(x0 + 0.6, y0 + 4.2, 0.3, 0.9, 2.8, 0.9, p.wood);
+  I.box(x0 + 0.7, y0 + 4.6, 1.2, 0.2, 2.0, 1.3, p.dark);
+  I.qR(x0 + 0.9, y0 + 4.7, y0 + 6.5, 1.3, 2.4, p.cyan[1]);
+  // plant and floor lamp
+  I.cyl(x0 + 11, y0 + 1.2, 0.3, 0.45, 0.9, p.red);
+  const [px, py] = I.p(x0 + 11, y0 + 1.2, 1.4);
+  I.g.ball(px, py - 8, 11, p.leaf);
+  I.cyl(x0 + 11, y0 + 6.5, 0.3, 0.08, 3.3, p.dark);
+  I.cyl(x0 + 11, y0 + 6.5, 3.6, 0.55, 0.7, p.yellow, p.yellow[4]);
+  // people
+  const [qx, qy] = I.p(x0 + 5, y0 + 6.4, 1.2);
+  personS(I.g, p, qx - 6, qy - 28, 2, p.cyan, undefined);
+  const [rx, ry] = I.p(x0 + 9, y0 + 2.4, 0.3);
+  personS(I.g, p, rx - 6, ry - 30, 2, p.amber, p.red);
+}
 
 export const house: SceneDef = {
   id: "house",
   name: "Metering Point",
-  hint: "One household. The meter cabinet is where the physical connection meets the data layer. Dive into it.",
+  hint: "One household with its roof lifted off. The meter cabinet is where the physical connection meets the data layer. Dive into it.",
   bg(g, p) {
-    dataSky(g, p, 5);
-    meadow(g, p, { road: true, seed: 5 });
-    tree(g, p, 606, 316, 1.1, "round");
-    // house body (cutaway)
-    g.shadow(265, 322, 160, 5, p.outline, 0.5);
-    g.slab(124, 220, 284, 100, p.wall);
-    g.r(126, 224, 280, 92, p.wall[3]);
-    for (let x = 128; x < 404; x += 8) g.r(x, 224, 1, 92, p.wall[2]);
-    for (let y = 224; y < 316; y += 46) g.r(126, y, 280, 1, p.wall[2]);
-    // wooden floor
-    g.r(126, 304, 280, 14, p.wood[2]);
-    for (let x = 126; x < 406; x += 22) g.r(x, 304, 1, 14, p.wood[0]);
-    g.r(126, 304, 280, 2, p.wood[3]);
-    // ceiling beam
-    g.slab(124, 218, 284, 8, p.wood);
-    // roof
-    g.poly(
-      [
-        [104, 222],
-        [265, 166],
-        [426, 222],
-      ],
-      p.roof[0],
-    );
-    g.poly(
-      [
-        [110, 220],
-        [265, 171],
-        [420, 220],
-      ],
-      p.roof[2],
-    );
-    for (let y = 176; y < 218; y += 5) {
-      const half = ((y - 168) / 54) * 153;
-      g.r(265 - half, y, half * 2, 1, p.roof[1]);
-      for (let x = 265 - half + ((y / 5) % 2 ? 0 : 6); x < 265 + half; x += 12)
-        g.p(x, y + 1, p.roof[3]);
-    }
-    g.slab(100, 220, 330, 6, p.roof);
-    // window with curtains and picture
-    g.slab(340, 240, 50, 54, p.paper);
-    g.r(344, 244, 42, 46, p.glass[2]);
-    g.r(344, 244, 42, 14, p.glass[3]);
-    g.r(364, 244, 2, 46, p.paper[2]);
-    g.r(344, 266, 42, 2, p.paper[2]);
-    g.poly(
-      [
-        [342, 242],
-        [356, 242],
-        [348, 292],
-        [342, 292],
-      ],
-      p.red[2],
-    );
-    g.poly(
-      [
-        [388, 242],
-        [374, 242],
-        [382, 292],
-        [388, 292],
-      ],
-      p.red[2],
-    );
-    g.slab(322, 266, 14, 18, p.wood);
-    g.r(325, 269, 8, 12, p.cyan[2]);
-    // garage
-    g.slab(404, 250, 222, 70, p.wall);
-    g.r(407, 258, 216, 56, p.wall[1]);
-    g.slab(398, 238, 234, 14, p.concrete);
-    g.r(407, 304, 216, 14, p.concrete[2]);
-    for (let x = 407; x < 623; x += 12) g.r(x, 304, 1, 14, p.concrete[1]);
-    // door opening arch to garage
-    g.slab(404, 248, 8, 72, p.wood);
+    sky(g, p, 5);
+    const I = new Iso(g, ISL.ox, ISL.oy);
+    const D = new Iso(g, DEC.ox, DEC.oy);
+    island(I, p, NX, NY, 3, 5);
+    strip(I, p, "x", 25.2, 2.6, NX);
+    houseShell(I, p);
+    for (const [x, y, s, k] of [
+      [3, 3, 1.1, "round"],
+      [8, 9, 1, "pine"],
+      [4, 14, 1, "pine"],
+      [30, 3, 1, "round"],
+      [44, 4, 1.1, "pine"],
+      [45, 20, 1, "round"],
+      [10, 22, 1, "round"],
+      [36, 21, 1, "pine"],
+      [28, 19, 1, "round"],
+      [2, 26, 1, "pine"],
+    ] as const)
+      tree(I, p, x, y, s, k);
+    for (const x of [8, 20, 32, 44]) lamp(I, p, x, 24.6, 3);
+    fence(I, p, 12, 19.5, 18, "x", 0.8);
+    for (const [x, y] of [
+      [16, 15.5],
+      [22, 16],
+      [36, 17],
+    ] as const)
+      bush(I, p, x, y, 1.1);
+    deck(D, p, 36, 16, 0.6, 9);
   },
   anim(g, t, p) {
-    clouds(g, p, t, 5, 8);
+    clouds(g, p, t, 4, 8);
+    const I = new Iso(g, ISL.ox, ISL.oy);
+    const cx = (t * 2.0) % 60;
+    if (cx < NX - 4) car(I, p, cx, 25.5, p.amber);
   },
   objects: [
     {
       id: "grid",
       layer: "p",
-      x: 10,
-      y: 188,
-      w: 100,
-      h: 126,
+      ...place(ISL, [3, 17, 0], poleBox, poleDraw),
       name: "Connection",
-      paint: grid,
       links: [],
       text: "The service cable from the street pole into the building.",
     },
     {
-      id: "cabinet",
+      id: "roof",
       layer: "p",
-      x: 140,
-      y: 236,
-      w: 112,
-      h: 72,
-      name: "Meter cabinet",
-      paint: cabinet,
-      links: [],
-      portal: { dx: 8, dy: 0 },
-      text: "Smart meter plus communication gateway. Click to zoom inside.",
-    },
-    {
-      id: "pv",
-      layer: "p",
-      x: 278,
-      y: 170,
-      w: 138,
-      h: 74,
+      ...place(ISL, [13.5, 5.5, 10.5], roofBox, roofDraw),
       name: "Roof PV",
-      paint: pv,
+      anim: roofAnim,
       links: [],
       text: "Rooftop solar: generation behind the meter, reported as a separate energy flow.",
     },
     {
       id: "hems",
       layer: "p",
-      x: 264,
-      y: 252,
-      w: 112,
-      h: 66,
+      ...place(ISL, [20, 6.4, 0.9], hemsBox, hemsDraw),
       name: "HEMS",
-      paint: hems,
       anim: hemsAnim,
       links: [],
       text: "Home energy management: reads consumption through the gateway and steers flexible devices.",
     },
     {
+      id: "cabinet",
+      layer: "p",
+      ...place(ISL, [18, 19, 0], cabBox, cabDraw),
+      name: "Meter cabinet",
+      anim: cabAnim,
+      links: [],
+      portal: { x: 770, y: 330 },
+      text: "Smart meter plus communication gateway. Click to zoom inside.",
+    },
+    {
       id: "wallbox",
       layer: "p",
-      x: 418,
-      y: 236,
-      w: 206,
-      h: 88,
+      ...place(ISL, [30, 8, 0], evBox, evDraw),
       name: "Wallbox + EV",
-      paint: wallbox,
-      anim: wallboxAnim,
+      anim: evAnim,
       links: [],
-      lights: [{ x: 25, y: 34, r: 30, color: "#58e090" }],
+      lights: [{ x: 60, y: 120, r: 30, color: "#58e090" }],
       text: "A large flexible load that can be scheduled or throttled on a signal.",
     },
     {
       id: "pki",
       layer: "d",
-      x: 24,
-      y: 22,
-      w: 124,
-      h: 112,
+      ...place(DEC, [2, 3, 0], pkiBox, pkiDraw),
       name: "Trust chain",
-      paint: pki,
       links: ["cabinet"],
       text: "Certificates prove that gateway, operator and market parties are who they claim to be.",
     },
     {
       id: "master",
       layer: "d",
-      x: 160,
-      y: 26,
-      w: 124,
-      h: 108,
+      ...place(DEC, [10, 2, 0], masterBox, masterDraw),
       name: "Master data",
-      paint: master,
       links: ["grid", "cabinet"],
       text: "The metering point identity, its owner, supplier and assigned roles.",
     },
     {
       id: "msgs",
       layer: "d",
-      x: 296,
-      y: 26,
-      w: 170,
-      h: 108,
+      ...place(DEC, [12, 9, 0], msgsBox, msgsDraw),
       name: "Market messages",
-      paint: msgs,
       anim: msgsAnim,
-      links: ["cabinet", "pv"],
+      links: ["cabinet", "roof"],
       text: "Standardised files carry master data, meter readings and orders between market parties.",
     },
     {
       id: "backend",
       layer: "d",
-      x: 480,
-      y: 22,
-      w: 140,
-      h: 112,
+      ...place(DEC, [24, 3, 0], backBox, backDraw),
       name: "Gateway admin",
-      paint: backend,
-      anim: backendAnim,
+      anim: backAnim,
       links: ["cabinet", "hems", "wallbox"],
       text: "Configures, updates and monitors gateways over an encrypted wide-area link.",
     },
   ],
   wires: [
-    { kind: "p", pts: sagPts(58, 212, 176, 244, 26) },
     {
       kind: "p",
-      pts: polyPts([
-        [232, 300],
-        [440, 300],
-      ]),
+      pts: sagPts(...ISL.p(5, 19, 7.8), ...ISL.p(19, 20.4, 3.6), 22),
     },
     {
-      kind: "d",
-      pts: polyPts([
-        [196, 238],
-        [196, 150],
-        [550, 150],
-        [550, 136],
-      ]),
+      kind: "p",
+      pts: sagPts(...ISL.p(19.5, 21, 0.2), ...ISL.p(22, 14.2, 0.2), 0),
     },
-    { kind: "d", pts: sagPts(30, 144, 610, 144, 0) },
   ],
 };
 void bush;

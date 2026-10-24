@@ -156,6 +156,28 @@ export class Pix {
     }
   }
 
+  /** Polygon filled per pixel: `fn(x, y)` returns a colour or null to skip. */
+  polyFn(pts: [number, number][], fn: (x: number, y: number) => string | null) {
+    const ys = pts.map((p) => p[1]);
+    const y0 = Math.floor(Math.min(...ys));
+    const y1 = Math.ceil(Math.max(...ys));
+    for (let y = y0; y <= y1; y++) {
+      const xs: number[] = [];
+      for (let i = 0; i < pts.length; i++) {
+        const [ax, ay] = pts[i]!;
+        const [bx, by] = pts[(i + 1) % pts.length]!;
+        if ((ay <= y + 0.5 && by > y + 0.5) || (by <= y + 0.5 && ay > y + 0.5))
+          xs.push(ax + ((y + 0.5 - ay) / (by - ay)) * (bx - ax));
+      }
+      xs.sort((a, b) => a - b);
+      for (let i = 0; i + 1 < xs.length; i += 2)
+        for (let x = Math.round(xs[i]!); x < Math.round(xs[i + 1]!); x++) {
+          const c = fn(x, y);
+          if (c) this.p(x, y, c);
+        }
+    }
+  }
+
   /** Rectangle shaded from a ramp: dark outline, lit top/left, shadowed bottom/right. */
   slab(x: number, y: number, w: number, h: number, R: Ramp) {
     this.r(x, y, w, h, R[0]);

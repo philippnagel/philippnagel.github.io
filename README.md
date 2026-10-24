@@ -2,7 +2,7 @@
 
 Personal site: one interactive pixel-art page, "Grid to Packet".
 
-One shared scene with two layers drawn together: the **power layer** (ground) and the **data layer** (the band above it). Zoom through four nested scales, each a full pixel-art scene:
+One shared isometric scene with two layers drawn together: the **power layer** (a floating terrain island) and the **data layer** (a glass deck hovering above it). Zoom through four nested scales, each a full pixel-art scene:
 
 1. **Grid**: generation, transmission, substation, local transformer, a house. Regulator, standards, security and market roles above.
 2. **Metering Point**: the house with its grid connection, meter cabinet, rooftop PV, home energy management and EV charger. Trust chain, master data, market messages and gateway admin above.
@@ -13,7 +13,7 @@ Hover or click anything to light up what it is linked to on the other layer; a c
 
 ## Stack
 
-TypeScript + [Bun](https://bun.sh) 1.4.4. No runtime dependencies; `typescript` and `@types/bun` are dev-only. All art is drawn in code at 640x360 art pixels per scene with shaded five-tone material ramps, ordered dithering, a 5x7 bitmap font, live animation (turbine blades, smoke, traffic, LEDs, drifting clouds) and night-time glows. Scenes are pre-rendered to canvases and scaled with nearest-neighbour, so there are no image assets except the avatar.
+TypeScript + [Bun](https://bun.sh) 1.4.4. No runtime dependencies; `typescript` and `@types/bun` are dev-only. All art is drawn in code on an isometric 2:1 grid at 960x540 art pixels per scene, with shaded five-tone material ramps, a 5x7 bitmap font, live animation (turbine blades, smoke, traffic, LEDs, clouds, packets) and night-time glows. Objects are pre-rendered bitmaps, picked pixel-accurately and outlined by silhouette. There are no image assets except the avatar.
 
 ## Commands
 
@@ -33,6 +33,7 @@ bun run check       # fmt check + typecheck + tests (what CI runs)
 | --------------------------------- | -------------------------------------------------------------------------------------------- |
 | `src/index.html`, `src/style.css` | Page shell and UI styling                                                                    |
 | `src/art/*.ts`                    | The four scenes: background, objects (sprites), links, wires                                 |
+| `src/iso.ts`                      | Isometric primitives: boxes, cylinders, gable roofs, face quads, shadows                     |
 | `src/pix.ts`                      | Pixel painter: shaded slabs, cylinders, spheres, polygons, dithering, 5x7 font, wire helpers |
 | `src/palette.ts`                  | Day and night palettes built from five-tone material ramps                                   |
 | `src/scenes.ts`                   | Scene order (outermost first)                                                                |
@@ -46,9 +47,9 @@ bun run check       # fmt check + typecheck + tests (what CI runs)
 
 ## Editing a scene
 
-- Each scene is a 640x360 pixel grid. A data band sits above `BAND_Y` (160), the power band below it.
+- Each scene is a 960x540 pixel canvas holding an isometric terrain island (power layer) and a glass deck (data layer). `place(iso, [gx, gy, gz], fitBox(...), draw)` positions an object by grid coordinates.
 - An object has a rectangle, a `paint(g, pal)` function in local coordinates (static), optional `anim(g, t, pal)` (drawn live every frame) and `lights` (night glows), a name, a caption and `links` to objects on the other layer (links are symmetric).
-- Exactly one object per scene has a `portal`: the 96x54 window in which the next scene appears.
+- Exactly one object per scene has a `portal`: the 144x81 hologram window (given in scene coordinates) in which the next scene appears.
 - `bun test` checks bounds, layer placement, overlaps, link targets, drawable glyphs and portal nesting.
 
 ## Deploy

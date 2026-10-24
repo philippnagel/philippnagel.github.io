@@ -1,240 +1,273 @@
 import type { Pal } from "../palette";
-import { polyPts, rng, type Pix } from "../pix";
+import { Iso } from "../iso";
+import { rng, sagPts, type Pix } from "../pix";
 import type { SceneDef } from "../types";
-import { BAND_Y, SH, SW } from "../geometry";
-import { dataSky, envelope, key, label, lock, plate } from "./common";
+import {
+  deck,
+  envelope,
+  fitBox,
+  isoAnim,
+  label,
+  lock,
+  key,
+  place,
+  sky,
+} from "./kit";
+import { clouds } from "./common";
 
-export const gatewayBox = (g: Pix, p: Pal, x: number, y: number) => {
-  g.shadow(x + 62, y + 110, 62, 4, p.outline, 0.5);
-  g.cylV(x + 100, y, 6, 22, p.dark);
-  g.ball(x + 103, y, 5, p.cyan);
-  g.slab(x, y + 20, 124, 90, p.dark);
-  g.r(x + 4, y + 24, 116, 3, p.dark[3]);
-  for (let i = 0; i < 6; i++) g.r(x + 10 + i * 5, y + 34, 3, 24, p.dark[0]);
-  // sticker with QR
-  g.slab(x + 44, y + 32, 40, 36, p.paper);
+const ISL = new Iso(undefined as unknown as Pix, 330, 200);
+const DEC = new Iso(undefined as unknown as Pix, 640, 70);
+const NX = 31,
+  NY = 15;
+const WALL = 10.5;
+const LAB = (I: Iso, p: Pal, sx: number, sy: number, text: string, dz = 0) =>
+  label(
+    I.g,
+    p,
+    I.ox + (((sx - sy) * 8) / 2) * 1,
+    I.oy + (sx + sy) * 4 + 8 + dz,
+    text,
+  );
+
+// wall devices are drawn flat against the back wall; local origin = wall face at (0, 0, 0) with +y protrusion
+const meterBox = fitBox(8, 2, 9, { bottom: 24 });
+const meterDraw = (I: Iso, p: Pal) => {
+  I.box(0, 0, 0, 7.4, 1.4, 8.6, p.concrete);
+  I.qL(1.4, 0.4, 7.0, 6.0, 8.2, p.paper[2]);
+  I.qL(1.4, 0.6, 6.8, 6.2, 8.0, p.leaf[0]);
+  I.qL(1.4, 0.7, 6.7, 6.3, 7.9, p.leaf[1]);
+  // 7-seg style digits "0012345"
+  const digits = "0012345";
+  for (let k = 0; k < digits.length; k++) {
+    const [x, y] = I.p(0.85 + k * 0.82, 1.4, 7.9);
+    I.g.text(x, y + 1, digits[k]!, p.leaf[4]);
+  }
+  const [ux, uy] = I.p(6.2, 1.4, 6.8);
+  I.g.text(ux - 10, uy + 6, "KWH", p.leaf[3]);
+  I.qL(1.4, 0.5, 2.1, 3.8, 5.6, p.dark[1]);
+  I.qL(1.4, 2.5, 3.6, 4.2, 5.4, p.metal[2]);
+  I.qL(1.4, 3.9, 5.0, 4.2, 5.4, p.metal[2]);
+  I.qL(1.4, 0.7, 1.9, 3.9, 5.5, p.metal[3]);
+  const [px, py] = I.p(6.1, 1.4, 4.6);
+  I.g.ball(px, py, 4, p.metal);
+  I.qL(1.4, 0.3, 7.1, 0.5, 2.8, p.dark[2]);
+  for (let k = 0; k < 4; k++) {
+    const [tx, ty] = I.p(0.9 + k * 1.6, 1.4, 1.7);
+    I.g.ball(tx, ty, 3, p.metal);
+  }
+  I.qL(1.4, 0.3, 7.1, 2.5, 2.8, p.red[2]);
+  const [sx, sy] = I.p(3.7, 1.4, 2.65);
+  I.g.ball(sx, sy, 2, p.red);
+  for (let k = 0; k < 4; k++)
+    I.line3(
+      [0.9 + k * 1.6, 1.4, 0.5],
+      [0.9 + k * 1.6, 1.4, -0.4],
+      [p.red[2], p.dark[1], p.cyan[2], p.leaf[2]][k]!,
+    );
+  label(I.g, p, I.p(3.7, 1.4, 0)[0], I.p(3.7, 1.4, -0.6)[1], "SMART METER");
+};
+const meterAnim = isoAnim(meterBox, (I, t, p) => {
+  const [x, y] = I.p(6.4, 1.4, 5.4);
+  I.g.r(x, y, 3, 3, Math.sin(t * 6) > 0 ? p.red[3] : p.red[0]);
+});
+
+const gwBox = fitBox(9, 4, 10, { bottom: 24 });
+const gwDraw = (I: Iso, p: Pal) => {
+  I.cyl(7.2, 0.8, 7.2, 0.2, 2.6, p.dark);
+  I.g.ball(...I.p(7.2, 0.8, 9.9), 5, p.cyan);
+  I.box(0, 0, 0, 8.6, 2.2, 7.2, p.dark);
+  I.qL(2.2, 0.3, 8.3, 6.4, 6.9, p.dark[3]);
+  for (let k = 0; k < 8; k++)
+    I.qL(2.2, 0.5 + k * 0.28, 0.5 + k * 0.28 + 0.14, 4.3, 6.1, p.dark[0]);
+  I.qL(2.2, 3.3, 6.2, 3.0, 5.9, p.paper[2]);
   const r = rng(4);
-  for (let j = 0; j < 7; j++)
-    for (let i = 0; i < 7; i++)
-      if (r() > 0.45) g.r(x + 48 + i * 3, y + 36 + j * 3, 3, 3, p.outline);
-  g.r(x + 48, y + 36, 8, 8, p.outline);
-  g.r(x + 50, y + 38, 4, 4, p.paper[2]);
-  for (let i = 0; i < 3; i++) g.r(x + 90, y + 34 + i * 8, 24, 2, p.dark[3]);
-  // ports
-  for (let i = 0; i < 3; i++) {
-    g.slab(x + 12 + i * 20, y + 84, 16, 14, p.metal);
-    g.r(x + 15 + i * 20, y + 88, 10, 8, p.dark[0]);
+  for (let j = 0; j < 8; j++)
+    for (let i = 0; i < 8; i++)
+      if (r() > 0.45)
+        I.qL(
+          2.2,
+          3.5 + i * 0.1,
+          3.5 + i * 0.1 + 0.1,
+          3.1 + j * 0.3,
+          3.1 + j * 0.3 + 0.28,
+          p.outline,
+        );
+  for (let k = 0; k < 3; k++) {
+    I.qL(2.2, 0.5 + k * 1.2, 1.4 + k * 1.2, 0.5, 1.7, p.metal[2]);
+    I.qL(2.2, 0.65 + k * 1.2, 1.25 + k * 1.2, 0.7, 1.4, p.dark[0]);
   }
-  g.slab(x + 80, y + 84, 28, 14, p.metal);
+  I.qL(2.2, 6.8, 8.2, 0.6, 1.6, p.metal[2]);
+  label(I.g, p, I.p(4.3, 2.2, 0)[0], I.p(4.3, 2.2, -0.6)[1], "GATEWAY");
 };
-const gatewayLeds = (g: Pix, t: number, p: Pal, x: number, y: number) => {
-  g.r(x + 8, y + 26, 5, 5, p.data);
-  g.r(x + 16, y + 26, 5, 5, Math.sin(t * 5) > -0.3 ? p.leaf[4] : p.leaf[1]);
-  g.r(x + 24, y + 26, 5, 5, Math.sin(t * 7 + 1) > 0 ? p.amber[3] : p.amber[0]);
+const gwAnim = isoAnim(gwBox, (I, t, p) => {
+  for (let k = 0; k < 3; k++) {
+    const [x, y] = I.p(0.7 + k * 0.7, 2.2, 6.4);
+    const on =
+      k === 0 || (k === 1 ? Math.sin(t * 5) > -0.3 : Math.sin(t * 7 + 1) > 0);
+    I.g.r(x, y, 3, 3, on ? [p.data, p.leaf[4], p.amber[3]][k]! : p.dark[1]);
+  }
+});
+
+const subBox = fitBox(6, 2, 7, { bottom: 24 });
+const subDraw = (I: Iso, p: Pal) => {
+  I.box(0, 0, 0, 5.6, 1.2, 6.2, p.concrete);
+  I.qL(1.2, 0.4, 5.2, 4.4, 5.8, p.leaf[0]);
+  const [x, y] = I.p(0.8, 1.2, 5.7);
+  I.g.text(x, y + 1, "0042", p.leaf[4], 2);
+  I.qL(1.2, 0.5, 2.4, 2.4, 3.8, p.metal[2]);
+  I.qL(1.2, 3.0, 5.0, 2.4, 3.6, p.dark[1]);
+  I.qL(1.2, 0.4, 5.2, 0.4, 1.8, p.dark[2]);
+  label(I.g, p, I.p(2.8, 1.2, 0)[0], I.p(2.8, 1.2, -0.6)[1], "SUB-METER");
 };
 
-const meter = (g: Pix, p: Pal) => {
-  g.shadow(60, 134, 56, 4, p.outline, 0.5);
-  g.slab(10, 4, 100, 120, p.concrete);
-  g.slab(18, 12, 84, 24, p.paper);
-  g.slab(22, 16, 76, 16, p.leaf);
-  g.r(24, 18, 72, 12, p.leaf[1]);
-  g.text(28, 19, "001234.5", p.leaf[4], 1);
-  g.text(28, 19, "", p.leaf[4]);
-  g.text(80, 24, "KWH", p.leaf[3]);
-  g.disc(34, 50, 6, p.dark[0]);
-  g.disc(34, 50, 4, p.dark[2]);
-  g.ball(60, 50, 5, p.metal);
-  g.slab(74, 44, 14, 12, p.metal);
-  g.slab(90, 44, 14, 12, p.metal);
-  g.slab(22, 62, 76, 44, p.dark);
+const devBox = fitBox(10, 6, 5, { bottom: 24 });
+const devDraw = (I: Iso, p: Pal) => {
+  I.shadow(0.2, 0.2, 10, 6, 0.25);
+  // inverter
+  I.box(0.4, 0.8, 0, 2.6, 1.0, 2.6, p.metal);
+  I.qL(1.8, 0.7, 2.7, 0.4, 2.2, p.metal[3]);
+  I.g.ball(...I.p(1.7, 1.8, 1.5), 7, p.yellow);
+  // wallbox post
+  I.box(4.2, 1.2, 0, 1.0, 0.8, 4.0, p.dark);
+  I.qL(2.0, 4.3, 5.1, 2.5, 3.8, p.leaf[2]);
+  // heat pump
+  I.box(6.6, 0.8, 0, 3.0, 2.6, 2.4, p.wall);
+  I.cyl(8.1, 3.4, 1.2, 1.0, 0.1, p.dark);
+  LAB(I, p, 10, 6, "LOCAL DEVICES");
+};
+const devAnim = isoAnim(devBox, (I, t, p) => {
+  const [cx, cy] = I.p(8.1, 3.4, 1.3);
   for (let i = 0; i < 4; i++) {
-    g.slab(26 + i * 18, 70, 12, 12, p.metal);
-    g.disc(32 + i * 18, 76, 3, p.metal[0]);
-  }
-  g.r(26, 90, 68, 2, p.red[1]);
-  g.ball(60, 98, 3, p.red);
-  g.r(34, 108, 3, 18, p.red[2]);
-  g.r(52, 108, 3, 18, p.dark[0]);
-  g.r(70, 108, 3, 18, p.cyan[2]);
-  g.r(88, 108, 3, 18, p.leaf[2]);
-  label(g, p, 120, 130, "SMART METER");
-};
-const meterAnim = (g: Pix, t: number, p: Pal) => {
-  g.r(98, 18, 5, 5, Math.sin(t * 6) > 0 ? p.red[3] : p.red[0]);
-  g.r(28 + 45, 19, 0, 0, p.white);
-};
-
-const gateway = (g: Pix, p: Pal) => {
-  gatewayBox(g, p, 8, 4);
-  label(g, p, 140, 122, "GATEWAY");
-};
-const gatewayAnim = (g: Pix, t: number, p: Pal) => gatewayLeds(g, t, p, 8, 4);
-
-const submeter = (g: Pix, p: Pal) => {
-  g.shadow(48, 98, 40, 3, p.outline, 0.5);
-  g.slab(14, 4, 68, 80, p.concrete);
-  g.slab(20, 10, 56, 20, p.leaf);
-  g.r(22, 12, 52, 16, p.leaf[1]);
-  g.text(26, 16, "0042", p.leaf[4], 2);
-  g.disc(34, 46, 5, p.dark[1]);
-  g.slab(48, 40, 20, 12, p.metal);
-  g.slab(20, 60, 56, 16, p.dark);
-  g.r(28, 84, 3, 12, p.dark[0]);
-  g.r(64, 84, 3, 12, p.red[2]);
-  label(g, p, 96, 100, "SUB-METER");
-};
-
-const devices = (g: Pix, p: Pal) => {
-  g.slab(6, 6, 50, 52, p.concrete);
-  g.ball(31, 30, 11, p.yellow);
-  for (let i = 0; i < 8; i++) {
-    const a = (i * Math.PI) / 4;
-    g.r(
-      Math.round(31 + Math.cos(a) * 16) - 1,
-      Math.round(30 + Math.sin(a) * 16) - 1,
-      3,
-      3,
-      p.yellow[3],
-    );
-  }
-  g.slab(64, 6, 36, 52, p.dark);
-  g.slab(70, 12, 24, 14, p.dark);
-  g.r(72, 14, 20, 10, p.leaf[2]);
-  g.cylV(76, 34, 12, 16, p.metal);
-  g.slab(108, 6, 62, 52, p.wall);
-  g.disc(139, 32, 20, p.outline);
-  g.disc(139, 32, 18, p.metal[1]);
-  g.disc(139, 32, 3, p.dark[0]);
-  label(g, p, 178, 70, "LOCAL DEVICES");
-};
-const devicesAnim = (g: Pix, t: number, p: Pal) => {
-  for (let i = 0; i < 4; i++) {
-    const a = t * 6 + (i * Math.PI) / 2;
-    g.line(
-      139,
-      32,
-      Math.round(139 + Math.cos(a) * 16),
-      Math.round(32 + Math.sin(a) * 16),
-      p.metal[4],
-    );
-    g.line(
-      140,
-      32,
-      Math.round(140 + Math.cos(a) * 16),
-      Math.round(32 + Math.sin(a) * 16),
+    const a = t * 7 + (i * Math.PI) / 2;
+    I.g.line(
+      cx,
+      cy,
+      Math.round(cx + Math.cos(a) * 10),
+      Math.round(cy + Math.sin(a) * 5),
       p.metal[3],
     );
   }
-  g.disc(139, 32, 3, p.dark[0]);
-};
+});
 
-const chip = (g: Pix, p: Pal, x: number, y: number, R: typeof p.metal) => {
-  g.slab(x, y, 24, 24, R);
-  g.r(x + 9, y + 9, 6, 6, p.data);
-};
-const link =
-  (
-    title: string,
-    sub: string,
-    a: "meter" | "gateway",
-    b: "gateway" | "devices",
-  ) =>
-  (g: Pix, p: Pal) => {
-    plate(g, p, 152, 88);
-    chip(g, p, 10, 14, a === "meter" ? p.concrete : p.dark);
-    chip(g, p, 118, 14, b === "gateway" ? p.dark : p.wall);
-    // glass tube
-    g.slab(36, 20, 80, 12, p.glass);
-    g.r(38, 22, 76, 3, p.glass[4]);
-    for (let x = 40; x < 112; x += 24) envelope(g, p, x, 15, p.cyan);
-    g.textCS(76, 52, title, p.ink, p.night ? p.outline : p.white, 2);
-    g.textC(76, 70, sub, p.inkDim);
+// ---- data deck ----
+const tube =
+  (title: string, sub: string, a: Pal["metal"] | null) => (I: Iso, p: Pal) => {
+    I.shadow(0.2, 0.2, 7, 3, 0.18);
+    I.box(0, 0.6, 0, 1.4, 1.4, 1.4, a ?? p.concrete);
+    I.box(6.2, 0.6, 0, 1.4, 1.4, 1.4, p.dark);
+    I.qL(2.0, 0.4, 1.0, 0.5, 0.9, p.data);
+    const glass = p.night ? "rgba(60,170,230,.45)" : "rgba(160,225,250,.65)";
+    I.qT(1.1, 1.4, 6.2, 0.9, 1.7, glass);
+    I.qL(1.7, 1.4, 6.2, 0.7, 1.1, glass);
+    I.line3([1.4, 1.7, 1.1], [6.2, 1.7, 1.1], p.cyan[4]);
+    LAB(I, p, 7.6, 2.0, title, 0);
+    const [x, y] = I.p(3.8, 2.0, 0);
+    I.g.textC(x, y + 20, sub, p.inkDim);
   };
-const linkAnim = (g: Pix, t: number, p: Pal) => {
-  const u = (t * 0.4) % 1;
-  g.r(Math.round(40 + u * 66), 24, 6, 4, p.yellow[3]);
+const tubeAnim = (box: { ax: number; ay: number }) =>
+  isoAnim(box, (I, t, p) => {
+    for (let k = 0; k < 3; k++) {
+      const u = (t * 0.3 + k / 3) % 1;
+      const [x, y] = I.p(1.6 + u * 4.4, 1.3, 1.0);
+      envelope(I.g, p, x - 7, y - 10, p.cyan);
+    }
+  });
+const lmnBox = fitBox(8, 3, 3, { bottom: 52 });
+const hanBox = fitBox(8, 3, 3, { bottom: 52 });
+
+const wanBox = fitBox(6, 6, 2, { top: 12 });
+const wanDraw = (I: Iso, p: Pal) => {
+  I.shadow(0.4, 0.4, 4, 4, 0.2);
+  I.box(0.5, 0.5, 0, 3.6, 3.6, 1.2, p.cyan);
+  for (const [a, c] of [
+    [0.7, p.white],
+    [1.6, p.yellow[2]],
+    [2.5, p.dark[2]],
+    [3.4, p.red[2]],
+  ] as const)
+    I.qL(4.1, a, a + 0.8, 0.2, 1.0, c);
+  for (let k = 0; k < 4; k++)
+    I.line3(
+      [2.2 + k * 0.2, 4.1, 0.4 + k * 0.15],
+      [3.0, 4.1, 0.4 + k * 0.15],
+      p.white,
+    );
+  LAB(I, p, 4.6, 4.6, "WAN PACKET", 14);
 };
 
-const wan = (g: Pix, p: Pal) => {
-  g.shadow(56, 62, 52, 3, p.outline, 0.45);
-  g.slab(8, 0, 96, 54, p.cyan);
-  g.r(12, 4, 12, 46, p.white);
-  g.r(26, 4, 26, 46, p.yellow[2]);
-  g.r(54, 4, 28, 46, p.dark[2]);
-  g.r(84, 4, 16, 46, p.red[2]);
-  for (let y = 10; y < 46; y += 7) g.r(58, y, 20, 2, p.white);
-  g.r(8, 0, 96, 3, p.cyan[4]);
-  label(g, p, 112, 62, "WAN PACKET");
+const secBox = fitBox(5, 5, 4);
+const secDraw = (I: Iso, p: Pal) => {
+  I.shadow(0.3, 0.3, 5, 5, 0.2);
+  I.box(0.8, 0.8, 0, 3.4, 3.4, 0.9, p.dark);
+  for (let k = 0; k < 8; k++) {
+    I.line3([1 + k * 0.4, 4.2, 0.3], [1 + k * 0.4, 4.6, 0.3], p.metal[3]);
+    I.line3([4.2, 1 + k * 0.4, 0.3], [4.6, 1 + k * 0.4, 0.3], p.metal[3]);
+  }
+  const [lx, ly] = I.p(2.5, 2.5, 1.0);
+  lock(I.g, p, lx - 14, ly - 18);
+  key(I.g, p, lx - 2, ly - 12);
+  LAB(I, p, 5, 5, "TLS + PKI");
 };
 
-const sec = (g: Pix, p: Pal) => {
-  plate(g, p, 108, 106);
-  g.slab(26, 20, 56, 46, p.dark);
-  for (let i = 0; i < 7; i++) {
-    g.r(30 + i * 7, 12, 3, 8, p.metal[3]);
-    g.r(30 + i * 7, 66, 3, 8, p.metal[3]);
+function cabinetShell(I: Iso, p: Pal) {
+  I.shadow(-0.5, -0.5, NX + 1, NY + 1, 0.0);
+  // floor plate
+  I.box(0, 0, -0.4, NX, NY, 0.4, p.steel, { tex: true });
+  for (let i = 0; i < NX; i += 2)
+    I.line3([i, 0, 0.01], [i, NY, 0.01], p.steel[1]);
+  for (let j = 0; j < NY; j += 2)
+    I.line3([0, j, 0.01], [NX, j, 0.01], p.steel[1]);
+  for (let k = 0; k < NX; k += 4)
+    for (let j = 2; j < NY; j += 4) {
+      const [x, y] = I.p(k + 1, j, 0);
+      I.g.r(x, y, 2, 1, p.dark[1]);
+    }
+  // back walls
+  I.box(0, 0, 0, NX, 0.6, WALL, p.metal, { tex: true });
+  I.box(0, 0, 0, 0.6, NY, WALL, p.metal, { tex: true });
+  // mounting plate on the back wall with perforations, rails and ducts
+  I.qL(0.6, 1, NX - 1, 1.2, WALL - 0.8, p.steel[3]);
+  const r = rng(9);
+  for (let k = 0; k < 300; k++) {
+    const [x, y] = I.p(1.2 + r() * (NX - 2.4), 0.6, 1.4 + r() * (WALL - 2.4));
+    I.g.p(x, y, p.steel[1]);
   }
-  for (let i = 0; i < 5; i++) {
-    g.r(18, 26 + i * 8, 8, 3, p.metal[3]);
-    g.r(82, 26 + i * 8, 8, 3, p.metal[3]);
+  for (const z of [3.0, 9.4]) {
+    I.qL(0.7, 1, NX - 1, z, z + 0.5, p.metal[3]);
+    for (let x = 1.3; x < NX - 1; x += 1.0)
+      I.qL(0.7, x, x + 0.5, z + 0.12, z + 0.38, p.dark[1]);
   }
-  lock(g, p, 34, 28);
-  key(g, p, 50, 32);
-  label(g, p, 108, 84, "TLS + PKI");
-};
+  I.qL(0.7, 1, NX - 1, WALL - 1.6, WALL - 0.9, p.paper[2]);
+  for (let x = 1.2; x < NX - 1; x += 0.8)
+    I.qL(0.7, x, x + 0.45, WALL - 1.5, WALL - 1.0, p.paper[1]);
+  // cable glands on the floor edge
+  for (let k = 0; k < 8; k++) I.cyl(3 + k * 4, 1.3, 0, 0.35, 0.4, p.dark);
+  // top rim highlights
+  I.line3([0, 0, WALL], [NX, 0, WALL], p.metal[4]);
+  I.line3([0, 0, WALL], [0, NY, WALL], p.metal[4]);
+  void p;
+}
 
 export const cabinet: SceneDef = {
   id: "cabinet",
   name: "Meter Cabinet",
-  hint: "Inside the cabinet: meter, gateway and local devices below; the links that connect them above. Dive into the WAN packet.",
+  hint: "Inside the cabinet: meter, gateway and local devices on the panel; the links that connect them hover above. Dive into the WAN packet.",
   bg(g, p) {
-    dataSky(g, p, 21);
-    g.gradV(0, BAND_Y, SW, SH - BAND_Y, [
-      p.steel[3],
-      p.steel[2],
-      p.steel[2],
-      p.steel[1],
-      p.steel[1],
-    ]);
-    const r = rng(6);
-    for (let y = BAND_Y + 8; y < SH - 6; y += 10)
-      for (let x = 6; x < SW; x += 10) if (r() > 0.8) g.p(x, y, p.steel[1]);
-    // cable duct and DIN rails
-    g.slab(0, BAND_Y + 6, SW, 18, p.paper);
-    for (let x = 6; x < SW; x += 14) g.r(x, BAND_Y + 10, 8, 10, p.paper[1]);
-    for (const y of [BAND_Y + 36, 322]) {
-      g.slab(0, y, SW, 12, p.metal);
-      for (let x = 6; x < SW; x += 16) g.r(x, y + 4, 8, 4, p.dark[1]);
-    }
-    for (const [x, y] of [
-      [10, BAND_Y + 34],
-      [SW - 10, BAND_Y + 34],
-      [10, SH - 12],
-      [SW - 10, SH - 12],
-    ] as const) {
-      g.ball(x, y, 5, p.metal);
-      g.line(x - 3, y, x + 3, y, p.dark[0]);
-    }
-    g.textS(8, BAND_Y + 8, "POWER LAYER", p.dark[0], p.paper[3]);
-    g.r(0, BAND_Y - 2, SW, 2, p.data);
+    sky(g, p, 21);
+    const I = new Iso(g, ISL.ox, ISL.oy);
+    const D = new Iso(g, DEC.ox, DEC.oy);
+    cabinetShell(I, p);
+    deck(D, p, 36, 16, 0.6, 21);
   },
   anim(g, t, p) {
-    // wiring harness pulses
-    void t;
-    void p;
-    void g;
+    clouds(g, p, t, 3, 3);
   },
   objects: [
     {
       id: "meter",
       layer: "p",
-      x: 10,
-      y: 180,
-      w: 130,
-      h: 136,
+      ...place(ISL, [1.2, 0.6, 2.3], meterBox, meterDraw),
       name: "Smart meter",
-      paint: meter,
       anim: meterAnim,
       links: [],
       text: "Measures energy and exposes registers such as total import. It never talks to the market directly.",
@@ -242,127 +275,71 @@ export const cabinet: SceneDef = {
     {
       id: "gateway",
       layer: "p",
-      x: 168,
-      y: 184,
-      w: 140,
-      h: 130,
+      ...place(ISL, [10.5, 0.6, 2.8], gwBox, gwDraw),
       name: "Gateway",
-      paint: gateway,
-      anim: gatewayAnim,
+      anim: gwAnim,
       links: [],
-      lights: [{ x: 28, y: 36, r: 36, color: "#2ad4ff" }],
+      lights: [{ x: 30, y: 70, r: 36, color: "#2ad4ff" }],
       text: "The trust anchor. It collects meter data, signs it and forwards it to authorised parties.",
     },
     {
       id: "submeter",
       layer: "p",
-      x: 332,
-      y: 210,
-      w: 104,
-      h: 112,
+      ...place(ISL, [21, 0.6, 2.8], subBox, subDraw),
       name: "Sub-meter",
-      paint: submeter,
       links: [],
       text: "Measures one circuit or device behind the main meter, for example a heat pump.",
     },
     {
       id: "devices",
       layer: "p",
-      x: 450,
-      y: 216,
-      w: 180,
-      h: 84,
+      ...place(ISL, [18, 6, 0], devBox, devDraw),
       name: "Local devices",
-      paint: devices,
-      anim: devicesAnim,
+      anim: devAnim,
       links: [],
       text: "Inverter, wallbox and heat pump reached through a controlled local interface.",
     },
     {
       id: "lmn",
       layer: "d",
-      x: 20,
-      y: 28,
-      w: 152,
-      h: 88,
+      ...place(DEC, [1, 3, 0], lmnBox, tube("LMN", "METER > GATEWAY", null)),
       name: "LMN",
-      paint: link("LMN", "METER > GATEWAY", "meter", "gateway"),
-      anim: linkAnim,
+      anim: tubeAnim(lmnBox),
       links: ["meter", "gateway", "submeter"],
       text: "Local metrological network: meters report to the gateway over a short wired or wireless link.",
     },
     {
       id: "wan",
       layer: "d",
-      x: 192,
-      y: 22,
-      w: 112,
-      h: 76,
+      ...place(DEC, [11, 4, 0], wanBox, wanDraw),
       name: "WAN packet",
-      paint: wan,
       links: ["gateway"],
-      portal: { dx: 8, dy: 0 },
+      portal: { x: 790, y: 16 },
       text: "Wide-area link to the backend. Each reading travels as a signed packet. Click to open one.",
     },
     {
       id: "han",
       layer: "d",
-      x: 332,
-      y: 28,
-      w: 152,
-      h: 88,
+      ...place(DEC, [16, 9, 0], hanBox, tube("HAN", "GATEWAY > DEVICES", null)),
       name: "HAN",
-      paint: link("HAN", "GATEWAY > DEVICES", "gateway", "devices"),
-      anim: linkAnim,
+      anim: tubeAnim(hanBox),
       links: ["gateway", "devices"],
       text: "Home area network: authorised energy services read data and send control signals through the gateway.",
     },
     {
       id: "sec",
       layer: "d",
-      x: 508,
-      y: 24,
-      w: 108,
-      h: 106,
+      ...place(DEC, [28, 4, 0], secBox, secDraw),
       name: "Security module",
-      paint: sec,
       links: ["gateway"],
       text: "Holds keys, mutually authenticates every link with TLS and signs readings.",
     },
   ],
   wires: [
+    { kind: "p", pts: sagPts(...ISL.p(5.5, 1, 0.2), ...ISL.p(14, 1, 0.2), 0) },
     {
       kind: "p",
-      pts: polyPts([
-        [80, 318],
-        [80, 340],
-        [236, 340],
-        [236, 316],
-      ]),
-    },
-    {
-      kind: "p",
-      pts: polyPts([
-        [236, 340],
-        [380, 340],
-        [380, 320],
-      ]),
-    },
-    {
-      kind: "p",
-      pts: polyPts([
-        [380, 340],
-        [540, 340],
-        [540, 300],
-      ]),
-    },
-    {
-      kind: "d",
-      pts: polyPts([
-        [30, 140],
-        [610, 140],
-      ]),
+      pts: sagPts(...ISL.p(14, 1.4, 0.1), ...ISL.p(24, 1.4, 0.1), 0),
     },
   ],
 };
-void envelope;

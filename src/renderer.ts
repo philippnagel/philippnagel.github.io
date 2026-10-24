@@ -1,6 +1,6 @@
 import {
-  LOD_ON,
   KID,
+  LOD_ON,
   SH,
   SW,
   lodOpacity,
@@ -8,7 +8,7 @@ import {
   portalOf,
   portalRect,
 } from "./geometry";
-import { Pix, routePts } from "./pix";
+import { Pix } from "./pix";
 import type { LayerMode, Obj, Ref, SceneDef, Size, View } from "./types";
 import type { World } from "./world";
 
@@ -25,6 +25,8 @@ export interface Hit {
 
 const SPARK_SPEED = 34;
 const ENV_SPEED = 24;
+/** Opacity of the miniature next-level scene shown inside a portal frame. */
+const THUMB_ALPHA = 0.92;
 
 export class Renderer {
   private readonly ctx: CanvasRenderingContext2D;
@@ -69,6 +71,7 @@ export class Renderer {
     return l === 0 || this.opacity(l, v, s) > LOD_ON;
   }
 
+  /** Pixel-accurate picking: objects are hit where their bitmap is opaque. */
   pick(v: View, s: Size, cx: number, cy: number): Hit | null {
     const ps = s.w / v.w;
     const wx = v.cx + (cx - s.w / 2) / ps;
@@ -80,14 +83,20 @@ export class Renderer {
       const ly = (wy - o.y) / o.k;
       if (lx < 0 || ly < 0 || lx >= SW || ly >= SH) continue;
       const objs = this.defs[l]!.objects;
+      const built = this.world.scenes[l]!;
       for (let i = objs.length - 1; i >= 0; i--) {
         const b = objs[i]!;
         const r = b.portal ? portalRect(b) : null;
-        const hitBody =
-          lx >= b.x && lx < b.x + b.w && ly >= b.y && ly < b.y + b.h;
-        const hitPortal =
-          r && lx >= r.x && lx < r.x + r.w && ly >= r.y && ly < r.y + r.h;
-        if (hitBody || hitPortal) return { l, obj: b };
+        if (r && lx >= r.x && lx < r.x + r.w && ly >= r.y && ly < r.y + r.h)
+          return { l, obj: b };
+        if (
+          lx >= b.x &&
+          lx < b.x + b.w &&
+          ly >= b.y &&
+          ly < b.y + b.h &&
+          this.world.alphaAt(built.objs.get(b.id)!, lx - b.x, ly - b.y) > 100
+        )
+          return { l, obj: b };
       }
       return { l, obj: null };
     }
@@ -110,7 +119,7 @@ export class Renderer {
       -(v.cx - v.w / 2) * ps,
       -(v.cy - h / 2) * ps,
     );
-    this.scene(0, 1, v, s, st, t);
+    this.scene(0, 1, v, s, st, t, true);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
@@ -126,26 +135,28 @@ export class Renderer {
     s: Size,
     st: RenderState,
     t: number,
+    full: boolean,
   ) {
     const { ctx, world } = this;
     const b = world.scenes[l]!;
     const def = b.def;
-    const focus = this.focusOf(l, st);
+    const focus = full ? this.focusOf(l, st) : null;
     const related = focus ? (b.adj.get(focus.id) ?? new Set<string>()) : null;
     const layerA = (layer: "p" | "d") =>
       st.layer === "both" || st.layer === layer ? 1 : 0.14;
 
     // As a child scene takes over the screen, its parent fades out so only the child remains.
     const pobj = portalOf(def);
-    const childOp =
-      pobj && l + 1 < this.defs.length ? this.opacity(l + 1, v, s) : 0;
-    alpha *= 1 - 0.98 * childOp;
+    const hasChild = !!pobj && l + 1 < this.defs.length;
+    const childOp = hasChild ? this.opacity(l + 1, v, s) : 0;
+    const a0 = alpha;
+    alpha *= 1 - childOp;
 
     ctx.globalAlpha = alpha;
     ctx.drawImage(b.bg, 0, 0);
 
     const px = new Pix(ctx);
-    if (!this.reduceMotion) {
+    if (full && !this.reduceMotion) {
       ctx.save();
       ctx.beginPath();
       ctx.rect(0, 0, SW, SH);
@@ -156,36 +167,45 @@ export class Renderer {
       this.flows(def, alpha, st, t);
     }
 
+    if (focus) this.halos(def, b, focus, alpha, t);
     for (const o of def.objects) {
       const dim = focus && o.id !== focus.id && !related!.has(o.id) ? 0.3 : 1;
       ctx.globalAlpha = alpha * layerA(o.layer) * dim;
       ctx.drawImage(b.objs.get(o.id)!, o.x, o.y);
-      if (o.anim && !this.reduceMotion) {
+      if (full && o.anim && !this.reduceMotion) {
         ctx.save();
         ctx.translate(o.x, o.y);
         o.anim(px, t, world.pal);
         ctx.restore();
       }
     }
-    if (world.pal.night) this.lights(def, alpha, t);
+    if (full && world.pal.night) this.lights(def, alpha, t);
     ctx.globalAlpha = alpha;
 
-    if (focus) this.highlight(def, b.adj, focus, alpha, st, t);
+    if (focus) this.highlight(def, b, focus, alpha, t);
 
-    if (pobj && l + 1 < this.defs.length) {
+    if (hasChild && pobj) {
       const r = portalRect(pobj);
-      const op = childOp;
-      this.portalMarker(r, alpha * (1 - op), focus?.id === pobj.id, t);
-      if (op > 0.01) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(r.x, r.y, r.w, r.h);
-        ctx.clip();
-        ctx.translate(r.x, r.y);
-        ctx.scale(KID, KID);
-        this.scene(l + 1, op, v, s, st, t);
-        ctx.restore();
-      }
+      this.portalFrame(r, alpha * (1 - childOp), focus?.id === pobj.id, t);
+      this.connector(pobj, r, alpha * (1 - childOp), t);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(r.x, r.y, r.w, r.h);
+      ctx.clip();
+      ctx.translate(r.x, r.y);
+      ctx.scale(KID, KID);
+      this.scene(
+        l + 1,
+        a0 * Math.max(childOp, THUMB_ALPHA),
+        v,
+        s,
+        st,
+        t,
+        childOp > 0.25,
+      );
+      ctx.restore();
+      ctx.globalAlpha = alpha * (1 - childOp);
+      this.scanlines(r);
     }
     ctx.globalAlpha = 1;
   }
@@ -211,16 +231,14 @@ export class Renderer {
       if (n < 8) continue;
       ctx.globalAlpha = a;
       if (w.kind === "p") {
-        ctx.fillStyle = world.pal.power;
-        for (let k = 0; k < Math.max(2, Math.floor(n / 40)); k++) {
-          const i = Math.floor(
-            (t * SPARK_SPEED + (k * n) / Math.max(2, Math.floor(n / 40))) % n,
-          );
+        const count = Math.max(2, Math.floor(n / 40));
+        for (let k = 0; k < count; k++) {
+          const i = Math.floor((t * SPARK_SPEED + (k * n) / count) % n);
           const [x, y] = w.pts[i]!;
+          ctx.fillStyle = world.pal.power;
           ctx.fillRect(x - 2, y - 2, 4, 4);
           ctx.fillStyle = world.pal.white;
           ctx.fillRect(x - 1, y - 1, 2, 2);
-          ctx.fillStyle = world.pal.power;
         }
       } else {
         const count = n > 160 ? 2 : 1;
@@ -234,41 +252,44 @@ export class Renderer {
     ctx.globalAlpha = alpha;
   }
 
+  /** Arc between two object centres, sampled to pixels. */
   private route(def: SceneDef, a: Obj, b: Obj) {
     const key = `${def.id}:${a.id}:${b.id}`;
     let r = this.routes.get(key);
     if (!r) {
-      const aAbove = a.y + a.h <= b.y;
-      const ax = Math.round(a.x + a.w / 2);
-      const bx = Math.round(b.x + b.w / 2);
-      r = aAbove
-        ? routePts(ax, a.y + a.h, bx, b.y - 1)
-        : routePts(ax, a.y - 1, bx, b.y + b.h);
+      const x0 = a.x + a.w / 2,
+        y0 = a.y + a.h / 2,
+        x1 = b.x + b.w / 2,
+        y1 = b.y + b.h / 2;
+      const cx = (x0 + x1) / 2,
+        cy = Math.min(y0, y1) - 50 - Math.abs(x1 - x0) * 0.08;
+      const n = Math.max(
+        24,
+        Math.round((Math.abs(x1 - x0) + Math.abs(y1 - y0)) / 2.5),
+      );
+      r = [];
+      for (let i = 0; i <= n; i++) {
+        const u = i / n;
+        r.push([
+          Math.round(
+            (1 - u) * (1 - u) * x0 + 2 * u * (1 - u) * cx + u * u * x1,
+          ),
+          Math.round(
+            (1 - u) * (1 - u) * y0 + 2 * u * (1 - u) * cy + u * u * y1,
+          ),
+        ]);
+      }
       this.routes.set(key, r);
     }
     return r;
   }
 
-  private outline(o: Obj, color: string, grow: number, a: number) {
-    const { ctx } = this;
-    ctx.globalAlpha = a;
-    ctx.fillStyle = color;
-    const x = o.x - grow,
-      y = o.y - grow,
-      w = o.w + grow * 2,
-      h = o.h + grow * 2;
-    ctx.fillRect(x, y, w, 2);
-    ctx.fillRect(x, y + h - 2, w, 2);
-    ctx.fillRect(x, y, 2, h);
-    ctx.fillRect(x + w - 2, y, 2, h);
-  }
-
-  private highlight(
+  /** Coloured outlines drawn beneath the objects themselves. */
+  private halos(
     def: SceneDef,
-    adj: Map<string, Set<string>>,
+    b: { objs: Map<string, HTMLCanvasElement>; adj: Map<string, Set<string>> },
     f: Ref,
     alpha: number,
-    st: RenderState,
     t: number,
   ) {
     const { ctx, world } = this;
@@ -277,7 +298,33 @@ export class Renderer {
     const color = (o: Obj) =>
       o.layer === "p" ? world.pal.power : world.pal.data;
     const pulse = 0.7 + 0.3 * Math.sin(t * 5);
-    for (const rid of adj.get(f.id) ?? []) {
+    const halo = (o: Obj, col: string, grow: number, a: number) => {
+      ctx.globalAlpha = a;
+      ctx.drawImage(
+        world.silhouette(b.objs.get(o.id)!, col, grow),
+        o.x - grow,
+        o.y - grow,
+      );
+    };
+    for (const rid of b.adj.get(f.id) ?? [])
+      halo(byId.get(rid)!, color(byId.get(rid)!), 2, alpha * pulse);
+    halo(self, color(self), 4, alpha * (0.35 + 0.25 * pulse));
+    halo(self, color(self), 2, alpha);
+    ctx.globalAlpha = alpha;
+  }
+
+  /** Link arcs and travelling envelopes between the focused object and its counterparts. */
+  private highlight(
+    def: SceneDef,
+    b: { adj: Map<string, Set<string>> },
+    f: Ref,
+    alpha: number,
+    t: number,
+  ) {
+    const { ctx, world } = this;
+    const byId = new Map(def.objects.map((o) => [o.id, o]));
+    const self = byId.get(f.id)!;
+    for (const rid of b.adj.get(f.id) ?? []) {
       const other = byId.get(rid)!;
       const pts = this.route(def, self, other);
       ctx.globalAlpha = alpha * 0.9;
@@ -285,26 +332,19 @@ export class Renderer {
       pts.forEach(([x, y], i) => {
         if (i % 4 < 2) ctx.fillRect(x, y, 2, 2);
       });
-      ctx.globalAlpha = alpha * 0.35;
-      pts.forEach(([x, y], i) => {
-        if (i % 4 >= 2) ctx.fillRect(x, y, 1, 1);
-      });
       if (!this.reduceMotion) {
         ctx.globalAlpha = alpha;
         for (let k = 0; k < 2; k++) {
-          const i = Math.floor((t * 38 + (k * pts.length) / 2) % pts.length);
-          const [x, y] = pts[i]!;
+          const [x, y] =
+            pts[Math.floor((t * 38 + (k * pts.length) / 2) % pts.length)]!;
           ctx.drawImage(world.env, x - 7, y - 5);
         }
       }
-      this.outline(other, color(other), 2, alpha * pulse);
     }
-    this.outline(self, color(self), 2, alpha);
-    this.outline(self, color(self), 4, alpha * 0.4 * pulse);
     ctx.globalAlpha = alpha;
   }
 
-  private portalMarker(
+  private portalFrame(
     r: { x: number; y: number; w: number; h: number },
     a: number,
     focused: boolean,
@@ -312,27 +352,74 @@ export class Renderer {
   ) {
     if (a < 0.02) return;
     const { ctx, world } = this;
-    ctx.globalAlpha = a * (focused ? 1 : 0.8);
-    ctx.fillStyle = world.pal.yellow[3];
-    for (let x = r.x; x < r.x + r.w; x += 4) {
-      ctx.fillRect(x, r.y - 2, 2, 2);
-      ctx.fillRect(x, r.y + r.h, 2, 2);
+    const col = focused ? world.pal.yellow[3] : world.pal.data;
+    ctx.globalAlpha = a * (focused ? 1 : 0.55 + 0.25 * Math.sin(t * 3));
+    ctx.fillStyle = col;
+    const c = 14;
+    for (const [x, y, dx, dy] of [
+      [r.x, r.y, 1, 1],
+      [r.x + r.w, r.y, -1, 1],
+      [r.x, r.y + r.h, 1, -1],
+      [r.x + r.w, r.y + r.h, -1, -1],
+    ] as const) {
+      ctx.fillRect(dx > 0 ? x - 3 : x + 1, dy > 0 ? y - 3 : y + 1, c, 3);
+      ctx.fillRect(
+        dx > 0 ? x - 3 : x + 1 - (c - 3),
+        dy > 0 ? y - 3 : y + 1 - (c - 3),
+        3,
+        c,
+      );
     }
-    for (let y = r.y; y < r.y + r.h; y += 4) {
-      ctx.fillRect(r.x - 2, y, 2, 2);
-      ctx.fillRect(r.x + r.w, y, 2, 2);
-    }
+    ctx.globalAlpha = a * 0.25;
+    ctx.fillRect(r.x - 3, r.y - 3, r.w + 6, 1);
+    ctx.fillRect(r.x - 3, r.y + r.h + 2, r.w + 6, 1);
     // magnifier
-    const mx = r.x + r.w - 16;
-    const my = r.y - 18;
+    const mx = r.x + r.w - 20,
+      my = r.y - 26;
     ctx.globalAlpha = a * (0.6 + 0.4 * Math.sin(t * 4));
     ctx.fillStyle = world.pal.outline;
-    ctx.fillRect(mx, my, 14, 14);
+    ctx.fillRect(mx, my, 16, 16);
     ctx.fillStyle = world.pal.white;
-    ctx.fillRect(mx + 2, my + 2, 8, 2);
-    ctx.fillRect(mx + 2, my + 8, 8, 2);
-    ctx.fillRect(mx + 2, my + 2, 2, 8);
-    ctx.fillRect(mx + 8, my + 2, 2, 8);
-    ctx.fillRect(mx + 10, my + 10, 4, 4);
+    ctx.fillRect(mx + 2, my + 2, 9, 2);
+    ctx.fillRect(mx + 2, my + 9, 9, 2);
+    ctx.fillRect(mx + 2, my + 2, 2, 9);
+    ctx.fillRect(mx + 9, my + 2, 2, 9);
+    ctx.fillRect(mx + 11, my + 11, 4, 4);
+  }
+
+  /** Dotted beam from the portal object up to its hologram window. */
+  private connector(
+    o: Obj,
+    r: { x: number; y: number; w: number; h: number },
+    a: number,
+    t: number,
+  ) {
+    if (a < 0.02) return;
+    const { ctx, world } = this;
+    const x0 = o.x + o.w * 0.5,
+      y0 = o.y + o.h * 0.35,
+      x1 = r.x + r.w / 2,
+      y1 = r.y + r.h;
+    const n = Math.round(Math.hypot(x1 - x0, y1 - y0) / 4);
+    ctx.fillStyle = world.pal.data;
+    for (let i = 0; i < n; i++) {
+      ctx.globalAlpha =
+        a * (0.25 + 0.6 * ((Math.sin(t * 3 - i * 0.5) + 1) / 2));
+      ctx.fillRect(
+        Math.round(x0 + ((x1 - x0) * i) / n),
+        Math.round(y0 + ((y1 - y0) * i) / n),
+        2,
+        2,
+      );
+    }
+  }
+
+  /** Subtle hologram scanlines over a portal thumbnail. */
+  private scanlines(r: { x: number; y: number; w: number; h: number }) {
+    const { ctx, world } = this;
+    ctx.fillStyle = world.pal.night
+      ? "rgba(42,212,255,.10)"
+      : "rgba(11,159,196,.08)";
+    for (let y = r.y; y < r.y + r.h; y += 3) ctx.fillRect(r.x, y, r.w, 1);
   }
 }

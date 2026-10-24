@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import {
-  BAND_Y,
   PORTAL_H,
   PORTAL_W,
   SH,
@@ -25,34 +24,6 @@ describe.each(scenes.map((s, l) => [s, l] as const))("scene $0.id", (s, l) => {
       expect(o.x + o.w, o.id).toBeLessThanOrEqual(SW);
       expect(o.y + o.h, o.id).toBeLessThanOrEqual(SH);
     }
-  });
-
-  test("layers respect the band divider", () => {
-    for (const o of s.objects) {
-      if (o.layer === "d")
-        expect(
-          o.y + o.h,
-          `${o.id} data object must sit above the divider`,
-        ).toBeLessThanOrEqual(BAND_Y + 2);
-      else
-        expect(
-          o.y + o.h,
-          `${o.id} power object must reach the ground band`,
-        ).toBeGreaterThan(BAND_Y);
-    }
-  });
-
-  test("objects on the same layer do not overlap", () => {
-    for (const a of s.objects)
-      for (const b of s.objects) {
-        if (a.id >= b.id || a.layer !== b.layer) continue;
-        const overlap =
-          a.x < b.x + b.w &&
-          b.x < a.x + a.w &&
-          a.y < b.y + b.h &&
-          b.y < a.y + a.h;
-        expect(overlap, `${a.id} overlaps ${b.id}`).toBe(false);
-      }
   });
 
   test("links resolve and cross layers", () => {
@@ -92,6 +63,7 @@ describe.each(scenes.map((s, l) => [s, l] as const))("scene $0.id", (s, l) => {
       const r = portalRect(p!);
       expect(r.w).toBe(PORTAL_W);
       expect(r.h).toBe(PORTAL_H);
+      expect(r.x).toBeGreaterThanOrEqual(0);
       expect(r.x + r.w).toBeLessThanOrEqual(SW);
       expect(r.y + r.h).toBeLessThanOrEqual(SH);
       expect(s.objects.filter((o) => o.portal).length).toBe(1);

@@ -25,7 +25,7 @@ export interface Obj {
   /** night-time glows in object-local coordinates */
   lights?: Light[];
   /** when set, a child scene lives in a PORTAL_W x PORTAL_H window at (x+dx, y+dy) */
-  portal?: { dx: number; dy: number };
+  portal?: { x: number; y: number };
 }
 
 export interface Light {

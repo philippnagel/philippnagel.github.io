@@ -1,18 +1,16 @@
 import type { Insets, Obj, Origin, SceneDef, Size, View } from "./types";
 
 /** Every scene is a SW x SH grid of art pixels. */
-export const SW = 640;
-export const SH = 360;
-/** Divider between the data band (above) and the power band (below). */
-export const BAND_Y = 160;
-export const PORTAL_W = 96;
-export const PORTAL_H = 54;
+export const SW = 960;
+export const SH = 540;
+export const PORTAL_W = 144;
+export const PORTAL_H = 81;
 export const KID = PORTAL_W / SW;
 
 /** Scene-space window of an object's portal. */
 export const portalRect = (o: Obj) => ({
-  x: o.x + o.portal!.dx,
-  y: o.y + o.portal!.dy,
+  x: o.portal!.x,
+  y: o.portal!.y,
   w: PORTAL_W,
   h: PORTAL_H,
 });
