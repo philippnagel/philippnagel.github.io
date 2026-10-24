@@ -1,45 +1,530 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta http-equiv="content-type" content="text/html; charset="utf-8" />
-  <meta name="mobile-web-app-capable" content="yes" />                                                                
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="google-site-verification" content="" />
-  <title>Philipp Nagel</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌌</text></svg>">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Philipp Nagel · Grid to Packet</title>
+<meta name="description" content="Interactive multi-scale map of German smart-metering: from the national grid down to the DLMS/COSEM frame, with the physical and protocol layers side by side.">
+<meta property="og:title" content="Philipp Nagel · Grid to Packet">
+<meta property="og:url" content="https://www.philippnagel.com">
+<meta property="og:description" content="Zoom from the national grid to the protocol frame: physical infrastructure and market/metering protocols, side by side.">
+<meta property="og:type" content="website">
+<link rel="me" href="https://www.linkedin.com/in/philippnagel/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+<style>
+:root {
+  --bg: #f5f6f8; --card: #ffffff; --ink: #0f172a; --mute: #5b6779; --line: #c4ccd8;
+  --grid: rgba(15, 23, 42, .055); --phys: #b45309; --proto: #0e7490;
+  --glow-p: rgba(180, 83, 9, .35); --glow-r: rgba(14, 116, 144, .35);
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --panel-w: 360px; --top: 64px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a0e14; --card: #111823; --ink: #e6edf3; --mute: #8b98a9; --line: #263143;
+    --grid: rgba(148, 163, 184, .07); --phys: #fbbf24; --proto: #22d3ee;
+    --glow-p: rgba(251, 191, 36, .55); --glow-r: rgba(34, 211, 238, .55);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0a0e14; --card: #111823; --ink: #e6edf3; --mute: #8b98a9; --line: #263143;
+  --grid: rgba(148, 163, 184, .07); --phys: #fbbf24; --proto: #22d3ee;
+  --glow-p: rgba(251, 191, 36, .55); --glow-r: rgba(34, 211, 238, .55);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: var(--sans); overflow: hidden; }
+a { color: inherit; }
 
+/* chrome */
+header {
+  position: fixed; inset: 0 0 auto 0; height: var(--top); z-index: 5; display: flex; align-items: center; gap: 12px;
+  padding: 0 16px; background: linear-gradient(var(--bg) 60%, transparent); pointer-events: none;
+}
+header > * { pointer-events: auto; }
+.who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.who img { width: 30px; height: 30px; border-radius: 50%; }
+.who b { font-size: 15px; font-weight: 650; white-space: nowrap; }
+.who span { font: 12px var(--mono); color: var(--mute); white-space: nowrap; }
+.sp { flex: 1; }
+.btn {
+  font: 600 13px var(--sans); text-decoration: none; padding: 7px 12px; border: 1px solid var(--line);
+  background: var(--card); color: var(--ink); border-radius: 8px; cursor: pointer; white-space: nowrap;
+}
+.btn:hover, .btn:focus-visible { border-color: var(--proto); outline: none; }
+.btn.pri { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+#theme { width: 34px; padding: 8px 0; display: grid; place-items: center; }
 
-  <meta name="description" content="" />
-  <meta name="keywords" content="" />
-  <meta property="og:title" content="Philipp Nagel" />
-  <meta property="og:url" content="https://www.philippnagel.com" />
-  <meta property="og:description" content="" />
-  <meta property="og:type" content="website" />
-  
-  <link rel="me" href="https://linkedin.com/philippnagel" />
-  <link rel="me" href="https://github/philippnagel" />
-  <link rel="me" href="https://njump.me/npub1nageldlty6u8yqhpy75wgd3kw3299znc6lj4nv08rvh75fmvqrqsmavye4l/" />
-  <link rel="me" href="https://beta.cent.co/pmn" />
+#crumbs {
+  position: fixed; z-index: 4; top: var(--top); left: 16px; right: calc(var(--panel-w) + 16px);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 2px; font: 12px var(--mono);
+}
+#crumbs button {
+  all: unset; cursor: pointer; padding: 4px 8px; border-radius: 6px; color: var(--mute); border: 1px solid transparent;
+}
+#crumbs button:hover, #crumbs button:focus-visible { color: var(--ink); border-color: var(--line); }
+#crumbs button[aria-current] { color: var(--ink); background: var(--card); border-color: var(--line); cursor: default; }
+#crumbs i { color: var(--line); font-style: normal; }
+#crumbs .fr { color: var(--proto); }
 
-  <link rel="stylesheet" href="style.css">
+#minimap { position: fixed; z-index: 4; left: 16px; bottom: 16px; width: 120px; height: 120px; }
+#minimap rect { fill: var(--card); stroke: var(--line); cursor: pointer; transition: stroke .2s; }
+#minimap rect.act { stroke: var(--proto); fill: color-mix(in srgb, var(--proto) 12%, var(--card)); }
+#minimap text { font: 9px var(--mono); fill: var(--mute); pointer-events: none; }
+
+#hint {
+  position: fixed; z-index: 4; left: 16px; top: calc(var(--top) + 34px); font: 12px var(--mono); color: var(--mute);
+  max-width: 420px; transition: opacity .6s;
+}
+
+#stage { position: fixed; inset: 0; touch-action: none; cursor: grab; }
+#stage.drag { cursor: grabbing; }
+svg { width: 100%; height: 100%; display: block; }
+
+aside {
+  position: fixed; z-index: 4; top: var(--top); right: 0; bottom: 0; width: var(--panel-w); padding: 18px 20px 24px;
+  overflow-y: auto; background: color-mix(in srgb, var(--card) 92%, transparent); border-left: 1px solid var(--line);
+  backdrop-filter: blur(8px);
+}
+aside .eyebrow { font: 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--mute); }
+aside .eyebrow.p { color: var(--phys); } aside .eyebrow.r { color: var(--proto); }
+aside h2 { margin: 6px 0 2px; font-size: 21px; line-height: 1.2; }
+aside .tag { font: 12px var(--mono); color: var(--mute); margin-bottom: 12px; }
+aside p { font-size: 14px; line-height: 1.55; margin: 0 0 14px; }
+aside h3 { font: 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--mute); margin: 18px 0 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 12px var(--mono); padding: 5px 9px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+.chip.p { border-left: 3px solid var(--phys); } .chip.r { border-left: 3px solid var(--proto); }
+.chip:hover, .chip:focus-visible { outline: none; border-color: var(--ink); }
+.frame { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); overflow: hidden; }
+.frame div { padding: 7px 10px; border-top: 1px solid var(--line); }
+.frame div:first-child { border-top: 0; }
+.frame code { display: block; font: 12px/1.4 var(--mono); color: var(--proto); word-break: break-all; }
+.frame span { display: block; font-size: 12px; color: var(--mute); margin-top: 2px; }
+.frame .note { font: 11px var(--mono); color: var(--mute); background: transparent; }
+.acts { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+kbd { font: 11px var(--mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; }
+
+/* svg theme */
+.fbg { fill: var(--bg); stroke: var(--line); stroke-width: 2; }
+.lvl { font: 600 13px var(--mono); fill: var(--mute); letter-spacing: .12em; }
+.lane { font: 600 12px var(--mono); letter-spacing: .14em; }
+.lane.p { fill: var(--phys); } .lane.r { fill: var(--proto); }
+.laneline { stroke-width: 1.5; stroke-dasharray: 2 6; stroke-linecap: round; opacity: .6; }
+.node { cursor: pointer; transition: opacity .25s; outline: none; }
+.node.dim { opacity: .3; }
+.nbox { fill: var(--card); stroke: var(--line); stroke-width: 1.5; transition: stroke .2s, filter .2s; }
+.node.p.on .nbox, .node.p:focus-visible .nbox { stroke: var(--phys); stroke-width: 2.5; filter: drop-shadow(0 0 10px var(--glow-p)); }
+.node.r.on .nbox, .node.r:focus-visible .nbox { stroke: var(--proto); stroke-width: 2.5; filter: drop-shadow(0 0 10px var(--glow-r)); }
+.node.sel .nbox { stroke-width: 3.5; }
+.ntag { font: 13px var(--mono); }
+.node.p .ntag { fill: var(--phys); } .node.r .ntag { fill: var(--proto); }
+.nttl { font: 650 22px var(--sans); fill: var(--ink); }
+.nsub { font: 14.5px var(--mono); fill: var(--mute); }
+.pframe { fill: none; stroke-width: 1.5; stroke-dasharray: 5 4; }
+.node.p .pframe { stroke: var(--phys); } .node.r .pframe { stroke: var(--proto); }
+.phit { fill: transparent; cursor: zoom-in; }
+.flow { fill: none; stroke-width: 2; }
+.flow.p { stroke: var(--phys); opacity: .55; stroke-dasharray: 10 8; animation: dash 1.2s linear infinite; }
+.flow.r { stroke: var(--proto); opacity: .55; stroke-dasharray: 3 7; stroke-linecap: round; animation: dash 1.2s linear infinite; }
+.link { fill: none; stroke: var(--mute); stroke-width: 1.5; opacity: .22; transition: opacity .25s; }
+.link.on { opacity: 1; stroke: var(--proto); stroke-width: 3; stroke-dasharray: 12 8; filter: drop-shadow(0 0 6px var(--glow-r)); animation: dash .8s linear infinite; }
+.link.dim { opacity: .05; }
+@keyframes dash { to { stroke-dashoffset: -36; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+@media (max-width: 880px) {
+  :root { --panel-w: 0px; }
+  .who span, #hint, #minimap { display: none; }
+}
+@media (max-width: 520px) { .who b { display: none; } }
+@media (max-width: 880px) {
+  #crumbs { right: 16px; }
+  aside { top: auto; left: 0; width: auto; height: 42vh; border-left: 0; border-top: 1px solid var(--line); }
+}
+</style>
 </head>
-
 <body>
-  <img id="userPhoto" src="/profile-circle-crop.png" alt="Profile Picture">
-    
-  <p id="userName">Philipp Nagel</p>
-  <div id="links">
-      <a class="link" href="https://kraftwerk.social//">My Blog on kraftwerk.social</a>
-      <a class="link" href="https://www.linkedin.com/in/philippnagel/" rel="me">LinkedIn</a>
-      <a class="link" href="https://twitter.com/philippnag" rel="me">Twitter</a>
-      <!-- <a class="link" href="https://beta.cent.co/pmn" rel="me">Cent</a> -->
-      <!-- <a class="link" href="https://gm.xyz/u/0x2a19c055e56e0b8a1f424552609f7a1fb281598a" rel="me">gm</a> -->
-      <a class="link" href="https://njump.me/npub1nageldlty6u8yqhpy75wgd3kw3299znc6lj4nv08rvh75fmvqrqsmavye4" rel="me">Nostr</a>
+<header>
+  <div class="who">
+    <img src="profile-circle-crop.png" alt="">
+    <b>Philipp Nagel</b><span>grid → packet</span>
   </div>
+  <div class="sp"></div>
+  <a class="btn" href="https://www.linkedin.com/in/philippnagel/" rel="me">LinkedIn</a>
+  <a class="btn pri" href="https://cal.com/nagel">Book a call</a>
+  <button class="btn" id="theme" aria-label="Toggle light/dark theme"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 2a6 6 0 0 0 0 12z" fill="currentColor"/></svg></button>
+</header>
 
-  <!-- Javascript -->
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
-  <script  src="index.js"></script>
+<nav id="crumbs" aria-label="Zoom level"></nav>
+<div id="stage"><svg id="svg" role="group" aria-label="Interactive map of physical grid infrastructure and protocol layers"></svg></div>
+<svg id="minimap" viewBox="0 0 120 120" aria-label="Zoom level map"></svg>
+<div id="hint">scroll / pinch to zoom · drag to pan · click a node · click a dashed thumbnail to dive in</div>
+<aside id="panel" aria-live="polite"></aside>
+<noscript><p style="position:fixed;inset:80px 20px;font:15px system-ui">This diagram needs JavaScript.</p></noscript>
 
+<script>
+(() => {
+'use strict';
+
+/* ---------- data ---------- */
+const FRAMES = {
+  mscons: [
+    ["UNB+UNOC:3+9900000000003:500+9900000000010:500+260101:0000+REF0001'", "interchange envelope · sender → receiver as BDEW code numbers (qualifier 500)"],
+    ["UNH+1+MSCONS:D:04B:UN:2.4c'", "message header · type + release (version string illustrative)"],
+    ["BGM+7+MSG0001+9'", "beginning of message · document reference"],
+    ["NAD+MS+9900000000003::293'", "sender role (MS) · 293 = BDEW code list"],
+    ["LOC+172+DE0001234567890123456789012345678'", "Messlokation (MeLo) · DE + 31 characters"],
+    ["QTY+220:1234.5:KWH'", "measured value + unit"],
+    ["Illustrative and abridged, not schema-valid.", null]
+  ],
+  dlms: [
+    ["C0 01 C1", "GET.request-normal · invoke-id C1"],
+    ["00 03", "COSEM class 3 · Register"],
+    ["01 00 01 08 00 FF", "OBIS 1-0:1.8.0*255 · active energy import, total"],
+    ["02 · 00", "attribute 2 (value) · no selective access"],
+    ["C4 01 C1 00 06 00 01 E2 40", "GET.response-normal · data-access-result OK · double-long-unsigned 0x0001E240 = 123456"],
+    ["Request then response, reading one register.", null]
+  ],
+  pki: [
+    ["SM-PKI Root CA (BSI)", "trust anchor for the smart-metering infrastructure"],
+    ["↳ Sub-CA", "issues certificates to SMGW, gateway admin (GWA) and external market participants (EMT)"],
+    ["↳ Leaf certificate (ECC)", "device or role identity, presented in the TLS handshake"],
+    ["TLS 1.2 · mutual authentication", "both ends present certificates; the SMGW decides who may read what"]
+  ]
+};
+
+const LV = [
+  { name: 'NATIONAL GRID',
+    p: [
+      { t: 'Transmission · TSO', tag: '380/220 kV · Übertragungsnetz', l: ['4 TSOs balance the system', 'Aggregates only, no households'],
+        i: 'Four TSOs (50Hertz, Amprion, TenneT, TransnetBW) run the 380/220 kV transmission grid and keep the system balanced. Nothing at household level is visible here, only aggregated schedules and settlement data.' },
+      { t: 'Substation · DSO', tag: '110 kV → 20 kV · Umspannwerk', l: ['HV/MV transformer station', 'One DSO per grid area'],
+        i: 'HV/MV substations (Umspannwerke) step 110 kV down to medium voltage. Each distribution system operator runs its grid area, and a DSO-affiliated company is usually the default metering point operator (grundzuständiger MSB) there.' },
+      { t: 'Local grid station', tag: '20 kV → 0.4 kV · Ortsnetz', l: ['MV/LV transformer', 'Feeds the cable network'],
+        i: 'The MV/LV transformer (Ortsnetzstation) feeds the 0.4 kV cable network. This is where households, PV and wallboxes first show up, as one aggregated feeder load.' },
+      { t: 'Connection point', tag: 'Netzanschluss · Zählpunkt', l: ['Where energy is measured', 'Zoom in ▸'],
+        i: 'Every grid connection has a Zählpunkt: the point where energy is measured and where market roles attach. Zoom in: this is where physical measurement turns into market data.' }
+    ],
+    r: [
+      { t: 'BNetzA · EnWG', tag: 'Festlegungen · MaKo · MPES', l: ['Federal Network Agency', 'Binding market-process rules'],
+        i: 'The Bundesnetzagentur issues binding Festlegungen (determinations) on market processes: the MaKo programme with its revisions (MaKo 2.0 etc.) and MPES for generation plants. It mandates the processes and the formats the industry specifies below.' },
+      { t: 'BDEW · EDI@Energy', tag: 'AHB · MIG · EBD', l: ['GPKE · GeLi Gas · WiM · MaBiS', 'Processes → EDIFACT messages'],
+        i: 'BDEW\'s EDI@Energy working group writes the implementation guides: AHB (application handbooks), MIG (message implementation guides) and EBD decision trees. They map GPKE (power), GeLi Gas (gas), WiM (metering) and MaBiS (balancing) onto EDIFACT messages.' },
+      { t: 'VDE FNN · BSI', tag: 'TR-03109 · BSI-CC-PP-0073', l: ['Technical + security rules', 'SMGW certification regime'],
+        i: 'BSI sets the security framework: TR-03109 for the smart-metering infrastructure and the Common Criteria protection profile for the SMGW (BSI-CC-PP-0073). VDE FNN contributes technical grid and metering rules.' },
+      { t: 'Market roles', tag: 'NB · LF · MSB · ÜNB', l: ['Bilateral EDIFACT, no hub', 'IDs via BDEW code registry'],
+        i: 'Network operator (NB), supplier (LF), metering point operator (MSB), TSO (ÜNB): each identified by a BDEW code number. Germany rejected a central data hub, so messages flow bilaterally between roles.' }
+    ],
+    links: [[0, 0], [1, 0], [1, 3], [2, 2], [3, 1], [3, 2], [3, 3]] },
+
+  { name: 'METERING POINT',
+    p: [
+      { t: 'Meter cabinet', tag: 'Zählerplatz · 0.4 kV', l: ['Zählpunkt identified by', 'MeLo (33) + MaLo (11 chars)'],
+        i: 'The meter cabinet at the connection. The metering location is identified by a MeLo ID (Messlokation, DE + 31 characters); the market location, where energy flows are attributed, by an 11-character MaLo ID.' },
+      { t: 'Base meter · mME', tag: 'Basiszähler · eHZ', l: ['Electronic household meter', 'Reads locally, no WAN'],
+        i: 'A modern meter (mME) measures locally and shows values on a display. Paired with a gateway it becomes part of an intelligent metering system (iMSys).' },
+      { t: 'Smart Meter Gateway', tag: 'SMGW · BSI TR-03109-1', l: ['Security module (HSM)', 'LMN · HAN · WAN'],
+        i: 'The gateway is the trust anchor. It receives meter telegrams over LMN, decrypts and verifies them, then signs, timestamps and forwards them encrypted over WAN to authorised parties. It also terminates the HAN towards customer devices.' },
+      { t: 'Customer premises', tag: 'Kundenanlage · Submetering', l: ['Sub-meters, PV, loads', 'Zoom in ▸'],
+        i: 'Behind the meter: sub-meters, sub-distribution, generation and loads. Controllable devices attach as CLS via the HAN. Zoom in for the edge devices.' }
+    ],
+    r: [
+      { t: 'UTILMD', tag: 'Stammdaten · process messages', l: ['Registration, switching', 'MaLo/MeLo master data'],
+        i: 'Master data and process messages: supplier registration and switching (GPKE), assignment of MaLo/MeLo, role changes. This is the message that makes a metering point exist for the market.' },
+      { t: 'MSCONS', tag: 'Messwerte · metered values', l: ['Readings, load profiles', 'MSB → NB / LF'], f: 'mscons',
+        i: 'Metered values (meter readings, load profiles) sent by the metering point operator to network operator, supplier and others. The values originate in the meter, are signed by the SMGW, and reach the market as EDIFACT.' },
+      { t: 'ORDERS · CONTRL · APERAK', tag: 'Orders · acknowledgements', l: ['CONTRL: syntax-level ACK', 'APERAK: content-level ACK'],
+        i: 'ORDERS carries requests and orders (for example metering data or configuration changes). CONTRL acknowledges at EDIFACT syntax level (envelope accepted or rejected); APERAK at application level (content rejected, e.g. unknown MaLo).' },
+      { t: 'AS4 · TLS · PKI', tag: 'Transport & trust', l: ['EDIFACT over AS4 (ebMS3)', 'SM-PKI behind the gateway'], f: 'pki',
+        i: 'Transport and trust. EDIFACT travels over AS4 with X.509 certificates; REST APIs appear alongside it for selected processes. On the gateway side, the SM-PKI rooted at BSI issues certificates so every WAN and HAN TLS session is mutually authenticated.' }
+    ],
+    links: [[0, 0], [1, 1], [2, 1], [2, 3], [3, 1], [3, 2]] },
+
+  { name: 'EDGE DEVICES',
+    p: [
+      { t: 'Meter · sub-meter', tag: 'OBIS 1-0:1.8.0', l: ['Measurement register', 'Never talks to the market'],
+        i: 'Meter or sub-meter exposing OBIS registers (1-0:1.8.0 is total active energy import). It hands readings to the SMGW over LMN and never talks to the market directly.' },
+      { t: 'Smart Meter Gateway', tag: 'SMGW', l: ['Three interfaces', 'Sign · timestamp · forward'],
+        i: 'The same gateway, seen through its three interfaces: LMN towards meters, HAN towards customer devices, WAN towards the backend. All three are specified in BSI TR-03109-1.' },
+      { t: 'HEMS · control box', tag: 'CLS · §14a EnWG', l: ['Home energy management', 'Load signals, optimisation'],
+        i: 'A home energy management system on the HAN reads consumption via the SMGW and steers devices. Controllable consumers under §14a EnWG can be driven through a control box on a CLS channel.' },
+      { t: 'Wallbox · Inverter', tag: 'Heat pump · local sensors', l: ['Controllable local systems', 'No direct internet exposure'],
+        i: 'Wallbox, PV inverter, heat pump, local sensors. As CLS they reach an authorised backend only through the gateway\'s TLS-protected, transparent channel.' }
+    ],
+    r: [
+      { t: 'LMN · meter ↔ SMGW', tag: 'SML · OMS · RS-485', l: ['wireless M-Bus (OMS, 868 MHz)', 'or wired RS-485'],
+        i: 'Meter to gateway. TR-03109-1 annexes require wireless M-Bus (OMS, 868 MHz) and wired RS-485 as physical options. SML historically carries the data in Germany; DLMS/COSEM is increasingly displacing it.' },
+      { t: 'DLMS/COSEM', tag: 'IEC 62056 · OBIS', l: ['COSEM objects by OBIS code', 'GET / SET / ACTION'], f: 'dlms',
+        i: 'The application layer for meter data: COSEM objects addressed by OBIS codes and accessed with GET, SET and ACTION services. The frame below reads total import energy.' },
+      { t: 'HAN · TLS', tag: 'SMGW ↔ CLS / HEMS', l: ['TLS 1.2, mutual certificates', 'Per-party data profiles'],
+        i: 'Gateway to HEMS and CLS devices. TLS 1.2 with mutual certificate authentication (cryptography per BSI TR-03116-3). The SMGW enforces which party may see which data.' },
+      { t: 'WAN · SMGW admin', tag: 'GWA · EMT · SM-PKI', l: ['Provisioning, config, updates', 'Data out to market parties'], f: 'pki',
+        i: 'Gateway to backend. The gateway administrator (GWA, run by the MSB) provisions, configures and updates SMGWs; external market participants receive data through the gateway\'s WAN channel. The trust chain is the SM-PKI.' }
+    ],
+    links: [[0, 0], [0, 1], [1, 0], [1, 1], [1, 2], [1, 3], [2, 2], [3, 2]] }
+];
+const CRUMBS = ['National Grid', 'Metering Point', 'Edge Devices'];
+
+/* ---------- geometry ---------- */
+const SZ = 1000, PW = 420, NH = 190, GAP = 40, Y0 = 100, PORT = 100, KID = PORT / SZ, DRILL = 3;
+const X = { p: 30, r: 550 };
+const ny = i => Y0 + i * (NH + GAP);
+const PX = X.p + PW - PORT - 14, PY = ny(DRILL) + (NH - PORT) / 2;
+const ORIG = [{ x: 0, y: 0, k: 1 }];
+for (let l = 1; l < LV.length; l++) { const o = ORIG[l - 1]; ORIG.push({ x: o.x + o.k * PX, y: o.y + o.k * PY, k: o.k * KID }); }
+
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+function scene(l) {
+  const d = LV[l];
+  let s = `<rect class="fbg" width="${SZ}" height="${SZ}"/><rect width="${SZ}" height="${SZ}" fill="url(#grid)"/>`;
+  s += `<text class="lvl" x="${SZ / 2}" y="30" text-anchor="middle">LEVEL ${l + 1} · ${d.name}</text>`;
+  s += `<text class="lane p" x="${X.p}" y="72">PHYSICAL · POWER DELIVERY</text><text class="lane r" x="${X.r}" y="72">INFORMATION · PROTOCOL</text>`;
+  d.links.forEach(([a, b], n) => {
+    const y1 = ny(a) + NH / 2, y2 = ny(b) + NH / 2;
+    s += `<path class="link" data-l="${l}" data-n="${n}" d="M${X.p + PW} ${y1} C${X.p + PW + 50} ${y1} ${X.r - 50} ${y2} ${X.r} ${y2}"/>`;
+  });
+  for (const side of ['p', 'r']) for (let i = 0; i < 3; i++)
+    s += `<path class="flow ${side}" d="M${X[side] + PW / 2} ${ny(i) + NH} V${ny(i + 1)}"/>`;
+  for (const side of ['p', 'r']) d[side].forEach((n, i) => {
+    const x = X[side], y = ny(i), drill = side === 'p' && i === DRILL && l < LV.length - 1;
+    s += `<g class="node ${side}" data-l="${l}" data-s="${side}" data-i="${i}" tabindex="0" role="button" aria-label="${esc(n.t)}">`;
+    s += `<rect class="nbox" x="${x}" y="${y}" width="${PW}" height="${NH}" rx="10"/>`;
+    s += `<text class="ntag" x="${x + 20}" y="${y + 36}">${esc(n.tag)}</text><text class="nttl" x="${x + 20}" y="${y + 72}">${esc(n.t)}</text>`;
+    n.l.forEach((t, k) => { s += `<text class="nsub" x="${x + 20}" y="${y + 108 + k * 24}">${esc(t)}</text>`; });
+    if (n.f) s += `<text class="ntag" x="${x + 20}" y="${y + NH - 14}">▤ frame</text>`;
+    if (drill) {
+      s += `<g transform="translate(${PX} ${PY}) scale(${KID})"><g class="scene" data-l="${l + 1}">${scene(l + 1)}</g></g>`;
+      s += `<rect class="pframe" data-child="${l + 1}" x="${PX}" y="${PY}" width="${PORT}" height="${PORT}"/>`;
+      s += `<rect class="phit" data-child="${l + 1}" x="${PX}" y="${PY}" width="${PORT}" height="${PORT}"/>`;
+    }
+    s += `</g>`;
+  });
+  return s;
+}
+
+/* ---------- build ---------- */
+const svg = document.getElementById('svg'), stage = document.getElementById('stage');
+svg.innerHTML = `<defs><pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M50 0H0V50" fill="none" stroke="var(--grid)" stroke-width="1"/></pattern></defs>
+<g class="scene" data-l="0">${scene(0)}</g>`;
+const sceneEl = [...svg.querySelectorAll('.scene')].sort((a, b) => a.dataset.l - b.dataset.l);
+const nodes = [...svg.querySelectorAll('.node')];
+const links = [...svg.querySelectorAll('.link')];
+const byChild = sel => [...svg.querySelectorAll(sel)].sort((a, b) => a.dataset.child - b.dataset.child);
+const phits = byChild('.phit'), pframes = byChild('.pframe');
+const linksOf = l => links.filter(e => +e.dataset.l === l);
+// laneline colour set via style (CSS vars)
+nodes.forEach(n => { n._k = n.dataset.s + n.dataset.i; });
+
+/* ---------- camera ---------- */
+let W = innerWidth, H = innerHeight;
+const cam = { cx: 500, cy: 500, w: 1100 };
+let anim = null, level = 0, active = [true, false, false];
+const mobile = () => innerWidth <= 880;
+const insets = () => {
+  const top = 96, right = mobile() ? 0 : 360, bottom = mobile() ? Math.round(innerHeight * .42) : 0;
+  return { top, right, bottom };
+};
+function fit(l) {
+  const o = ORIG[l], size = SZ * o.k, ins = insets();
+  const aw = W - ins.right, ah = H - ins.top - ins.bottom;
+  const ps = Math.min(aw, ah) / (size * 1.05);
+  const acx = aw / 2, acy = ins.top + ah / 2;
+  return { cx: o.x + size / 2 - (acx - W / 2) / ps, cy: o.y + size / 2 - (acy - H / 2) / ps, w: W / ps };
+}
+function render() {
+  const ps = W / cam.w, h = cam.w * H / W;
+  svg.setAttribute('viewBox', `${cam.cx - cam.w / 2} ${cam.cy - h / 2} ${cam.w} ${h}`);
+  let cur = 0;
+  for (let l = 1; l < LV.length; l++) {
+    const px = SZ * ORIG[l].k * ps, o = Math.min(1, Math.max(0, (px - 70) / 110)), on = o > .6;
+    sceneEl[l].style.opacity = o;
+    sceneEl[l].style.pointerEvents = on ? 'auto' : 'none';
+    phits[l - 1].style.pointerEvents = on ? 'none' : 'all';
+    pframes[l - 1].style.opacity = 1 - o;
+    if (px >= .45 * Math.min(W, H)) cur = l;
+    if (on !== active[l]) { active[l] = on; nodes.forEach(n => { if (+n.dataset.l === l) n.tabIndex = on ? 0 : -1; }); }
+  }
+  if (cur !== level) { level = cur; crumbs(); }
+}
+function setCam(c) { cam.cx = c.cx; cam.cy = c.cy; cam.w = c.w; render(); }
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function flyTo(t) {
+  const f = { ...cam }, dur = reduce ? 0 : 900 + 250 * Math.abs(Math.log(t.w / f.w) / Math.LN10);
+  const t0 = performance.now();
+  anim = id => {
+    let u = dur ? Math.min(1, (id - t0) / dur) : 1;
+    u = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    const w = Math.exp(Math.log(f.w) + (Math.log(t.w) - Math.log(f.w)) * u);
+    const s = Math.abs(1 / t.w - 1 / f.w) < 1e-12 ? u : (1 / w - 1 / f.w) / (1 / t.w - 1 / f.w);
+    setCam({ cx: f.cx + (t.cx - f.cx) * s, cy: f.cy + (t.cy - f.cy) * s, w });
+    if (u < 1) requestAnimationFrame(anim); else anim = null;
+  };
+  requestAnimationFrame(anim);
+}
+const stop = () => { anim = null; };
+const go = l => { fadeHint(); flyTo(fit(Math.max(0, Math.min(LV.length - 1, l)))); };
+
+/* pan / zoom input */
+const ptrs = new Map(); let moved = false, last = null;
+const toWorld = (px, py) => { const ps = W / cam.w; return [cam.cx + (px - W / 2) / ps, cam.cy + (py - H / 2) / ps]; };
+function zoomAt(px, py, f) {
+  const nw = Math.min(2600, Math.max(6, cam.w * f)), [wx, wy] = toWorld(px, py), r = nw / cam.w;
+  setCam({ cx: wx - (wx - cam.cx) * r, cy: wy - (wy - cam.cy) * r, w: nw });
+}
+stage.addEventListener('wheel', e => {
+  e.preventDefault(); stop();
+  zoomAt(e.clientX, e.clientY, Math.exp(e.deltaY * (e.ctrlKey ? .01 : .0015)));
+  fadeHint();
+}, { passive: false });
+stage.addEventListener('pointerdown', e => {
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); moved = false; stop();
+  last = pinchState();
+});
+addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const p = ptrs.get(e.pointerId), dx = e.clientX - p.x, dy = e.clientY - p.y;
+  p.x = e.clientX; p.y = e.clientY;
+  const now = pinchState();
+  if (!moved && Math.hypot(dx, dy) < 3 && ptrs.size === 1) return;
+  if (!moved) { moved = true; stage.classList.add('drag'); fadeHint(); }
+  const ps = W / cam.w;
+  if (ptrs.size >= 2 && last && last.d) {
+    zoomAt(now.x, now.y, last.d / now.d);
+  }
+  cam.cx -= (now.x - last.x) / (W / cam.w); cam.cy -= (now.y - last.y) / (W / cam.w);
+  last = now; render();
+});
+const up = e => { ptrs.delete(e.pointerId); last = pinchState(); if (!ptrs.size) stage.classList.remove('drag'); };
+addEventListener('pointerup', up); addEventListener('pointercancel', up);
+function pinchState() {
+  const a = [...ptrs.values()]; if (!a.length) return null;
+  const x = a.reduce((s, p) => s + p.x, 0) / a.length, y = a.reduce((s, p) => s + p.y, 0) / a.length;
+  return { x, y, d: a.length > 1 ? Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) : 0 };
+}
+function fadeHint() { document.getElementById('hint').style.opacity = 0; }
+
+/* ---------- selection + highlight ---------- */
+let sel = null, hov = null;
+const refOf = n => ({ l: +n.dataset.l, s: n.dataset.s, i: +n.dataset.i });
+const same = (a, b) => a && b && a.l === b.l && a.s === b.s && a.i === b.i;
+function related(ref) {
+  const out = [];
+  LV[ref.l].links.forEach(([a, b], n) => {
+    if (ref.s === 'p' && a === ref.i) out.push({ n, s: 'r', i: b });
+    if (ref.s === 'r' && b === ref.i) out.push({ n, s: 'p', i: a });
+  });
+  return out;
+}
+function paint() {
+  const ref = hov || sel;
+  nodes.forEach(n => n.classList.remove('on', 'dim', 'sel'));
+  links.forEach(e => e.classList.remove('on', 'dim'));
+  if (!ref) return;
+  const rel = related(ref), inScene = n => +n.dataset.l === ref.l;
+  nodes.filter(inScene).forEach(n => {
+    const r = refOf(n), hit = same(r, ref) || rel.some(x => x.s === r.s && x.i === r.i);
+    n.classList.add(hit ? 'on' : 'dim');
+    if (sel && same(r, sel)) n.classList.add('sel');
+  });
+  linksOf(ref.l).forEach(e => e.classList.add(rel.some(x => x.n === +e.dataset.n) ? 'on' : 'dim'));
+}
+function select(ref) { sel = ref; paint(); panel(); crumbs(); }
+
+/* ---------- panel + breadcrumb ---------- */
+const panelEl = document.getElementById('panel');
+function intro() {
+  panelEl.innerHTML = `<div class="eyebrow">Grid → packet</div><h2>Two stacks, one meter</h2>
+  <p>Left: the physical path electricity takes, from the transmission grid to a wallbox. Right: the regulation, market messages and device protocols that describe and control it.</p>
+  <p>Select any node to light up its counterpart on the other stream, then dive in through the dashed thumbnail: <b>Connection point → Customer premises</b>.</p>
+  <h3>Controls</h3><p><kbd>scroll</kbd> / pinch zoom &nbsp; <kbd>drag</kbd> pan &nbsp; <kbd>Esc</kbd> zoom out</p>`;
+}
+function panel() {
+  if (!sel) return intro();
+  const n = LV[sel.l][sel.s][sel.i], isP = sel.s === 'p';
+  const rel = related(sel).map(x => LV[sel.l][x.s][x.i]).length ? related(sel) : [];
+  let h = `<div class="eyebrow ${sel.s}">Level ${sel.l + 1} · ${isP ? 'Physical' : 'Protocol'}</div><h2>${esc(n.t)}</h2><div class="tag">${esc(n.tag)}</div><p>${esc(n.i)}</p>`;
+  if (rel.length) {
+    h += `<h3>${isP ? 'Protocols acting here' : 'Physical counterpart'}</h3><div class="chips">`;
+    rel.forEach(x => { h += `<button class="chip ${x.s}" data-s="${x.s}" data-i="${x.i}">${esc(LV[sel.l][x.s][x.i].t)}</button>`; });
+    h += `</div>`;
+  }
+  if (n.f) {
+    h += `<h3>Protocol frame</h3><div class="frame">` + FRAMES[n.f].map(([c, d]) =>
+      d ? `<div><code>${esc(c)}</code><span>${esc(d)}</span></div>` : `<div class="note">${esc(c)}</div>`).join('') + `</div>`;
+  }
+  h += `<div class="acts">`;
+  if (isP && sel.i === DRILL && sel.l < LV.length - 1) h += `<button class="btn pri" data-act="in">Zoom in ▸</button>`;
+  if (sel.l > 0) h += `<button class="btn" data-act="out">◂ Zoom out</button>`;
+  panelEl.innerHTML = h + `</div>`;
+}
+panelEl.addEventListener('click', e => {
+  const c = e.target.closest('.chip'), b = e.target.closest('[data-act]');
+  if (c) select({ l: sel.l, s: c.dataset.s, i: +c.dataset.i });
+  if (b) go(b.dataset.act === 'in' ? sel.l + 1 : sel.l - 1);
+});
+const crumbEl = document.getElementById('crumbs');
+function crumbs() {
+  const n = sel && sel.l === level ? LV[sel.l][sel.s][sel.i] : null;
+  let h = '';
+  for (let l = 0; l <= level; l++) {
+    if (l) h += '<i>›</i>';
+    const curr = l === level && !(n && n.f);
+    h += `<button data-l="${l}" ${curr ? 'aria-current="step"' : ''}>${CRUMBS[l]}</button>`;
+  }
+  if (n && n.f) h += `<i>›</i><button class="fr" aria-current="step">Protocol Frame · ${esc(n.t)}</button>`;
+  crumbEl.innerHTML = h;
+  mini();
+}
+crumbEl.addEventListener('click', e => { const b = e.target.closest('[data-l]'); if (b) go(+b.dataset.l); });
+
+/* minimap */
+const mm = document.getElementById('minimap');
+const MM = [[4, 4, 112], [14, 50, 62], [22, 82, 26]];
+function mini() {
+  mm.innerHTML = MM.map(([x, y, s], l) => `<rect data-l="${l}" x="${x}" y="${y}" width="${s}" height="${s}" rx="3" class="${l === level ? 'act' : ''}"/><text x="${x + 4}" y="${y + 11}">L${l + 1}</text>`).join('');
+}
+mm.addEventListener('click', e => { const r = e.target.closest('rect'); if (r) go(+r.dataset.l); });
+
+/* ---------- events ---------- */
+svg.addEventListener('click', e => {
+  if (moved) return;
+  const hit = e.target.closest('.phit');
+  if (hit) { go(+hit.dataset.child); return; }
+  const n = e.target.closest('.node');
+  if (n) select(refOf(n)); else select(null);
+});
+svg.addEventListener('dblclick', e => {
+  const n = e.target.closest('.node');
+  if (n && n.dataset.s === 'p' && +n.dataset.i === DRILL && +n.dataset.l < LV.length - 1) go(+n.dataset.l + 1);
+});
+svg.addEventListener('keydown', e => {
+  const n = e.target.closest && e.target.closest('.node');
+  if (n && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); select(refOf(n)); }
+});
+svg.addEventListener('pointerover', e => {
+  const n = e.target.closest('.node');
+  const next = n && ((+n.dataset.l === 0) || active[+n.dataset.l]) ? refOf(n) : null;
+  if (!same(next, hov)) { hov = next; paint(); }
+});
+svg.addEventListener('pointerleave', () => { hov = null; paint(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') go(level - 1); });
+addEventListener('resize', () => { W = innerWidth; H = innerHeight; stop(); setCam(fit(level)); });
+
+/* theme */
+const root = document.documentElement;
+try { const t = localStorage.getItem('theme'); if (t) root.dataset.theme = t; } catch (_) {}
+document.getElementById('theme').addEventListener('click', () => {
+  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  root.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('theme', root.dataset.theme); } catch (_) {}
+});
+
+/* init */
+setCam(fit(0)); crumbs(); intro();
+window.__grid = { go, jump: l => { stop(); setCam(fit(l)); }, select, cam, get level() { return level; } };
+})();
+</script>
 </body>
+</html>
