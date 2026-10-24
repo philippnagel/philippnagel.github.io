@@ -17,7 +17,7 @@ A chapter card explains each station; the dots on the right jump between them. T
 
 ## Stack
 
-TypeScript + [Bun](https://bun.sh) 1.4.4. No runtime dependencies; `typescript` and `@types/bun` are dev-only. Everything is drawn in code to a small canvas (about 320x180 art pixels, scaled by a whole number) with a 5x7 bitmap font. No image assets except the avatar. Page scroll sets how far Philipp has walked; the walk is eased so he keeps stepping after you stop.
+TypeScript + [Bun](https://bun.sh) 1.4.4. No runtime dependencies; `typescript` and `@types/bun` are dev-only. Everything is drawn in code to a small canvas (about 640x360 art pixels, scaled by a whole number). Objects are pre-rendered once per time of day with five-tone shaded material ramps, dithering and an automatic coloured silhouette outline; the sky is a dithered 22-band gradient and the hills come from value noise. Labels use a 5x7 bitmap font. No image assets except the avatar. Page scroll sets how far Philipp has walked; the walk is eased so he keeps stepping after you stop.
 
 ## Commands
 
@@ -49,8 +49,8 @@ bun run check       # fmt check + typecheck + tests (what CI runs)
 
 ## Editing a station
 
-- `STATIONS` in `walk.ts` lists where each chapter is in focus; add a matching entry in `chapters.ts` and a draw function in `STATION_ART` (`world.ts`).
-- Station functions draw around a centre x and the ground line `gy`, using `px`, `wire`, `dotted`, `label` and `dataCloud`. Strings drawn on the canvas go in `CANVAS_TEXT` so the test can check the font covers them.
+- `STATIONS` in `walk.ts` lists where each chapter is in focus; add a matching entry in `chapters.ts` and a `Station` in `STATION_ART` (`stations.ts`).
+- A station has `bounds`, a `still` drawing (baked once per time of day, outlined) and a `live` drawing (animation and light), both in station space where x = 0 is the middle of the art and y = 0 the ground line. Strings drawn on the canvas go in `CANVAS_TEXT` so the test can check the font covers them.
 
 ## Deploy
 

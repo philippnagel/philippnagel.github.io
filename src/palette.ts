@@ -2,7 +2,7 @@ export type Theme = "night" | "day";
 
 export interface Pal {
   night: boolean;
-  /** sky bands, top to bottom */
+  /** sky gradient stops, top to horizon */
   sky: string[];
   far: string;
   hill: string;
@@ -36,6 +36,12 @@ export interface Pal {
 const hex = (h: string, i: number) =>
   parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
 
+export const rgb = (h: string): [number, number, number] => [
+  hex(h, 0),
+  hex(h, 1),
+  hex(h, 2),
+];
+
 export const mix = (a: string, b: string, t: number) => {
   const c = (i: number) =>
     Math.round(hex(a, i) + (hex(b, i) - hex(a, i)) * t)
@@ -59,7 +65,7 @@ const shared = {
 const day: Pal = {
   ...shared,
   night: false,
-  sky: ["#4fa3e8", "#67b4ee", "#82c4f3", "#9dd2f7", "#b8e0fa", "#d2ecfb"],
+  sky: ["#2f7fd6", "#5aa8ee", "#9fd4f5", "#e6f2e8"],
   far: "#a9cbe0",
   hill: "#8dbf9a",
   ground: "#5cae45",
@@ -81,7 +87,7 @@ const day: Pal = {
 const night: Pal = {
   ...shared,
   night: true,
-  sky: ["#050818", "#0a1030", "#0f1a46", "#16255a", "#1d3070", "#243a80"],
+  sky: ["#02041a", "#0a1240", "#1b2a72", "#4a4a96"],
   far: "#101a3d",
   hill: "#142a4a",
   ground: "#1c4430",

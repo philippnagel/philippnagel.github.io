@@ -161,13 +161,14 @@ const loop = (now: number) => {
     camX: Math.round(walker.x) - charX,
     W,
     H,
-    gy: Math.round(H * 0.74),
+    gy: H > 500 ? Math.round(H * 0.72) : H - 94,
     t,
+    tk: s === 1 ? 2 : 1,
   };
   drawWorld(ctx, pal, view);
   drawPhilipp(ctx, pal, {
     x: charX,
-    y: view.gy + 7,
+    y: view.gy + 22,
     frame: walker.frame,
     moving: walker.moving,
     facing: walker.facing,

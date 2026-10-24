@@ -30,17 +30,17 @@ describe("stations", () => {
 
 describe("scroll mapping", () => {
   test("round-trips and clamps", () => {
-    expect(walkOf(scrollOf(480, 4), 4)).toBe(480);
-    expect(walkOf(-10, 4)).toBe(0);
-    expect(walkOf(1e9, 4)).toBe(END);
+    expect(walkOf(scrollOf(480, 2), 2)).toBe(480);
+    expect(walkOf(-10, 2)).toBe(0);
+    expect(walkOf(1e9, 2)).toBe(END);
   });
 
   test("art scale is a whole number within bounds", () => {
     for (const w of [320, 390, 1280, 1920, 5000]) {
       const k = artScale(w);
       expect(Number.isInteger(k)).toBe(true);
-      expect(k).toBeGreaterThanOrEqual(2);
-      expect(k).toBeLessThanOrEqual(6);
+      expect(k).toBeGreaterThanOrEqual(1);
+      expect(k).toBeLessThanOrEqual(3);
     }
   });
 });

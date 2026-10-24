@@ -1,10 +1,10 @@
 /** Where the character stands on screen, as a share of the width. */
 export const CHAR_AT = 0.38;
 /** Station art is centred this far ahead of the character's focus point. */
-export const ART_AHEAD = 50;
+export const ART_AHEAD = 100;
 
 /** Distance along the path (art px) at which each chapter is in focus. */
-export const STATIONS = [0, 480, 960, 1440, 1920, 2400];
+export const STATIONS = [0, 960, 1920, 2880, 3840, 4800];
 export const END = STATIONS[STATIONS.length - 1]!;
 
 /** Index of the station closest to walk distance `x`. */
@@ -17,7 +17,7 @@ export function nearest(x: number): number {
 
 /** Art-pixel zoom: whole numbers so pixels stay square. */
 export const artScale = (cssWidth: number) =>
-  Math.max(2, Math.min(6, Math.round(cssWidth / 320)));
+  Math.max(1, Math.min(3, Math.round(cssWidth / 640)));
 
 /** Walk distance for a page scroll offset, and back. */
 export const walkOf = (scrollY: number, s: number) =>
