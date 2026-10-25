@@ -1520,14 +1520,19 @@ const HOTSPOTS: Hotspot[][] = [
   [],
 ];
 
-/** The explainer under a point in station `i`'s space, if any. Later (smaller, nested) entries win. */
+/** The explainer under a point in station `i`'s space, if any, with `pad` px of slack for fingers. Smaller (nested) entries win. */
 export function hotspotAt(
   i: number,
   x: number,
   y: number,
+  pad = 0,
 ): Hotspot | undefined {
   const hits = (HOTSPOTS[i] ?? []).filter(
-    (h) => x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h,
+    (h) =>
+      x >= h.x - pad &&
+      x <= h.x + h.w + pad &&
+      y >= h.y - pad &&
+      y <= h.y + h.h + pad,
   );
   return hits.sort((a, b) => a.w * a.h - b.w * b.h)[0];
 }

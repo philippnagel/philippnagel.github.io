@@ -154,10 +154,14 @@ const hits: {
 /** When each animal was last poked (animation clock), by cell index. */
 const startled = new Map<number, number>();
 
-/** The animal under canvas point (x, y), if any. */
-export function critterAt(x: number, y: number) {
+/** The animal under canvas point (x, y), if any, with `pad` px of slack for fingers. */
+export function critterAt(x: number, y: number, pad = 0) {
   return hits.find(
-    (h) => x >= h.x && x <= h.x + h.w && y >= h.y && y <= h.y + h.h,
+    (h) =>
+      x >= h.x - pad &&
+      x <= h.x + h.w + pad &&
+      y >= h.y - pad &&
+      y <= h.y + h.h + pad,
   );
 }
 
