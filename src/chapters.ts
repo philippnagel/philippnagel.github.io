@@ -16,7 +16,7 @@ export interface Chapter {
 }
 
 /** Placeholder: replace with the real address before publishing. */
-export const EMAIL = "hello@example.com";
+export const EMAIL = "phil@philippnagel.com";
 
 /** One chapter per station along the path. */
 export const chapters: Chapter[] = [

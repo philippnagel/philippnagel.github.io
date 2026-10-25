@@ -13,33 +13,31 @@ export const LEGAL = {
       <h1>Impressum</h1>
       <p>Angaben gemäß § 5 DDG</p>
       <p>
-        [Vor- und Nachname / Firma]<br />
-        [Straße und Hausnummer]<br />
-        [PLZ Ort]<br />
-        Deutschland
+        Vivicy OÜ<br />
+        Sepapaja tn 6<br />
+        11415 Tallinn<br />
+        Estonia
       </p>
       <h2>Kontakt</h2>
       <p>
-        E-Mail: ${mail}<br />
-        Telefon: [Telefonnummer]
+        E-Mail: ${mail}
       </p>
-      <h2>Umsatzsteuer-ID</h2>
-      <p>Umsatzsteuer-Identifikationsnummer gemäß § 27 a UStG: [DE000000000]</p>
+      <h2>Registriernummer</h2>
+      <p>16814070</p>
       <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
-      <p>[Vor- und Nachname, Anschrift wie oben]</p>`,
+      <p>Vivicy OÜ, Anschrift wie oben</p>`,
   },
   datenschutz: {
     title: "Datenschutz",
     main: `
       <h1>Datenschutzerklärung</h1>
       <h2>Verantwortlicher</h2>
-      <p>[Vor- und Nachname / Firma, Anschrift], E-Mail: ${mail}</p>
+      <p>Vivicy OÜ, Sepapaja tn 6, 11415 Tallinn. E-Mail: ${mail}</p>
       <h2>Hosting</h2>
       <p>
         Diese Seite wird über GitHub Pages ausgeliefert (GitHub Inc., USA). Beim
         Aufruf verarbeitet der Hoster technisch notwendige Daten wie die
-        IP-Adresse (Art. 6 Abs. 1 lit. f DSGVO). [Prüfen: Angaben zu
-        Drittlandübermittlung und Auftragsverarbeitung ergänzen.]
+        IP-Adresse (Art. 6 Abs. 1 lit. f DSGVO).
       </p>
       <h2>Lokaler Speicher</h2>
       <p>
@@ -50,12 +48,12 @@ export const LEGAL = {
       <p>
         Bei E-Mail-Kontakt verarbeiten wir Ihre Angaben zur Bearbeitung der
         Anfrage. Die Terminbuchung läuft über cal.com; dort gelten deren
-        Datenschutzhinweise. [Prüfen und ergänzen.]
+        Datenschutzhinweise.
       </p>
       <h2>Ihre Rechte</h2>
       <p>
         Auskunft, Berichtigung, Löschung, Einschränkung, Widerspruch,
-        Datenübertragbarkeit sowie Beschwerde bei einer Aufsichtsbehörde.
+        Datenübertragbarkeit sowie Beschwerde bei der Datenschutzbehörde von Estland.
       </p>`,
   },
 } as const;
