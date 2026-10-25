@@ -22,6 +22,7 @@ import {
   tone,
 } from "./gfx";
 import { mix, type Pal } from "./palette";
+import { STATIONS } from "./walk";
 import { drawLamp, setFor, type View } from "./scenery";
 
 /** One scene along the path, drawn in station space: x = 0 is the middle of the art, y = 0 the ground line. */
@@ -581,7 +582,154 @@ const bess: Station = {
   },
 };
 
-/* ---------- 3: house ---------- */
+/* ---------- 3: data center ---------- */
+
+/** Coolers on the roof, left edge of each. */
+const COOLERS = [4, 56, 108, 160, 212];
+/** Grid connection, step-down, then into the hall. */
+const DC_FEED: Pt[] = [
+  [-177, -106],
+  [-117, -60],
+  [-67, -60],
+  [-14, -60],
+  [-14, -30],
+  [0, -30],
+];
+
+const datacenter: Station = {
+  bounds: [-250, -270, 420, 8],
+  still(c, p) {
+    const gravel = mix(p.ground, p.path, 0.5);
+    px(c, gravel, -150, -6, 550, 8);
+    fence(c, p, -150, 400, 30);
+    // grid connection: a pole and two step-down transformers
+    const wood = mat(p, "#9a6a3e", 0.2);
+    const ins = mat(p, "#c98a3c", 0.2);
+    slab(c, -180, -108, 6, 108, wood, 1);
+    slab(c, -192, -104, 30, 4, wood, 1);
+    for (const bx of [-190, -179, -167]) px(c, ins[3], bx, -112, 3, 8);
+    const tank = mat(p, "#8a8f9c", 0.2);
+    for (const tx of [-130, -80]) {
+      slab(c, tx, -40, 44, 40, tank, 2);
+      for (let x = tx + 4; x < tx + 40; x += 5) px(c, tank[1], x, -36, 1, 32);
+      for (const bx of [tx + 10, tx + 30]) {
+        cyl(c, bx, -56, 6, 18, ins);
+        px(c, mat(p, "#6f7a90", 0.2)[3], bx - 1, -58, 8, 3);
+      }
+    }
+    // the hall: long, windowless and bigger than anything else on the path
+    const wall = mat(p, "#7d879a", 0.2);
+    planks(c, 0, -88, 260, 88, wall, 8);
+    slab(c, -6, -96, 272, 8, mat(p, "#4a5368", 0.2), 2);
+    slab(c, 12, -70, 176, 28, mat(p, "#10131a", 0), 1);
+    for (let x = 14; x < 186; x += 8) px(c, "#1a2140", x, -68, 6, 24);
+    slab(c, 206, -52, 40, 52, mat(p, "#cfd5de", 0.2), 1);
+    px(c, wall[1], 225, -52, 2, 52);
+    px(c, mat(p, "#6f7a90", 0.2)[2], 220, -28, 3, 8);
+    px(c, mat(p, "#6f7a90", 0.2)[2], 229, -28, 3, 8);
+    // dry coolers on the roof, their fans spin in the live pass
+    const unit = mat(p, "#aab4c6", 0.2);
+    for (const x of COOLERS) {
+      slab(c, x, -114, 44, 18, unit, 1);
+      ball(c, x + 22, -105, 8, mat(p, "#4a5368", 0.2));
+    }
+    // UPS container and a backup generator
+    const white = mat(p, "#e8ecf2", 0.2);
+    slab(c, 284, -46, 52, 46, white, 2);
+    slab(c, 284, -26, 52, 6, mat(p, "#edcb1f", 0.2), 1);
+    slab(c, 290, -42, 18, 12, mat(p, "#10131a", 0), 1);
+    px(c, white[1], 318, -40, 2, 38);
+    slab(c, 346, -34, 44, 34, mat(p, "#d9a21b", 0.2), 2);
+    px(c, mat(p, "#8a6410", 0.2)[1], 352, -28, 24, 3);
+    px(c, mat(p, "#8a6410", 0.2)[1], 352, -20, 24, 3);
+    slab(c, 378, -58, 6, 26, mat(p, "#4a5368", 0.2), 1);
+    cloudData(c, p, 130, -190);
+  },
+  live(c, p, v) {
+    const t = v.t;
+    shadow(c, p, 135, 0, 150, 6);
+    shadow(c, p, -88, 0, 70, 4);
+    shadow(c, p, 310, 0, 30);
+    shadow(c, p, 368, 0, 26);
+    // racks seen through the glass band: lights flicker with the work
+    for (let i = 0; i < 21; i++)
+      for (let row = 0; row < 3; row++) {
+        const h = hash(i * 7 + row * 31 + Math.floor(t * (1 + hash(i) * 3)));
+        if (h > 0.45) continue;
+        const col = h < 0.2 ? p.green : h < 0.35 ? p.blue : p.yellow;
+        px(c, col, 15 + i * 8, -62 + row * 8, 2, 2);
+      }
+    // load meter: training jobs make it swing
+    const load = 0.62 + 0.28 * Math.sin(t * 0.7) + 0.06 * Math.sin(t * 3.1);
+    for (let i = 0; i < 10; i++) {
+      const lit = i < Math.round(load * 10);
+      const col = i < 5 ? p.green : i < 8 ? p.yellow : p.red;
+      px(c, lit ? col : mix(col, "#10131a", 0.8), 14 + i * 6, -82, 5, 6);
+    }
+    // roof fans, and the heat they carry off
+    COOLERS.forEach((x, k) => {
+      const fx = x + 22;
+      const a = t * 8 + k;
+      for (let b = 0; b < 3; b++) {
+        const ang = a + (b * Math.PI * 2) / 3;
+        line(
+          c,
+          "#10131a",
+          fx + Math.cos(ang) * 7,
+          -105 + Math.sin(ang) * 7,
+          fx,
+          -105,
+        );
+      }
+      c.save();
+      for (let j = 0; j < 2; j++) {
+        const u = (t * 0.25 + k * 0.37 + j * 0.5) % 1;
+        c.globalAlpha = 0.28 * (1 - u);
+        px(
+          c,
+          "#ffb36b",
+          fx + Math.sin(t * 2 + k + j * 3) * 4,
+          -120 - u * 54,
+          4,
+          4,
+        );
+      }
+      c.restore();
+    });
+    // grid power in, hard
+    const cm = mat(p, "#8d97a8", 0.2)[1];
+    wire(c, cm, DC_FEED);
+    wire(c, cm, [
+      [260, -24],
+      [284, -24],
+    ]);
+    wire(c, cm, [
+      [336, -20],
+      [346, -20],
+    ]);
+    pulse(c, p.yellow, DC_FEED, t, 8, 0.2, 5);
+    glow(c, p, 100, -56, 140, p.blue, 0.03);
+    // standby lights on the UPS and the generator
+    px(c, p.green, 312, -38, 3, 3);
+    px(c, Math.floor(t) & 1 ? p.green : mat(p, "#4a5368")[2], 380, -26, 3, 3);
+    // data layer
+    const link: Pt[] = [
+      [130, -116],
+      [130, -172],
+    ];
+    dotted(c, p.blue, 130, -116, 130, -172);
+    pulse(c, p.blue, link, t, 3, 0.4, 6);
+    pulse(c, p.blue, [link[1]!, link[0]!], t + 0.4, 2, 0.35, 6);
+    label(c, p, "CLOUD", 130, -232, 2 * v.tk);
+    label(c, p, "DATA CENTER", 130, 38, v.tk);
+    label(c, p, "TRAFO", -80, 38, v.tk);
+    label(c, p, "UPS", 310, 38, v.tk);
+    label(c, p, "GEN", 368 + 10 * (v.tk - 1), 38, v.tk);
+    drawLamp(c, p, -215, 0);
+  },
+};
+
+/* ---------- 4: house ---------- */
 
 const house: Station = {
   bounds: [-230, -260, 330, 8],
@@ -1089,6 +1237,7 @@ export const STATION_ART: Station[] = [
   hello,
   grid,
   bess,
+  datacenter,
   house,
   cabinet,
   frame,
@@ -1104,6 +1253,9 @@ export interface Hotspot {
   name: string;
   text: string;
 }
+
+if (STATION_ART.length !== STATIONS.length)
+  throw new Error("one scene per station");
 
 const HOTSPOTS: Hotspot[][] = [
   [],
@@ -1165,6 +1317,56 @@ const HOTSPOTS: Hotspot[][] = [
       h: 66,
       name: "Transformer (TRAFO)",
       text: "Lifts the site's output to medium voltage.",
+    },
+  ],
+  [
+    {
+      x: 0,
+      y: -96,
+      w: 260,
+      h: 96,
+      name: "Server hall",
+      text: "Rows of racks. AI training can pull hundreds of megawatts at once, around the clock.",
+    },
+    {
+      x: 4,
+      y: -114,
+      w: 252,
+      h: 18,
+      name: "Cooling",
+      text: "Nearly all the power ends up as heat. Roof coolers push it out; it could also warm nearby buildings.",
+    },
+    {
+      x: -130,
+      y: -66,
+      w: 94,
+      h: 66,
+      name: "Transformers (TRAFO)",
+      text: "Step the grid connection down to what the hall uses.",
+    },
+    {
+      x: 284,
+      y: -46,
+      w: 52,
+      h: 46,
+      name: "UPS",
+      text: "Batteries that bridge a grid dip until the generators start.",
+    },
+    {
+      x: 346,
+      y: -58,
+      w: 44,
+      h: 58,
+      name: "Backup generator (GEN)",
+      text: "Starts if the grid fails.",
+    },
+    {
+      x: -192,
+      y: -112,
+      w: 30,
+      h: 112,
+      name: "Grid connection",
+      text: "New connections can take years, so operators pair data centers with batteries and flexible load.",
     },
   ],
   [

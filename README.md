@@ -2,15 +2,16 @@
 
 Personal site: one scrolling pixel-art page, "Grid to Packet".
 
-Scroll to walk Philipp (the pixel character is him) along a path through seven stations, in a side-scrolling world with parallax layers (sky, far skyline, hills, pylons, path, foreground grass):
+Scroll to walk Philipp (the pixel character is him) along a path through eight stations, in a side-scrolling world with parallax layers (sky, far skyline, hills, pylons, path, foreground grass):
 
 1. **Hello**: the title as a block-pixel logo.
 2. **Grid**: wind turbines, substation, transformer. Yellow squares are power, blue squares are data, and the market cloud floats above.
 3. **Battery site (BESS)**: three battery containers with live state-of-charge bars and fans, a power conversion cabinet and a transformer. Power flows in while charging and out while discharging, and the energy management system talks to the market.
-4. **Metering point**: a house with rooftop PV, meter box, EV and charger, and a link up to the DSO.
-5. **Meter cabinet**: meter, gateway and sub-meter, with a live kWh counter and the WAN link.
-6. **Protocol frame**: one meter reading, field by field (header, address, OBIS, value, CRC).
-7. **Contact**: fireworks, a signpost and a mailbox.
+4. **Data center**: a long server hall with flickering rack lights, a swinging load meter, spinning roof coolers that shed heat, a grid connection with two transformers, a UPS and a backup generator, and a cloud link above.
+5. **Metering point**: a house with rooftop PV, meter box, EV and charger, and a link up to the DSO.
+6. **Meter cabinet**: meter, gateway and sub-meter, with a live kWh counter and the WAN link.
+7. **Protocol frame**: one meter reading, field by field (header, address, OBIS, value, CRC).
+8. **Contact**: fireworks, a signpost and a mailbox.
 
 A start gate (Enter / Enter without sound) unlocks audio and the page. Sound is synthesised in the browser with Web Audio (no audio files): a small chiptune loop that changes key between day and night, footsteps, an arrival chime per station and UI clicks; the speaker button in the header mutes it.
 
@@ -37,7 +38,7 @@ bun run check       # fmt check + typecheck + tests (what CI runs)
 | Path                              | Purpose                                                   |
 | --------------------------------- | --------------------------------------------------------- |
 | `src/index.html`, `src/style.css` | Page shell and UI styling                                 |
-| `src/world.ts`                    | Sky, parallax layers, ground and the six station scenes   |
+| `src/world.ts`                    | Sky, parallax layers, ground and the eight station scenes |
 | `src/philipp.ts`                  | The character and its walk cycle                          |
 | `src/walk.ts`                     | Station positions, scroll to walk mapping, eased `Walker` |
 | `src/palette.ts`, `src/theme.ts`  | Day and night palettes; theme toggle                      |

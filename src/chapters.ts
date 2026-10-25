@@ -38,8 +38,18 @@ export const chapters: Chapter[] = [
     ],
   },
   {
+    tag: "Data center",
+    title: "03. The data center",
+    body: "A data center can draw as much as a small city, around the clock, and AI is making them bigger. Grid connections take years, so operators now pair them with batteries, flexible load and waste-heat reuse. Each of those is a data and market integration.",
+    terms: [
+      ["UPS", "uninterruptible power supply"],
+      ["GEN", "backup generator"],
+      ["TRAFO", "transformer"],
+    ],
+  },
+  {
     tag: "Metering point",
-    title: "03. The metering point",
+    title: "04. The metering point",
     body: "Meter cabinet, rooftop PV, home energy management, an EV charger. Regulation (§14a EnWG, MsbG) now expects all of it to be controllable and billable. I've worked on the rollout side of that.",
     terms: [
       ["DSO", "distribution system operator"],
@@ -48,7 +58,7 @@ export const chapters: Chapter[] = [
   },
   {
     tag: "Meter cabinet",
-    title: "04. The meter cabinet",
+    title: "05. The meter cabinet",
     body: "Meter, gateway and sub-meters, signed by a security module. I run gateway lifecycle at scale on DLMS/COSEM (IEC 62056) and BSI TR-03109, from commissioning to certification per operator.",
     terms: [
       ["WAN", "wide-area network"],
@@ -58,7 +68,7 @@ export const chapters: Chapter[] = [
   },
   {
     tag: "Protocol frame",
-    title: "05. One reading",
+    title: "06. One reading",
     body: "A single reading, field by field. The same standard sits under German gateways and Japanese AMI, and I've mapped ECHONET Lite to DLMS/COSEM for a client. Cross-border data access is a protocol problem first.",
     terms: [
       ["HDR", "header"],

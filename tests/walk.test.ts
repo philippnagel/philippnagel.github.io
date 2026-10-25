@@ -141,9 +141,12 @@ describe("world life", () => {
 
   test("hotspots resolve to the smallest part under the point", async () => {
     const { hotspotAt } = await import("../src/stations");
-    expect(hotspotAt(3, 49, -38)?.name).toBe("Meter");
-    expect(hotspotAt(3, 0, -30)?.name).toBe("Home");
-    expect(hotspotAt(3, 5000, 5000)).toBeUndefined();
+    expect(hotspotAt(4, 49, -38)?.name).toBe("Meter");
+    expect(hotspotAt(4, 0, -30)?.name).toBe("Home");
+    expect(hotspotAt(3, 300, -20)?.name).toBe("UPS");
+    expect(hotspotAt(3, 20, -105)?.name).toBe("Cooling");
+    expect(hotspotAt(3, 100, -40)?.name).toBe("Server hall");
+    expect(hotspotAt(4, 5000, 5000)).toBeUndefined();
     expect(hotspotAt(0, 0, 0)).toBeUndefined();
   });
 });
