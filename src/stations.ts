@@ -1418,7 +1418,7 @@ const HOTSPOTS: Hotspot[][] = [
       w: 74,
       h: 94,
       name: "Smart meter",
-      text: "Measures consumption and hands the values to the gateway.",
+      text: "Measures consumption and other metrics and hands the values to the gateway.",
     },
     {
       x: -2,

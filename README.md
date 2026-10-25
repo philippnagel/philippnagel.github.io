@@ -21,6 +21,12 @@ A chapter card explains each station; the dots on the right jump between them. T
 
 TypeScript + [Bun](https://bun.sh) 1.4.4. No runtime dependencies; `typescript` and `@types/bun` are dev-only. Everything is drawn in code to a small canvas (about 640x360 art pixels, scaled by a whole number). Objects are pre-rendered once per time of day with five-tone shaded material ramps, dithering and an automatic coloured silhouette outline; the sky is a dithered 22-band gradient and the hills come from value noise. Labels use a 5x7 bitmap font. No image assets except the avatar. Page scroll sets how far Philipp has walked; the walk is eased so he keeps stepping after you stop.
 
+## Creative Inspiration
+
+- Landing page of the Nintendo Family Office: https://www.y-n10.com/
+- High quality, fidelity pixel/blocky art
+- Scrollytelling
+
 ## Commands
 
 ```sh
