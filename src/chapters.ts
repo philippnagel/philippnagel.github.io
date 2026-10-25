@@ -15,7 +15,7 @@ export interface Chapter {
   cases?: { title: string; text: string }[];
 }
 
-/** Placeholder: replace with the real address before publishing. */
+/** Contact address; `src/index.html` repeats it for readers without JavaScript. */
 export const EMAIL = "phil@philippnagel.com";
 
 /** One chapter per station along the path. */

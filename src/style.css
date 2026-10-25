@@ -55,6 +55,8 @@ body {
 }
 html {
   height: auto;
+  /* no rubber-band past the ends: the bounce would show the sky colour under the ground */
+  overscroll-behavior-y: none;
 }
 a {
   color: inherit;

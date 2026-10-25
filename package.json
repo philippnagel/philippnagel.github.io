@@ -12,10 +12,8 @@
     "format:check": "bun fmt --check src tests scripts package.json tsconfig.json README.md"
   },
   "devDependencies": {
+    "@fontsource/pixelify-sans": "^5.3.0",
     "@types/bun": "^1.4.4",
     "typescript": "^7.0.2"
-  },
-  "dependencies": {
-    "@fontsource/pixelify-sans": "^5.3.0"
   }
 }

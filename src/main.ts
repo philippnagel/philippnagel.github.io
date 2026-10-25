@@ -49,6 +49,8 @@ let pal = palette(currentTheme());
 let s = 4;
 let W = 320;
 let H = 180;
+/** Art rows visible with mobile toolbars shown: the scene is laid out in these, the canvas is H tall. */
+let Hv = 180;
 let section = -1;
 
 function renderChapter() {
@@ -163,23 +165,42 @@ let sized = false;
 let sizeKey = "";
 /** Layout width, without a classic scrollbar: what the fixed canvas is measured against. */
 const viewW = () => document.documentElement.clientWidth;
+/** Probes for the viewport height with mobile toolbars shown (svh) and hidden (lvh). */
+const probes = ["svh", "lvh"].map((unit) => {
+  const el = document.createElement("div");
+  el.style.cssText = `position:fixed;top:0;width:0;height:100${unit};visibility:hidden;pointer-events:none`;
+  document.body.append(el);
+  return el;
+});
+/** `innerHeight` slides between these while the toolbars move; without svh / lvh support both fall back to it. */
+const viewH = () => {
+  const [small, large] = probes.map((el) => el.offsetHeight);
+  return [
+    Math.min(small || innerHeight, innerHeight),
+    Math.max(large || 0, innerHeight),
+  ] as const;
+};
 function resize() {
   const dpr = devicePixelRatio || 1;
-  const key = `${viewW()}x${innerHeight}@${dpr}`;
-  if (key === sizeKey) return; // mobile toolbars fire resize while scrolling
+  const [small, large] = viewH();
+  // keyed on svh / lvh, not innerHeight: the toolbars sliding in and out must not re-lay the scene
+  const key = `${viewW()}x${small}-${large}@${dpr}`;
+  if (key === sizeKey) return;
   sizeKey = key;
   const prev = s;
   const walk = walkOf(scrollY, s);
   s = artScale(viewW(), dpr);
   W = Math.ceil(viewW() / s);
-  H = Math.ceil(innerHeight / s);
+  // the canvas covers the tallest viewport, so no page background shows below it when the toolbars hide
+  H = Math.ceil(large / s);
+  Hv = Math.ceil(small / s);
   cv.width = W;
   cv.height = H;
   // an exact multiple of the art size, so every art pixel is the same square on screen
   cv.style.width = `${W * s}px`;
   cv.style.height = `${H * s}px`;
   ctx.imageSmoothingEnabled = false;
-  trackEl.style.height = `${scrollOf(END, s) + innerHeight}px`;
+  trackEl.style.height = `${scrollOf(END, s) + large}px`;
   // keep the same spot on the path when the scale changes (not on first load, where `s` is a placeholder)
   if (sized && s !== prev) scrollTo(0, scrollOf(walk, s));
   sized = true;
@@ -271,47 +292,62 @@ function placeBoards(camX: number, gy: number) {
 let lastView = { camX: 0, gy: 0 };
 let clock = 0;
 let tipTimer = 0;
-const toArt = (e: PointerEvent) => [e.clientX / s, e.clientY / s];
+let lastPointer = "";
+const toArt = (e: MouseEvent) => [e.clientX / s, e.clientY / s] as const;
 function hideTip() {
   tipEl.hidden = true;
 }
-function showTip(e: PointerEvent, ax: number, ay: number) {
+function showTip(e: MouseEvent, ax: number, ay: number, touch = false) {
   const hs = hotspotAt(
     section,
     ax - Math.round(STATIONS[section]! + ART_AHEAD - lastView.camX),
     ay - lastView.gy,
+    touch ? Math.ceil(12 / s) : 0,
   );
   if (!hs) return hideTip();
   tipEl.innerHTML = `<b>${hs.name}</b>${hs.text}`;
   tipEl.hidden = false;
   const w = tipEl.offsetWidth;
+  const h = tipEl.offsetHeight;
   tipEl.style.left = `${Math.max(8, Math.min(viewW() - w - 8, e.clientX + 14))}px`;
-  tipEl.style.top = `${Math.min(innerHeight - tipEl.offsetHeight - 8, e.clientY + 14)}px`;
+  // a finger covers what is below it, so on touch the tip goes above when there is room
+  const above = e.clientY - h - 24;
+  tipEl.style.top = `${touch && above >= 8 ? above : Math.min(innerHeight - h - 8, e.clientY + 14)}px`;
+}
+/** Startles the animal at (ax, ay), if there is one. */
+function poke(ax: number, ay: number, pad: number) {
+  const hit = critterAt(ax, ay, pad);
+  if (!hit) return false;
+  startle(hit.i, clock);
+  if (hit.kind === "cat" || hit.kind === "fox") sound.meow();
+  else sound.squeak();
+  hideTip();
+  return true;
 }
 cv.addEventListener("pointermove", (e) => {
   if (!started || e.pointerType === "touch") return;
-  const [ax, ay] = toArt(e) as [number, number];
+  const [ax, ay] = toArt(e);
   cv.style.cursor = critterAt(ax, ay) ? "pointer" : "";
   showTip(e, ax, ay);
 });
 cv.addEventListener("pointerleave", hideTip);
 cv.addEventListener("pointerdown", (e) => {
-  if (!started) return;
-  const [ax, ay] = toArt(e) as [number, number];
-  const hit = critterAt(ax, ay);
-  if (hit) {
-    startle(hit.i, clock);
-    if (hit.kind === "cat" || hit.kind === "fox") sound.meow();
-    else sound.squeak();
-    hideTip();
-    return;
-  }
-  if (e.pointerType === "touch") {
-    showTip(e, ax, ay);
-    clearTimeout(tipTimer);
-    tipTimer = window.setTimeout(hideTip, 3500);
-  }
+  lastPointer = e.pointerType;
+  if (!started || e.pointerType === "touch") return;
+  const [ax, ay] = toArt(e);
+  poke(ax, ay, 0);
 });
+// a tap is a click: unlike pointerdown, it does not fire when the finger starts a scroll
+cv.addEventListener("click", (e) => {
+  if (!started || lastPointer !== "touch") return;
+  const [ax, ay] = toArt(e);
+  if (poke(ax, ay, Math.ceil(12 / s))) return;
+  showTip(e, ax, ay, true);
+  clearTimeout(tipTimer);
+  tipTimer = window.setTimeout(hideTip, 3500);
+});
+// the scene moves under a tip while scrolling, so it would point at the wrong thing
+window.addEventListener("scroll", hideTip, { passive: true });
 
 let lastStrike = strikeId(0);
 let last = performance.now();
@@ -366,7 +402,7 @@ const loop = (now: number) => {
     camX: Math.round(walker.x) - charX,
     W,
     H,
-    gy: H > 500 ? Math.round(H * 0.8) : H - 76,
+    gy: Hv > 500 ? Math.round(Hv * 0.8) : Hv - 76,
     t,
     tk: s < 1.5 ? 2 : 1,
   };
