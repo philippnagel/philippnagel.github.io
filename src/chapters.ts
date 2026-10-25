@@ -100,3 +100,23 @@ export const srHtml = () =>
           : ""),
     )
     .join("")}</div>`;
+
+const CTA = `<div class="cta"><a class="btn pri" href="https://cal.com/nagel">Book a call</a><a class="btn" href="https://www.linkedin.com/in/philippnagel/" rel="me">LinkedIn</a></div>`;
+
+/** The chapters as a plain reading page, for the simple view, and the no-JavaScript fallback (written into the HTML at build time). */
+export const simpleHtml = () =>
+  chapters
+    .map(
+      (c, i) =>
+        `<section><small>${c.tag}</small><h${i ? 2 : 1}>${c.title}</h${i ? 2 : 1}><p>${c.body}</p>` +
+        (c.proof ? `<p class="proof">${c.proof}</p>` : "") +
+        (c.offers?.length
+          ? `<ul>${c.offers.map((o) => `<li>${o}</li>`).join("")}</ul>`
+          : "") +
+        (c.terms?.length
+          ? `<p class="terms">${c.terms.map(([a, b]) => `<b>${a}</b> ${b}`).join(" · ")}</p>`
+          : "") +
+        (i === chapters.length - 1 ? CTA : "") +
+        `</section>`,
+    )
+    .join("");

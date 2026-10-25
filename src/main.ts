@@ -1,6 +1,6 @@
 import "./style.css";
 import { Sound } from "./audio";
-import { chapters, srHtml } from "./chapters";
+import { chapters, simpleHtml, srHtml } from "./chapters";
 import { palette, type Theme } from "./palette";
 import { drawPhilipp } from "./philipp";
 import { currentTheme, initTheme } from "./theme";
@@ -33,6 +33,9 @@ const soundEl = $("sound");
 const tipEl = $("tip");
 const sound = new Sound();
 let started = false;
+const root = document.documentElement;
+let simple = root.classList.contains("simple");
+let looping = false;
 
 const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
 let reduceMotion = motionQuery.matches;
@@ -107,6 +110,47 @@ railEl.addEventListener("click", (e) => {
 // (the build writes it into the HTML already, so crawlers get it without running this)
 if (!trackEl.firstElementChild) trackEl.innerHTML = srHtml();
 
+/* --- simple view: the chapters as plain text --- */
+const viewEl = $("view");
+const simpleEl = $("simple");
+// (the build writes it into the HTML already, for readers without JavaScript)
+if (!simpleEl.firstElementChild) simpleEl.innerHTML = simpleHtml();
+function setView(next: boolean) {
+  simple = next;
+  root.classList.toggle("simple", simple);
+  viewEl.textContent = simple ? "Story view" : "Simple view";
+  try {
+    localStorage.setItem("view", simple ? "simple" : "story");
+  } catch {}
+  sound.suspend(simple);
+  if (simple && !started) {
+    // leaving the gate behind: unlock the page, the gate itself is hidden by CSS
+    root.classList.remove("locked");
+    behindGate.forEach((el) => el.removeAttribute("inert"));
+  }
+  scrollTo(0, 0);
+  if (!simple) {
+    walker.x = 0;
+    if (!started) root.classList.add("locked");
+    void enter(false); // a no-op once the gate has been dismissed
+    if (!looping) {
+      looping = true;
+      last = performance.now();
+      requestAnimationFrame(loop);
+    }
+  }
+}
+viewEl.addEventListener("click", () => {
+  sound.click();
+  setView(!simple);
+});
+$("enter-simple").addEventListener("click", () => setView(true));
+$("replay").addEventListener("click", () => {
+  sound.click();
+  scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+  chapterEl.querySelector<HTMLElement>("h1")!.focus({ preventScroll: true });
+});
+
 /* --- size, theme, loop --- */
 let sized = false;
 let sizeKey = "";
@@ -172,12 +216,15 @@ async function enter(withSound: boolean) {
 // always open at the start of the path, not wherever the browser last left the page
 history.scrollRestoration = "manual";
 scrollTo(0, 0);
-document.documentElement.classList.add("locked");
 // keep keyboard and screen readers on the gate until it is dismissed
 const behindGate = [...document.body.children].filter(
   (el) => el !== gateEl && el.tagName !== "SCRIPT",
 );
-behindGate.forEach((el) => el.setAttribute("inert", ""));
+if (!simple) {
+  root.classList.add("locked");
+  behindGate.forEach((el) => el.setAttribute("inert", ""));
+}
+viewEl.textContent = simple ? "Story view" : "Simple view";
 $("enter").addEventListener("click", () => void enter(true));
 $("enter-quiet").addEventListener("click", () => void enter(false));
 soundEl.addEventListener("click", () => {
@@ -185,9 +232,9 @@ soundEl.addEventListener("click", () => {
   sound.click();
 });
 document.addEventListener("visibilitychange", () =>
-  sound.suspend(document.hidden),
+  sound.suspend(document.hidden || simple),
 );
-$("enter").focus();
+if (!simple) $("enter").focus();
 resize();
 
 /** Lays real links over the contact signpost so the boards themselves are clickable. */
@@ -263,6 +310,10 @@ let lastFrame = 0;
 let lastDraw = 0;
 let hintHidden = false;
 const loop = (now: number) => {
+  if (simple) {
+    looping = false;
+    return;
+  }
   const target = walkOf(scrollY, s);
   // standing still: the ambient life only needs 30 fps
   if (walker.x === target && now - lastDraw < 33) {
@@ -310,6 +361,11 @@ const loop = (now: number) => {
     t,
     tk: s < 1.5 ? 2 : 1,
   };
+  // mid-resize (e.g. switching device emulation) the viewport can be 0 wide or too short for a sky
+  if (view.W < 1 || view.gy < 1) {
+    requestAnimationFrame(loop);
+    return;
+  }
   lastView = view;
   drawWorld(ctx, pal, view);
   drawPhilipp(ctx, pal, {
@@ -327,4 +383,7 @@ const loop = (now: number) => {
   placeBoards(view.camX, view.gy);
   requestAnimationFrame(loop);
 };
-requestAnimationFrame(loop);
+if (!simple) {
+  looping = true;
+  requestAnimationFrame(loop);
+}

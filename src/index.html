@@ -38,11 +38,23 @@
       media="(prefers-color-scheme: dark)"
     />
     <script>
+      /* tell the CSS that scripts run: without it the page falls back to plain text */
+      document.documentElement.classList.add("js");
       /* apply a stored theme before first paint, so there is no flash */
       try {
         var t = localStorage.getItem("theme");
         if (t === "dark" || t === "light")
           document.documentElement.dataset.theme = t;
+      } catch (e) {}
+      /* simple view: stored choice, else follow reduced motion */
+      try {
+        var v = localStorage.getItem("view");
+        if (
+          v === "simple" ||
+          (v !== "story" &&
+            matchMedia("(prefers-reduced-motion: reduce)").matches)
+        )
+          document.documentElement.classList.add("simple");
       } catch (e) {}
     </script>
     <link rel="me" href="https://www.linkedin.com/in/philippnagel/" />
@@ -86,6 +98,7 @@
           />
         </svg>
       </button>
+      <button class="btn" id="view" type="button">Simple view</button>
       <button class="btn" id="theme" aria-label="Toggle day / night">
         <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
           <circle
@@ -126,6 +139,7 @@
         <a class="btn" href="https://www.linkedin.com/in/philippnagel/" rel="me"
           >LinkedIn</a
         >
+        <button class="btn" id="replay" type="button">Replay from start</button>
       </div>
     </article>
     <a class="board" id="board-1" aria-label="Book a call" hidden></a>
@@ -135,6 +149,7 @@
     <div id="tip" role="tooltip" hidden></div>
     <div id="hint">scroll ↓</div>
     <main id="track"></main>
+    <div id="simple"></div>
     <div id="gate" role="dialog" aria-modal="true" aria-label="Start">
       <div class="gate-card">
         <div class="squares" aria-hidden="true">
@@ -142,17 +157,12 @@
         </div>
         <button class="btn pri" id="enter">Enter</button>
         <button class="quiet" id="enter-quiet">Enter without sound</button>
+        <button class="quiet" id="enter-simple">Simple view instead</button>
         <p class="remark">
           This site plays sound. Turn it down or off any time.
         </p>
       </div>
     </div>
-    <noscript
-      ><p style="position: fixed; inset: 80px 20px; font: 15px system-ui">
-        This page needs JavaScript.
-      </p></noscript
-    >
-
     <script type="module" src="./main.ts"></script>
   </body>
 </html>

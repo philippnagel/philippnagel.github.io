@@ -1,5 +1,5 @@
 import { cp, readFile, rm, writeFile } from "node:fs/promises";
-import { srHtml } from "../src/chapters";
+import { simpleHtml, srHtml } from "../src/chapters";
 
 await rm("dist", { recursive: true, force: true });
 
@@ -21,6 +21,17 @@ if (!html.includes(track)) throw new Error("#track not found in built HTML");
 await writeFile(
   page,
   html.replace(track, `<main id="track">${srHtml()}</main>`),
+);
+
+// the plain reading page, so readers without JavaScript get the chapters too
+const simple = '<div id="simple"></div>';
+if (!html.includes(simple)) throw new Error("#simple not found in built HTML");
+await writeFile(
+  page,
+  (await readFile(page, "utf8")).replace(
+    simple,
+    `<div id="simple">${simpleHtml()}</div>`,
+  ),
 );
 
 // social preview image, referenced by an absolute URL so it is copied as is

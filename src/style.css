@@ -244,6 +244,7 @@ canvas {
 }
 #chapter .cta {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
 }
@@ -357,6 +358,105 @@ canvas {
     width: 44px;
     padding: 0;
   }
+}
+
+#chapter h1:focus {
+  outline: none;
+}
+
+/* simple view: the same chapters as plain text on one background */
+#simple {
+  display: none;
+}
+html:not(.js)
+  :is(
+    canvas,
+    #chapter,
+    #rail,
+    #legend,
+    #hint,
+    #tip,
+    .board,
+    #track,
+    #gate,
+    #sound,
+    #view,
+    #theme
+  ),
+html.simple
+  :is(
+    canvas,
+    #chapter,
+    #rail,
+    #legend,
+    #hint,
+    #tip,
+    .board,
+    #track,
+    #gate,
+    #sound
+  ) {
+  display: none !important;
+}
+html.simple header,
+html:not(.js) header {
+  background: var(--bg);
+  border-bottom: 2px solid var(--ink);
+}
+html.simple #simple,
+html:not(.js) #simple {
+  display: block;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: calc(var(--top) + env(safe-area-inset-top) + 24px)
+    max(16px, env(safe-area-inset-right)) 64px
+    max(16px, env(safe-area-inset-left));
+}
+#simple section {
+  padding: 24px 0;
+  border-top: 2px solid var(--ink);
+}
+#simple section:first-child {
+  border-top: 0;
+}
+#simple small {
+  font: 700 12px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--blue-text);
+}
+#simple :is(h1, h2) {
+  margin: 4px 0 10px;
+  font: 700 28px/1.15 var(--pix);
+}
+#simple p {
+  margin: 0 0 10px;
+  font: 16px/1.6 var(--mono);
+}
+#simple .terms {
+  font-size: 13px;
+  color: var(--mute);
+}
+#simple .terms b {
+  color: var(--ink);
+}
+#simple .proof {
+  font-weight: 700;
+  color: var(--blue-text);
+}
+#simple ul {
+  margin: 0 0 14px;
+  padding-left: 20px;
+  font: 15px/1.5 var(--mono);
+}
+#simple li + li {
+  margin-top: 6px;
+}
+#simple .cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 .sr {
