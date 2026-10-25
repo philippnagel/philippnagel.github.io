@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>
+      Philipp Nagel · Smart metering &amp; market-communication consultant
+    </title>
+    <meta
+      name="description"
+      content="Consulting on smart-metering platforms, market communication (MaKo) and SMGW / DLMS/COSEM integration. 500k+ meters, ~10M market messages a week. Explore it as a pixel-art walk from grid to protocol frame."
+    />
+    <link rel="canonical" href="https://philippnagel.com/" />
+    <meta
+      property="og:title"
+      content="Philipp Nagel · Smart metering &amp; market-communication consultant"
+    />
+    <meta property="og:url" content="https://philippnagel.com/" />
+    <meta
+      property="og:description"
+      content="Smart-metering platforms, MaKo and SMGW / DLMS/COSEM integration. Scroll to walk from the power grid to a protocol frame."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://philippnagel.com/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Pixel-art scene of Philipp walking past pylons toward a house under a blue sky"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="theme-color"
+      content="#bfe4fa"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#0f1a46"
+      media="(prefers-color-scheme: dark)"
+    />
+    <script>
+      /* tell the CSS that scripts run: without it the page falls back to plain text */
+      document.documentElement.classList.add("js");
+      /* apply a stored theme before first paint, so there is no flash */
+      try {
+        var t = localStorage.getItem("theme");
+        if (t === "dark" || t === "light")
+          document.documentElement.dataset.theme = t;
+      } catch (e) {}
+      /* simple view: stored choice, else follow reduced motion */
+      try {
+        var v = localStorage.getItem("view");
+        if (
+          v === "simple" ||
+          (v !== "story" &&
+            matchMedia("(prefers-reduced-motion: reduce)").matches)
+        )
+          document.documentElement.classList.add("simple");
+      } catch (e) {}
+    </script>
+    <link rel="me" href="https://www.linkedin.com/in/philippnagel/" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="who">
+        <img src="./profile-circle-crop.png" alt="" width="30" height="30" />
+        <b>Philipp Nagel</b><span>grid → packet</span>
+      </div>
+      <div class="sp"></div>
+      <a class="btn" href="https://www.linkedin.com/in/philippnagel/" rel="me"
+        >LinkedIn</a
+      >
+      <a class="btn pri" href="https://cal.com/nagel">Book a call</a>
+      <button
+        class="btn"
+        id="sound"
+        aria-label="Sound"
+        aria-pressed="false"
+        hidden
+      >
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+          <path d="M2 6h3l4-3v10l-4-3H2z" fill="currentColor" />
+          <path
+            class="on"
+            d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.5a6.3 6.3 0 0 1 0 9"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+          <path
+            class="off"
+            d="M11 6l4 4M15 6l-4 4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+        </svg>
+      </button>
+      <button class="btn" id="view" type="button">Simple view</button>
+      <button class="btn" id="theme" aria-label="Toggle day / night">
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+          <circle
+            cx="8"
+            cy="8"
+            r="6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+          />
+          <path d="M8 2a6 6 0 0 0 0 12z" fill="currentColor" />
+        </svg>
+      </button>
+    </header>
+
+    <canvas
+      id="cv"
+      role="img"
+      aria-label="Pixel-art world: Philipp walks along a path from the power grid to a house, a meter cabinet and a protocol frame as you scroll"
+    ></canvas>
+    <article id="chapter">
+      <button
+        class="fold"
+        type="button"
+        aria-expanded="true"
+        aria-label="Collapse"
+      ></button>
+      <small></small>
+      <h1 aria-live="polite"></h1>
+      <p></p>
+      <p class="terms"></p>
+      <div class="work" hidden>
+        <p class="proof"></p>
+        <ul></ul>
+      </div>
+      <div class="cta" hidden>
+        <a class="btn pri" href="https://cal.com/nagel">Book a call</a>
+        <a class="btn" id="email" href="mailto:hello@example.com">Email</a>
+        <a class="btn" href="https://www.linkedin.com/in/philippnagel/" rel="me"
+          >LinkedIn</a
+        >
+        <button class="btn" id="replay" type="button">Replay from start</button>
+      </div>
+      <p class="legal" hidden>
+        <a href="./impressum.html">Impressum</a> ·
+        <a href="./datenschutz.html">Datenschutz</a>
+      </p>
+    </article>
+    <a class="board" id="board-1" aria-label="Book a call" hidden></a>
+    <a class="board" id="board-2" aria-label="LinkedIn" hidden></a>
+    <nav id="rail" aria-label="Chapters"></nav>
+    <div id="legend"><i class="p"></i>power <i class="d"></i>data</div>
+    <div id="tip" role="tooltip" hidden></div>
+    <div id="hint">scroll ↓</div>
+    <main id="track"></main>
+    <div id="simple"></div>
+    <div id="gate" role="dialog" aria-modal="true" aria-label="Start">
+      <div class="gate-card">
+        <div class="squares" aria-hidden="true">
+          <i></i><i></i><i></i><i></i>
+        </div>
+        <button class="btn pri" id="enter">Enter</button>
+        <button class="quiet" id="enter-quiet">Enter without sound</button>
+        <button class="quiet" id="enter-simple">Simple view instead</button>
+        <button class="quiet" id="enter-services">
+          Skip to services and contact
+        </button>
+        <p class="remark">
+          This site plays sound. Turn it down or off any time.
+        </p>
+      </div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "philippnagel.github.io",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun ./src/index.html",
+    "build": "bun run scripts/build.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "check": "bun run format:check && bun run typecheck && bun test",
+    "format": "bun fmt src tests scripts package.json tsconfig.json README.md",
+    "format:check": "bun fmt --check src tests scripts package.json tsconfig.json README.md"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@fontsource/pixelify-sans": "^5.3.0"
+  }
+}
