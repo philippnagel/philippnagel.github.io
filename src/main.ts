@@ -1,6 +1,6 @@
 import "./style.css";
 import { Sound } from "./audio";
-import { chapters, simpleHtml, srHtml } from "./chapters";
+import { EMAIL, chapters, simpleHtml, srHtml } from "./chapters";
 import { palette, type Theme } from "./palette";
 import { drawPhilipp } from "./philipp";
 import { currentTheme, initTheme } from "./theme";
@@ -63,6 +63,7 @@ function renderChapter() {
   const last = section === chapters.length - 1;
   chapterEl.querySelector<HTMLElement>(".cta")!.hidden = !last;
   chapterEl.querySelector<HTMLElement>(".work")!.hidden = !last;
+  chapterEl.querySelector<HTMLElement>(".legal")!.hidden = !last;
   chapterEl.querySelector(".proof")!.textContent = c.proof ?? "";
   chapterEl.querySelector("ul")!.innerHTML = (c.offers ?? [])
     .map((o) => `<li>${o}</li>`)
@@ -145,6 +146,11 @@ viewEl.addEventListener("click", () => {
   setView(!simple);
 });
 $("enter-simple").addEventListener("click", () => setView(true));
+$("enter-services").addEventListener("click", () => {
+  setView(true);
+  $("services").scrollIntoView();
+});
+$<HTMLAnchorElement>("email").href = `mailto:${EMAIL}`;
 $("replay").addEventListener("click", () => {
   sound.click();
   scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });

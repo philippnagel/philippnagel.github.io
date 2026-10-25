@@ -4,7 +4,7 @@ import { simpleHtml, srHtml } from "../src/chapters";
 await rm("dist", { recursive: true, force: true });
 
 const result = await Bun.build({
-  entrypoints: ["src/index.html"],
+  entrypoints: ["src/index.html", "src/impressum.html", "src/datenschutz.html"],
   outdir: "dist",
   minify: true,
 });

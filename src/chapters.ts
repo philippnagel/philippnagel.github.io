@@ -11,7 +11,12 @@ export interface Chapter {
   proof?: string;
   /** what I can be hired for, shown on the contact card */
   offers?: string[];
+  /** worked examples, shown in the simple view and the hidden text, not on the card */
+  cases?: { title: string; text: string }[];
 }
+
+/** Placeholder: replace with the real address before publishing. */
+export const EMAIL = "hello@example.com";
 
 /** One chapter per station along the path. */
 export const chapters: Chapter[] = [
@@ -89,6 +94,20 @@ export const chapters: Chapter[] = [
       "Gateway (SMGW) lifecycle and DLMS/COSEM integration",
       "Technical due diligence, and EU–Japan data-access studies",
     ],
+    cases: [
+      {
+        title: "Japanese smart-metering data access, 2025",
+        text: "For a Japanese energy consultancy: mapped the B-route data pipeline and SMDSA intermediary access to EU conventions, identified the ECHONET Lite ↔ DLMS/COSEM translation requirements, and delivered a working proof of concept for HES/MDMS integration. Also compared METI/ANRE AMI policy with the EU SMGW governance model.",
+      },
+      {
+        title: "Gateway management for commercial metering operators",
+        text: "Built MakoFlow on DLMS/COSEM: a multi-tenant platform running about 500,000 smart meters for 6–7 commercial metering operators, including a company of Octopus Energy Group and Inexogy, with regulatory certification per operator.",
+      },
+      {
+        title: "Acquisition by Hausheld, 2025",
+        text: "Mako365 and Mako Software, two sister companies I co-founded, were acquired together by Hausheld AG in November 2025. I ran the technical and operational due diligence.",
+      },
+    ],
   },
 ];
 
@@ -105,28 +124,54 @@ export const srHtml = () =>
         (c.offers?.length
           ? `<ul>${c.offers.map((o) => `<li>${o}</li>`).join("")}</ul>`
           : "") +
+        casesHtml(c) +
         (c.terms?.length
           ? `<p>${c.terms.map(([a, b]) => `${a}: ${b}`).join("; ")}</p>`
           : ""),
     )
     .join("")}</div>`;
 
-const CTA = `<div class="cta"><a class="btn pri" href="https://cal.com/nagel">Book a call</a><a class="btn" href="https://www.linkedin.com/in/philippnagel/" rel="me">LinkedIn</a></div>`;
+const CTA = `<div class="cta"><a class="btn pri" href="https://cal.com/nagel">Book a call</a><a class="btn" href="mailto:${EMAIL}">Email</a><a class="btn" href="https://www.linkedin.com/in/philippnagel/" rel="me">LinkedIn</a></div>`;
 
-/** The chapters as a plain reading page, for the simple view, and the no-JavaScript fallback (written into the HTML at build time). */
-export const simpleHtml = () =>
-  chapters
-    .map(
-      (c, i) =>
-        `<section><small>${c.tag}</small><h${i ? 2 : 1}>${c.title}</h${i ? 2 : 1}><p>${c.body}</p>` +
-        (c.proof ? `<p class="proof">${c.proof}</p>` : "") +
-        (c.offers?.length
-          ? `<ul>${c.offers.map((o) => `<li>${o}</li>`).join("")}</ul>`
-          : "") +
-        (c.terms?.length
-          ? `<p class="terms">${c.terms.map(([a, b]) => `<b>${a}</b> ${b}`).join(" · ")}</p>`
-          : "") +
-        (i === chapters.length - 1 ? CTA : "") +
-        `</section>`,
-    )
-    .join("");
+export const LEGAL = `<a href="./impressum.html">Impressum</a> · <a href="./datenschutz.html">Datenschutz</a>`;
+
+const casesHtml = (c: Chapter) =>
+  c.cases?.length
+    ? c.cases.map((k) => `<h3>${k.title}</h3><p>${k.text}</p>`).join("")
+    : "";
+
+const list = (c: Chapter) =>
+  c.offers?.length
+    ? `<ul>${c.offers.map((o) => `<li>${o}</li>`).join("")}</ul>`
+    : "";
+
+/** The chapters as a plain reading page, for the simple view, and the no-JavaScript fallback (written into the HTML at build time). Services and proof sit right after the intro, so a buyer reaches them without reading the whole tour. */
+export const simpleHtml = () => {
+  const last = chapters.length - 1;
+  const section = (c: Chapter, i: number) => {
+    const h = i ? 2 : 1;
+    return (
+      `<section><small>${c.tag}</small><h${h}>${c.title}</h${h}><p>${c.body}</p>` +
+      (c.terms?.length
+        ? `<p class="terms">${c.terms.map(([a, b]) => `<b>${a}</b> ${b}`).join(" · ")}</p>`
+        : "") +
+      (i === last ? CTA : "") +
+      `</section>`
+    );
+  };
+  const services = chapters[last]!;
+  return (
+    section(chapters[0]!, 0) +
+    `<section id="services"><small>Services</small><h2>What I do for utilities and operators</h2>` +
+    (services.proof ? `<p class="proof">${services.proof}</p>` : "") +
+    list(services) +
+    casesHtml(services) +
+    CTA +
+    `</section>` +
+    chapters
+      .slice(1)
+      .map((c, i) => section(c, i + 1))
+      .join("") +
+    `<footer class="legal">${LEGAL}</footer>`
+  );
+};
