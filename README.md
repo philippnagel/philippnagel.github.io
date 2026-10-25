@@ -15,7 +15,7 @@ Scroll to walk Philipp (the pixel character is him) along a path through eight s
 
 A start gate (Enter / Enter without sound) unlocks audio and the page. Sound is synthesised in the browser with Web Audio (no audio files): a small chiptune loop that changes key between day and night, footsteps, an arrival chime per station and UI clicks; the speaker button in the header mutes it.
 
-A chapter card explains each station; the dots on the right jump between them. The scene follows light / dark mode (day / night) and the header button toggles it.
+Impressum and Datenschutz open as an overlay (links in the corner, or `/#impressum`, `/#datenschutz`) and also exist as standalone pages (`/impressum.html`, `/datenschutz.html`). A chapter card explains each station; the dots on the right jump between them. The scene follows light / dark mode (day / night) and the header button toggles it.
 
 ## Stack
 
@@ -41,19 +41,20 @@ bun run check       # fmt check + typecheck + tests (what CI runs)
 
 ## Layout
 
-| Path                              | Purpose                                                   |
-| --------------------------------- | --------------------------------------------------------- |
-| `src/index.html`, `src/style.css` | Page shell and UI styling                                 |
-| `src/world.ts`                    | Sky, parallax layers, ground and the eight station scenes |
-| `src/philipp.ts`                  | The character and its walk cycle                          |
-| `src/walk.ts`                     | Station positions, scroll to walk mapping, eased `Walker` |
-| `src/palette.ts`, `src/theme.ts`  | Day and night palettes; theme toggle                      |
-| `src/audio.ts`                    | Web Audio synth: music loop, footsteps, chimes            |
-| `src/font.ts`                     | 5x7 bitmap font                                           |
-| `src/chapters.ts`                 | Chapter card copy, one per station                        |
-| `src/main.ts`                     | Canvas sizing, frame loop, chapter card and rail          |
-| `tests/`                          | `bun test` suites                                         |
-| `.github/workflows/pages.yml`     | Check, build and deploy to GitHub Pages                   |
+| Path                              | Purpose                                                                                        |
+| --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `src/index.html`, `src/style.css` | Page shell and UI styling                                                                      |
+| `src/world.ts`                    | Sky, parallax layers, ground and the eight station scenes                                      |
+| `src/philipp.ts`                  | The character and its walk cycle                                                               |
+| `src/walk.ts`                     | Station positions, scroll to walk mapping, eased `Walker`                                      |
+| `src/palette.ts`, `src/theme.ts`  | Day and night palettes; theme toggle                                                           |
+| `src/audio.ts`                    | Web Audio synth: music loop, footsteps, chimes                                                 |
+| `src/font.ts`                     | 5x7 bitmap font                                                                                |
+| `src/chapters.ts`                 | Chapter card copy, one per station                                                             |
+| `src/legal-text.ts`, `legal.ts`   | Impressum and Datenschutz: overlay, `#impressum` links; the build also writes standalone pages |
+| `src/main.ts`                     | Canvas sizing, frame loop, chapter card and rail                                               |
+| `tests/`                          | `bun test` suites                                                                              |
+| `.github/workflows/pages.yml`     | Check, build and deploy to GitHub Pages                                                        |
 
 ## Editing a station
 

@@ -1,10 +1,11 @@
 import { cp, readFile, rm, writeFile } from "node:fs/promises";
 import { simpleHtml, srHtml } from "../src/chapters";
+import { legalPage, type LegalKey } from "../src/legal-text";
 
 await rm("dist", { recursive: true, force: true });
 
 const result = await Bun.build({
-  entrypoints: ["src/index.html", "src/impressum.html", "src/datenschutz.html"],
+  entrypoints: ["src/index.html"],
   outdir: "dist",
   minify: true,
 });
@@ -33,6 +34,14 @@ await writeFile(
     `<div id="simple">${simpleHtml()}</div>`,
   ),
 );
+
+// the legal pages: the same text as the overlay, with the built stylesheet and icon
+const head = [...html.matchAll(/<link rel="(?:stylesheet|icon)"[^>]*>/g)].map(
+  (m) => m[0],
+);
+if (head.length < 2) throw new Error("stylesheet / icon link not found");
+for (const key of ["impressum", "datenschutz"] as LegalKey[])
+  await writeFile(`dist/${key}.html`, legalPage(key, head.join("\n    ")));
 
 // social preview image, referenced by an absolute URL so it is copied as is
 await cp("src/og.png", "dist/og.png");

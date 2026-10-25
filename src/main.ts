@@ -1,6 +1,7 @@
 import "./style.css";
 import { Sound } from "./audio";
 import { EMAIL, chapters, simpleHtml, srHtml } from "./chapters";
+import { initLegal } from "./legal";
 import { palette, type Theme } from "./palette";
 import { drawPhilipp } from "./philipp";
 import { currentTheme, initTheme } from "./theme";
@@ -224,7 +225,8 @@ history.scrollRestoration = "manual";
 scrollTo(0, 0);
 // keep keyboard and screen readers on the gate until it is dismissed
 const behindGate = [...document.body.children].filter(
-  (el) => el !== gateEl && el.tagName !== "SCRIPT",
+  (el) =>
+    el !== gateEl && el.tagName !== "SCRIPT" && !el.hasAttribute("data-live"),
 );
 if (!simple) {
   root.classList.add("locked");
@@ -242,6 +244,7 @@ document.addEventListener("visibilitychange", () =>
 );
 if (!simple) $("enter").focus();
 resize();
+initLegal($("overlay"));
 
 /** Lays real links over the contact signpost so the boards themselves are clickable. */
 const boardEls = [$("board-1"), $("board-2")] as HTMLAnchorElement[];

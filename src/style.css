@@ -493,18 +493,102 @@ body.doc main {
   padding: 32px 16px 64px;
   font: 16px/1.6 var(--mono);
 }
-body.doc h1 {
+body.doc h1,
+.sheet h1 {
   font: 700 28px/1.15 var(--pix);
 }
-body.doc h2 {
+body.doc h2,
+.sheet h2 {
   margin: 24px 0 4px;
   font: 700 14px var(--mono);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--blue-text);
 }
-body.doc a {
+body.doc a,
+.sheet a {
   color: var(--blue-text);
+}
+
+/* legal links, always in reach (also over the start gate) */
+#legal {
+  position: fixed;
+  z-index: 21;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  font: 700 12px var(--mono);
+  color: var(--ink);
+  text-shadow: 0 0 3px var(--bg);
+}
+#legal a:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+html.simple #legal,
+html:not(.js) #legal {
+  display: none;
+}
+
+/* legal pages over the page */
+#overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(6 10 30 / 0.62);
+  animation: fade 0.2s;
+}
+#overlay[hidden] {
+  display: none;
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+.sheet {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 16px 28px 32px;
+  background: var(--card);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+  font: 15px/1.6 var(--mono);
+  animation: pop 0.25s;
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+.sheet-close {
+  position: sticky;
+  top: 0;
+  float: right;
+  margin: 0 -12px 8px 8px;
+  cursor: pointer;
+}
+.sheet h1 {
+  margin: 0 0 8px;
+  padding-top: 12px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 720px) {
+  .sheet {
+    padding: 12px 18px 28px;
+  }
+  .sheet h1 {
+    font-size: 22px;
+  }
+}
+html.sheet-open {
+  overflow: hidden;
 }
 
 .sr {

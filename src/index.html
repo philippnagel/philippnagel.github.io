@@ -158,6 +158,10 @@
     <div id="legend"><i class="p"></i>power <i class="d"></i>data</div>
     <div id="tip" role="tooltip" hidden></div>
     <div id="hint">scroll ↓</div>
+    <nav id="legal" data-live aria-label="Legal">
+      <a href="./impressum.html">Impressum</a> ·
+      <a href="./datenschutz.html">Datenschutz</a>
+    </nav>
     <main id="track"></main>
     <div id="simple"></div>
     <div id="gate" role="dialog" aria-modal="true" aria-label="Start">
@@ -174,6 +178,21 @@
         <p class="remark">
           This site plays sound. Turn it down or off any time.
         </p>
+      </div>
+    </div>
+    <div
+      id="overlay"
+      data-live
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sheet-title"
+      hidden
+    >
+      <div class="sheet">
+        <button class="btn sheet-close" type="button" aria-label="Close">
+          Close ✕
+        </button>
+        <div class="sheet-body"></div>
       </div>
     </div>
     <script type="module" src="./main.ts"></script>
