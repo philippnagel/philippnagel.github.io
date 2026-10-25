@@ -355,6 +355,10 @@ const grid: Station = {
     slab(c, 220, -120, 6, 120, wood, 1);
     slab(c, 208, -116, 30, 4, wood, 1);
     for (const bx of [210, 221, 233]) px(c, ins[3], bx, -124, 3, 8);
+    // the line ends on a pole of its own, so the wires never hang in the air
+    slab(c, 300, -106, 6, 106, wood, 1);
+    slab(c, 288, -102, 30, 4, wood, 1);
+    for (const bx of [290, 301, 313]) px(c, ins[3], bx, -110, 3, 8);
     cloudData(c, p, 50, -215);
   },
   live(c, p, v) {
@@ -386,7 +390,7 @@ const grid: Station = {
       [110, -88],
       [150, -94],
       [222, -118],
-      [330, -100],
+      [302, -104],
     ];
     wire(c, cm, [
       [74, -92],
@@ -545,10 +549,6 @@ const bess: Station = {
     ];
     const cm = mat(p, "#8d97a8", 0.2)[1];
     wire(c, cm, route);
-    wire(c, cm, [
-      [364, -108],
-      [448, -92],
-    ]);
     const rev = charging ? route : [...route].reverse();
     pulse(c, p.yellow, rev, t, 6, 0.18, 5);
     glow(c, p, 100, -40, 120, p.glow, 0.02);
