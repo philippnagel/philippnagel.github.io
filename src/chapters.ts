@@ -24,7 +24,7 @@ export const chapters: Chapter[] = [
   {
     tag: "Hello",
     title: "Smart energy infrastructure, built and run at scale",
-    body: "I build the platforms behind the meter: 500,000+ smart meters, about 10 million market messages a week. Scroll to walk the path with me.",
+    body: "From the grid connection to the single reading: batteries, data centers, homes, and the meters and market messages that tie them together. I've run 500,000+ smart meters and about 10 million market messages a week. Scroll to walk the path with me.",
   },
   {
     tag: "Grid",
@@ -35,7 +35,7 @@ export const chapters: Chapter[] = [
   {
     tag: "Storage",
     title: "02. The battery site",
-    body: "A grid-scale battery (BESS) soaks up surplus power and returns it at the peak. Its energy management system takes orders from the market and the grid operator. Every one of those links is an integration.",
+    body: "A grid-scale battery (BESS) soaks up surplus power and returns it at the peak. Its energy management system takes orders from the market and the grid operator. Behind a large consumer's grid connection, metering and settlement rules decide whether it may also sell into the market. I've worked that out for Japan.",
     terms: [
       ["BESS", "battery energy storage system"],
       ["PCS", "power conversion system"],
@@ -46,7 +46,7 @@ export const chapters: Chapter[] = [
   {
     tag: "Data center",
     title: "03. The data center",
-    body: "A data center can draw as much as a small city, around the clock, and AI is making them bigger. Grid connections take years, so operators now pair them with batteries, flexible load and waste-heat reuse. Each of those is a data and market integration.",
+    body: "A data center can draw as much as a small city, around the clock, and AI is making them bigger. Grid connections take years, so operators now pair them with batteries, flexible load and waste-heat reuse. A battery behind the same connection needs its own meters to trade, and each of those links is a data and market integration.",
     terms: [
       ["UPS", "uninterruptible power supply"],
       ["GEN", "backup generator"],
@@ -86,10 +86,11 @@ export const chapters: Chapter[] = [
   {
     tag: "Contact",
     title: "Work with me",
-    body: "Remote, or on-site when it's worth it. Bring me a metering, market-communication or grid-data problem. A first call is 30 minutes, no pitch.",
+    body: "Remote, or on-site when it's worth it. Bring me a metering, storage, market or grid-data problem. A first call is 30 minutes, no pitch.",
     proof:
       "9+ years · 500k+ meters · ~10M messages/week · BNetzA / BDEW / VDE FNN committees",
     offers: [
+      "Battery storage (BESS) metering and market access, incl. behind-the-meter sites in Japan",
       "Smart metering platform architecture and rollout operations",
       "Market communication (MaKo, EDIFACT/AS4) automation and regulatory mapping",
       "Gateway (SMGW) lifecycle and DLMS/COSEM integration",
@@ -99,6 +100,10 @@ export const chapters: Chapter[] = [
       {
         title: "Japanese smart-metering data access, 2025",
         text: "For a Japanese energy consultancy: mapped the B-route data pipeline and SMDSA intermediary access to EU conventions, identified the ECHONET Lite ↔ DLMS/COSEM translation requirements, and delivered a working proof of concept for HES/MDMS integration. Also compared METI/ANRE AMI policy with the EU SMGW governance model.",
+      },
+      {
+        title: "Behind-the-meter battery in Japan, 2026",
+        text: "Worked out whether a large battery behind a consumer's grid connection can also sell into the market, checked across TEPCO, Kansai and Chubu: the interconnection requirements, which metering the Measurement Act allows (certified child meters with agreed allocation, not differential metering), and how charging and discharging split across two balancing groups for JEPX and imbalance settlement.",
       },
       {
         title: "Gateway management for commercial metering operators",
@@ -163,7 +168,7 @@ export const simpleHtml = () => {
   const services = chapters[last]!;
   return (
     section(chapters[0]!, 0) +
-    `<section id="services"><small>Services</small><h2>What I do for utilities and operators</h2>` +
+    `<section id="services"><small>Services</small><h2>What I do for utilities, storage and grid operators</h2>` +
     (services.proof ? `<p class="proof">${services.proof}</p>` : "") +
     list(services) +
     casesHtml(services) +

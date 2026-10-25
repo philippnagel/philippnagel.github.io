@@ -1,7 +1,7 @@
 /** Who the brand is: the facts every medium prints. */
 export const IDENTITY = {
   name: "Philipp Nagel",
-  role: "Smart metering & market communication",
+  role: "Smart energy: metering, storage & markets",
   email: "phil@philippnagel.com",
   phone: "+49 151 1436 7551",
   linkedin: "linkedin.com/in/philippnagel",
