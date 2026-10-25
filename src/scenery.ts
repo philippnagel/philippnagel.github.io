@@ -16,8 +16,8 @@ import {
   vnoise,
   vox,
   voxBall,
-} from "./gfx";
-import { mix, rgb, type Pal } from "./palette";
+} from "@philippnagel/design/gfx";
+import { mix, rgb, type Pal } from "@philippnagel/design/palette";
 import { drawBird } from "./skylife";
 import { ART_AHEAD, STATIONS } from "./walk";
 

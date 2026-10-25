@@ -1,4 +1,4 @@
-import { drawText, eachTextPixel, textWidth } from "./font";
+import { drawText, eachTextPixel, textWidth } from "@philippnagel/design/font";
 import {
   type C,
   type Pt,
@@ -25,8 +25,8 @@ import {
   studs,
   tone,
   vox,
-} from "./gfx";
-import { mix, type Pal } from "./palette";
+} from "@philippnagel/design/gfx";
+import { mix, type Pal } from "@philippnagel/design/palette";
 import { STATIONS } from "./walk";
 import { drawLamp, setFor, type View } from "./scenery";
 

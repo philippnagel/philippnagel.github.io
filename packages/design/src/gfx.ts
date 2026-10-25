@@ -384,6 +384,12 @@ export interface Sprite {
   oy: number;
 }
 
+/** Makes the bitmaps sprites bake into; outside the browser, swap in a software canvas. */
+let newCanvas = (): HTMLCanvasElement => document.createElement("canvas");
+export const setCanvasFactory = (f: () => HTMLCanvasElement) => {
+  newCanvas = f;
+};
+
 function outline(cv: HTMLCanvasElement) {
   const c = cv.getContext("2d")!;
   const { width: w, height: h } = cv;
@@ -425,7 +431,7 @@ export function bake(
   edge = true,
 ): Sprite {
   const pad = edge ? 1 : 0;
-  const cv = document.createElement("canvas");
+  const cv = newCanvas();
   cv.width = Math.ceil(x1 - x0) + pad * 2;
   cv.height = Math.ceil(y1 - y0) + pad * 2;
   const c = cv.getContext("2d")!;

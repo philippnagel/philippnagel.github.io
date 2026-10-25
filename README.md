@@ -37,6 +37,8 @@ bun run test        # scene / geometry / template tests
 bun run typecheck   # tsc --noEmit
 bun run format      # bun fmt
 bun run check       # fmt check + typecheck + tests (what CI runs)
+bun run tokens      # regenerate packages/design/tokens.css after editing tokens.ts
+bun run cards       # business card PDF + previews in packages/design/out/ (needs typst)
 ```
 
 ## Layout
@@ -45,16 +47,24 @@ bun run check       # fmt check + typecheck + tests (what CI runs)
 | --------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `src/index.html`, `src/style.css` | Page shell and UI styling                                                                      |
 | `src/world.ts`                    | Sky, parallax layers, ground and the eight station scenes                                      |
-| `src/philipp.ts`                  | The character and its walk cycle                                                               |
 | `src/walk.ts`                     | Station positions, scroll to walk mapping, eased `Walker`                                      |
-| `src/palette.ts`, `src/theme.ts`  | Day and night palettes; theme toggle                                                           |
+| `src/theme.ts`                    | Theme toggle                                                                                   |
 | `src/audio.ts`                    | Web Audio synth: music loop, footsteps, chimes                                                 |
-| `src/font.ts`                     | 5x7 bitmap font                                                                                |
 | `src/chapters.ts`                 | Chapter card copy, one per station                                                             |
 | `src/legal-text.ts`, `legal.ts`   | Impressum and Datenschutz: overlay, `#impressum` links; the build also writes standalone pages |
 | `src/main.ts`                     | Canvas sizing, frame loop, chapter card and rail                                               |
+| `packages/design/`                | Design library: tokens, palettes, bricks, 5x7 font, Philipp, business cards                    |
 | `tests/`                          | `bun test` suites                                                                              |
 | `.github/workflows/pages.yml`     | Check, build and deploy to GitHub Pages                                                        |
+
+## Design library
+
+`packages/design` (`@philippnagel/design`, a Bun workspace) holds what the site and print share:
+
+- `tokens.ts`: identity (name, role, contact), accent and UI colours per scheme, font stacks. `tokens.css` is generated from it and imported by `style.css`; `tokens.typ` is generated for Typst.
+- `palette.ts`, `gfx.ts`, `font.ts`, `philipp.ts`: scene palettes, brick and voxel primitives, the 5x7 font, the character.
+- `raster.ts`: a software canvas and PNG writer, so the same art code draws without a browser.
+- `cards/`: the business card. `art.ts` draws the back scene and the brick strip for the front; `card.typ` lays out both sides at 85 x 55 mm plus 3 mm bleed, with a QR code to the site. `bun run cards` writes `out/card.pdf` (RGB, front then back) and 300 ppi previews.
 
 ## Editing a station
 

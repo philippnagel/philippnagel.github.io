@@ -2,18 +2,25 @@
   "name": "philippnagel.github.io",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "bun ./src/index.html",
     "build": "bun run scripts/build.ts",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "check": "bun run format:check && bun run typecheck && bun test",
-    "format": "bun fmt src tests scripts package.json tsconfig.json README.md",
-    "format:check": "bun fmt --check src tests scripts package.json tsconfig.json README.md"
+    "format": "bun fmt src tests scripts packages package.json tsconfig.json README.md",
+    "format:check": "bun fmt --check src tests scripts packages package.json tsconfig.json README.md",
+    "cards": "bun run --cwd packages/design cards",
+    "tokens": "bun run --cwd packages/design tokens"
   },
   "devDependencies": {
-    "@fontsource/pixelify-sans": "^5.3.0",
     "@types/bun": "^1.4.4",
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@philippnagel/design": "workspace:*"
   }
 }

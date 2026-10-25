@@ -1,0 +1,21 @@
+{
+  "name": "@philippnagel/design",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tokens": "./src/tokens.ts",
+    "./palette": "./src/palette.ts",
+    "./font": "./src/font.ts",
+    "./gfx": "./src/gfx.ts",
+    "./philipp": "./src/philipp.ts",
+    "./raster": "./src/raster.ts",
+    "./tokens.css": "./tokens.css"
+  },
+  "scripts": {
+    "tokens": "bun run scripts/tokens.ts",
+    "cards": "bun run scripts/cards.ts"
+  },
+  "devDependencies": {
+    "@fontsource/pixelify-sans": "^5.3.0"
+  }
+}

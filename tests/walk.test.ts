@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { bass, melody, noteHz } from "../src/audio";
 import { chapters } from "../src/chapters";
-import { hasGlyph } from "../src/font";
-import { palette } from "../src/palette";
+import { hasGlyph } from "@philippnagel/design/font";
+import { palette } from "@philippnagel/design/palette";
 import {
   END,
   STATIONS,

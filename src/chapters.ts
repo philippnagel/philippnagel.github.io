@@ -1,3 +1,4 @@
+import { IDENTITY } from "@philippnagel/design/tokens";
 import { STATIONS } from "./walk";
 
 export interface Chapter {
@@ -16,7 +17,7 @@ export interface Chapter {
 }
 
 /** Contact address; `src/index.html` repeats it for readers without JavaScript. */
-export const EMAIL = "phil@philippnagel.com";
+export const EMAIL = IDENTITY.email;
 
 /** One chapter per station along the path. */
 export const chapters: Chapter[] = [

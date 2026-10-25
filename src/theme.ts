@@ -1,4 +1,5 @@
-import type { Theme } from "./palette";
+import type { Theme } from "@philippnagel/design/palette";
+import { UI } from "@philippnagel/design/tokens";
 
 const KEY = "theme";
 const dark = () => matchMedia("(prefers-color-scheme: dark)");
@@ -8,14 +9,22 @@ export function currentTheme(): Theme {
   return t === "dark" || (t !== "light" && dark().matches) ? "night" : "day";
 }
 
-/** Browser bar colour, matching `--bg`; the meta tags' media queries only know the system setting. */
-const BAR = { day: "#bfe4fa", night: "#0f1a46" };
+/**
+ * Browser bar colour, matching `--bg`. Each meta tag follows its media query
+ * (the system setting) unless a theme was picked, which overrides both.
+ */
 function syncBar() {
-  if (!document.documentElement.dataset.theme) return;
-  const color = BAR[currentTheme()];
+  const picked = document.documentElement.dataset.theme;
   document
     .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
-    .forEach((m) => (m.content = color));
+    .forEach((m) => {
+      const t = picked
+        ? currentTheme()
+        : m.media.includes("dark")
+          ? "night"
+          : "day";
+      m.content = UI[t].bg;
+    });
 }
 
 export function initTheme(button: HTMLElement, onChange: (t: Theme) => void) {
