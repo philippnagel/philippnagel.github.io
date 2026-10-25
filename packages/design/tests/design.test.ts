@@ -67,12 +67,15 @@ describe("raster", () => {
 });
 
 describe("cards", () => {
-  test("art covers the card with bleed, no holes", () => {
-    const r = back(palette("day"));
-    expect([r.width, r.height]).toEqual([91 * 3, 61 * 3]);
-    for (let i = 3; i < r.data.length; i += 4) expect(r.data[i]).toBe(255);
-    expect(strip(palette("day")).width).toBe(r.width);
-  });
+  test.each(["day", "night"] as const)(
+    "%s art covers the card with bleed, no holes",
+    (t) => {
+      const r = back(palette(t));
+      expect([r.width, r.height]).toEqual([91 * 3, 61 * 3]);
+      for (let i = 3; i < r.data.length; i += 4) expect(r.data[i]).toBe(255);
+      expect(strip(palette(t)).width).toBe(r.width);
+    },
+  );
 
   test("the display font converts to a TrueType file", async () => {
     const woff = Bun.resolveSync(

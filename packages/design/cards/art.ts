@@ -25,7 +25,7 @@ const B = CARD.bleed * PX_MM;
 
 useRaster();
 
-/** The back: Philipp waving on a baseplate under the day sky, with room on the right for the QR code. */
+/** The back: Philipp waving on a baseplate under the sky of `p`, with room on the right for the QR code. */
 export function back(p: Pal): Raster {
   const r = new Raster(W, H);
   const c = r.getContext("2d");
@@ -53,15 +53,25 @@ export function back(p: Pal): Raster {
         1,
       );
 
-  // sun
-  voxBall(c, W * 0.42, B + 16, 9, 3, ramp(p.yellow));
+  if (p.night) {
+    // stars, two sizes, kept out of the lowest band
+    for (let i = 0; i < 70; i++) {
+      const x = Math.floor(hash(i * 31 + 7) * W);
+      const y = Math.floor(hash(i * 17 + 3) * ground * 0.7);
+      const big = hash(i * 5) < 0.15;
+      px(c, big ? p.glow : mix(p.white, p.sky[1]!, 0.35), x, y, big ? 2 : 1, 1);
+    }
+    voxBall(c, W * 0.42, B + 16, 9, 3, ramp("#e9ecf7"));
+  } else voxBall(c, W * 0.42, B + 16, 9, 3, ramp(p.yellow));
 
   // two cloud piles
   for (const [cx, cy, n] of [
     [B + 34, B + 18, 5],
     [W * 0.3, B + 46, 4],
   ] as const) {
-    const cl = ramp("#ffffff");
+    const cl = p.night
+      ? ramp(mix(p.sky[2]!, "#ffffff", 0.18))
+      : ramp("#ffffff");
     for (let i = 0; i < n; i++)
       block(
         c,
@@ -125,7 +135,7 @@ export function strip(p: Pal): Raster {
   let x = -6;
   for (let i = 0; x < W; i++) {
     const w = 16 + Math.floor(hash(i * 13 + 1) * 3) * 8;
-    const col = ramp(cols[i % cols.length]!);
+    const col = mat(p, cols[i % cols.length]!, 0.2);
     const top = 6 + (hash(i * 7) < 0.3 ? -3 : 0);
     block(c, x, top, w - 1, h - top, col, 2);
     studs(c, x, top, w - 1, col, 8, 2);

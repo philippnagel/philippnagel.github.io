@@ -64,7 +64,7 @@ bun run cards       # business card PDF + previews in packages/design/out/ (need
 - `tokens.ts`: identity (name, role, contact), accent and UI colours per scheme, font stacks. `tokens.css` is generated from it and imported by `style.css`; `tokens.typ` is generated for Typst.
 - `palette.ts`, `gfx.ts`, `font.ts`, `philipp.ts`: scene palettes, brick and voxel primitives, the 5x7 font, the character.
 - `raster.ts`: a software canvas and PNG writer, so the same art code draws without a browser.
-- `cards/`: the business card. `art.ts` draws the back scene and the brick strip for the front; `card.typ` lays out both sides at 85 x 55 mm plus 3 mm bleed, with a QR code to the site. `bun run cards` writes `out/card.pdf` (RGB, front then back) and 300 ppi previews.
+- `cards/`: the business card. `art.ts` draws the back scene and the brick strip for the front; `card.typ` lays out both sides at 85 x 55 mm plus 3 mm bleed, with a QR code to the site. `bun run cards` writes a day and a night version, `out/card-day.pdf` and `out/card-night.pdf` (RGB, front then back), with 300 ppi previews. The QR card stays dark on white in both.
 
 ## Editing a station
 
