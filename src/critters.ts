@@ -1,5 +1,5 @@
-import { type C, hash, px, tone } from "./gfx";
-import type { Pal } from "./palette";
+import { type C, hash, px, tone } from "@philippnagel/design/gfx";
+import type { Pal } from "@philippnagel/design/palette";
 import { cells, nearStation, type View } from "./scenery";
 
 type Kind = "cat" | "rabbit" | "hedgehog" | "fox";

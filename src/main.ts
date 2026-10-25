@@ -2,8 +2,8 @@ import "./style.css";
 import { Sound } from "./audio";
 import { EMAIL, chapters, simpleHtml, srHtml } from "./chapters";
 import { initLegal } from "./legal";
-import { palette, type Theme } from "./palette";
-import { drawPhilipp } from "./philipp";
+import { palette, type Theme } from "@philippnagel/design/palette";
+import { drawPhilipp } from "@philippnagel/design/philipp";
 import { currentTheme, initTheme } from "./theme";
 import {
   ART_AHEAD,

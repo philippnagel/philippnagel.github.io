@@ -30,13 +30,14 @@ Goal: a page that helps prospective consulting clients (utilities, metering oper
 
 - [ ] Hausheld date: site uses the press date (Nov 2025), CV says Sept 2025. Update the CV.
 - [ ] Japan client: CV says "an asset management firm", site says "a Japanese energy consultancy". Make them agree.
+- [ ] Positioning is now smart energy (metering, storage, markets). The CV still reads as smart metering only; add the BESS work there too.
 
 ## Copy
 
 - [ ] Add real outcome numbers to the cases (time saved, rollout rate, cost). None invented so far.
 - [ ] Offers read as capabilities; rewrite each as problem → result.
 - [ ] Show cases on the story-view contact card, not only in the simple view (at least the 500k-meter case and the Hausheld acquisition).
-- [ ] Battery and data center stations (02, 03) have no proof of work. Tie each to a real project, shorten, or cut.
+- [ ] Battery and data center stations (02, 03) now cite the Japan behind-the-meter BESS work (garden: `Japan Smart Metering/Sources/bess-btm-interconnection-metering.md`). Confirm it may be shown as a case (whose question was it, client or internal?) and add an outcome.
 - [ ] Pixel concept may read as creative rather than reliable to conservative buyers. Keep the proof strip, services block and email prominent.
 
 ## UX

@@ -10,10 +10,10 @@ import {
   drawSky,
   type View,
 } from "./scenery";
-import type { Pal } from "./palette";
+import type { Pal } from "@philippnagel/design/palette";
 import { ART_AHEAD, STATIONS } from "./walk";
 
-export { hash } from "./gfx";
+export { hash } from "@philippnagel/design/gfx";
 export type { View } from "./scenery";
 
 /** Foreground tufts, the stations' ground labels over them, then the weather over everything. */

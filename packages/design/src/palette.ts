@@ -1,3 +1,5 @@
+import { ACCENT, UI } from "./tokens";
+
 export type Theme = "night" | "day";
 
 export interface Pal {
@@ -51,10 +53,7 @@ export const mix = (a: string, b: string, t: number) => {
 };
 
 const shared = {
-  red: "#d82d17",
-  blue: "#4398cd",
-  green: "#47a639",
-  yellow: "#edcb1f",
+  ...ACCENT,
   skin: "#f2c6a0",
   hair: "#c07a3c",
   shirt: "#5b8fd0",
@@ -75,8 +74,8 @@ const day: Pal = {
   dot: "#6cbc52",
   fg: "#3b8a2c",
   shadow: "#3d7f30",
-  ink: "#10131a",
-  dim: "#4a5568",
+  ink: UI.day.ink,
+  dim: UI.day.mute,
   white: "#f4f6f8",
   steel: "#9aa4b2",
   steelDark: "#6b7686",
@@ -97,8 +96,8 @@ const night: Pal = {
   dot: "#24563c",
   fg: "#0a1a12",
   shadow: "#10281c",
-  ink: "#e6edf3",
-  dim: "#8b98c0",
+  ink: UI.night.ink,
+  dim: UI.night.mute,
   white: "#d8def0",
   steel: "#5b6585",
   steelDark: "#3c4566",

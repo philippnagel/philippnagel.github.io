@@ -1,5 +1,5 @@
-import { type C, hash, px } from "./gfx";
-import type { Pal } from "./palette";
+import { type C, hash, px } from "@philippnagel/design/gfx";
+import type { Pal } from "@philippnagel/design/palette";
 import type { View } from "./scenery";
 
 const BLOCK = 100;

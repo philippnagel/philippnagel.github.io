@@ -1,4 +1,5 @@
 import { cp, readFile, rm, writeFile } from "node:fs/promises";
+import { UI } from "@philippnagel/design/tokens";
 import { simpleHtml, srHtml } from "../src/chapters";
 import { legalPage, type LegalKey } from "../src/legal-text";
 
@@ -23,6 +24,14 @@ await writeFile(
   page,
   html.replace(track, `<main id="track">${srHtml()}</main>`),
 );
+
+// browser bar colours from the tokens, so they are right before any script runs
+const bars = { "%bar-day%": UI.day.bg, "%bar-night%": UI.night.bg };
+for (const [k, v] of Object.entries(bars)) {
+  const cur = await readFile(page, "utf8");
+  if (!cur.includes(k)) throw new Error(`${k} not found in built HTML`);
+  await writeFile(page, cur.replaceAll(k, v));
+}
 
 // the plain reading page, so readers without JavaScript get the chapters too
 const simple = '<div id="simple"></div>';
