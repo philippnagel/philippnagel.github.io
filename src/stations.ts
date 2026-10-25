@@ -8,6 +8,9 @@ import {
   ball,
   bake,
   blit,
+  block,
+  courses,
+  cubeChain,
   cyl,
   dotted,
   glow,
@@ -19,7 +22,9 @@ import {
   ramp,
   shadow,
   slab,
+  studs,
   tone,
+  vox,
 } from "./gfx";
 import { mix, type Pal } from "./palette";
 import { STATIONS } from "./walk";
@@ -36,23 +41,52 @@ interface Station {
 
 const cyc = (p: Pal, i: number) => [p.red, p.blue, p.green, p.yellow][i & 3]!;
 
+/** Ground labels wait here until the foreground grass is down, so no tuft hides one. */
+const groundLabels: (() => void)[] = [];
+
+/** Draws the ground labels queued this frame, each where its station put it. */
+export function flushLabels(c: C) {
+  for (const f of groundLabels) f();
+  groundLabels.length = 0;
+}
+
 function label(c: C, p: Pal, s: string, x: number, y: number, k: number) {
   const w = textWidth(s, k);
   if (y > 0) {
-    // ground labels sit on a small plaque so they read on any grass
-    const pad = 2 * k;
-    const x0 = Math.round(x - w / 2) - pad;
-    const w0 = w + 2 * pad;
-    const h0 = 7 * k + 2 * pad;
-    c.fillStyle = p.ink;
-    c.fillRect(x0 - 1, y - pad - 1, w0 + 2, h0 + 2);
-    c.fillStyle = p.night ? "#0a1030" : "#fffbe8";
-    c.fillRect(x0, y - pad, w0, h0);
-    drawText(c, s, x - w / 2, y, p.ink, k);
+    // ground labels sit on a flat tile brick so they read on any grass
+    const m = c.getTransform();
+    groundLabels.push(() => {
+      c.save();
+      c.setTransform(m);
+      const pad = 3 * k;
+      const x0 = Math.round(x - w / 2) - pad;
+      const r = p.night ? ramp("#1b2140") : ramp("#f4f1e6");
+      block(c, x0, y - pad, w + 2 * pad, 7 * k + 2 * pad, r, 2 * k);
+      drawText(c, s, x - w / 2, y, p.night ? "#e6edf3" : "#1c2030", k);
+      c.restore();
+    });
     return;
   }
-  drawText(c, s, x - w / 2 + k, y + k, p.night ? "#02041a" : "#ffffff55", k);
-  drawText(c, s, x - w / 2, y, p.ink, k);
+  // sky labels are extruded, one cube per font pixel
+  voxText(c, s, x - w / 2, y, k, p.night ? ramp("#d8deef") : mat(p, "#2c3142"));
+}
+
+/** Text as a row of cubes, `k` px each, with lit tops and shaded sides. */
+function voxText(c: C, s: string, x: number, y: number, k: number, r: R5) {
+  const cols = textWidth(s, 1) + 1;
+  const on = new Set<number>();
+  eachTextPixel(s, (gx, gy) => on.add(gy * cols + gx));
+  vox(
+    c,
+    Math.round(x),
+    Math.round(y),
+    cols,
+    7,
+    k,
+    (i, j) => (on.has(j * cols + i) ? r : null),
+    Math.max(1, k - 1 + (k > 2 ? 1 : 0)),
+    false,
+  );
 }
 
 /** A meter has just sent a reading: a ring grows from it every few seconds. */
@@ -69,27 +103,6 @@ function readingPing(c: C, p: Pal, t: number, x: number, y: number) {
   c.stroke();
   c.restore();
   if (u < 0.35) px(c, "#ffffff", x - 2, y - 2, 4, 4);
-}
-
-function taper(
-  c: C,
-  cx: number,
-  y0: number,
-  y1: number,
-  w0: number,
-  w1: number,
-  r: R5,
-) {
-  const n = y0 - y1;
-  for (let i = 0; i < n; i++) {
-    const w = Math.round(w0 + ((w1 - w0) * i) / n);
-    const x = cx - (w >> 1);
-    const q = Math.max(1, w >> 2);
-    px(c, r[2], x, y0 - 1 - i, w, 1);
-    px(c, r[3], x, y0 - 1 - i, q, 1);
-    px(c, r[4], x + q, y0 - 1 - i, 1, 1);
-    px(c, r[1], x + w - q, y0 - 1 - i, q, 1);
-  }
 }
 
 function trapezoid(
@@ -162,16 +175,40 @@ function panel(
     }
 }
 
+/** The market / operator cloud: blue cubes in a dome, with a tiny server rack in front. */
 function cloudData(c: C, p: Pal, x: number, y: number) {
   const r = mat(p, "#4398cd", 0.15);
-  ball(c, x - 28, y + 6, 12, r, 18, -0.4, -0.7);
-  ball(c, x + 28, y + 6, 12, r, 18, -0.4, -0.7);
-  ball(c, x, y, 18, r, 26, -0.4, -0.7);
-  ball(c, x + 12, y - 12, 12, r, 14, -0.4, -0.7);
-  px(c, r[1], x - 44, y + 12, 90, 4);
+  const top = mat(p, "#6cb4e0", 0.15);
+  const cell = 5;
+  const cols = 19;
+  const rows = 8;
+  const h = (i: number) => {
+    const u = (i + 0.5) / cols;
+    return Math.round(
+      Math.max(
+        2,
+        4.2 * Math.sin(u * Math.PI),
+        7.6 * Math.max(0, 1 - ((u - 0.55) / 0.22) ** 2),
+        5.5 * Math.max(0, 1 - ((u - 0.28) / 0.2) ** 2),
+      ),
+    );
+  };
+  vox(
+    c,
+    x - (cols * cell) / 2,
+    y + 16 - rows * cell,
+    cols,
+    rows,
+    cell,
+    (i, j) => {
+      const hh = i === 0 || i === cols - 1 ? 1 : h(i);
+      if (rows - j > hh) return null;
+      return rows - j === hh ? top : r;
+    },
+  );
   // a tiny server rack
-  px(c, "#0b1030", x - 8, y - 4, 16, 14);
-  for (let i = 0; i < 3; i++) px(c, "#2b3f7a", x - 6, y - 2 + i * 4, 12, 3);
+  block(c, x - 8, y - 6, 16, 16, ramp("#0b1030"), 2);
+  for (let i = 0; i < 3; i++) px(c, "#2b3f7a", x - 6, y - 4 + i * 4, 12, 3);
 }
 
 function pulse(
@@ -196,24 +233,6 @@ function wire(c: C, col: string, pts: Pt[]) {
     line(c, col, pts[i - 1]![0], pts[i - 1]![1], pts[i]![0], pts[i]![1]);
 }
 
-function blade(
-  c: C,
-  col: string,
-  edge: string,
-  x: number,
-  y: number,
-  ang: number,
-  len: number,
-) {
-  for (let i = 0; i <= len; i++) {
-    const w = Math.max(1, Math.round(5 - (i / len) * 4));
-    const bx = x + Math.cos(ang) * i;
-    const by = y + Math.sin(ang) * i;
-    px(c, col, bx - w / 2, by - w / 2, w, w);
-    px(c, edge, bx - w / 2, by + w / 2 - 1, w, 1);
-  }
-}
-
 function turbineLive(
   c: C,
   p: Pal,
@@ -225,16 +244,27 @@ function turbineLive(
 ) {
   const m = mat(p, "#f2f4f8", 0.2);
   for (let b = 0; b < 3; b++)
-    blade(c, m[3], m[1], x, y, t * 1.1 + phase + (b * Math.PI * 2) / 3, len);
-  ball(c, x, y, 6, m);
+    cubeChain(c, m, x, y, t * 1.1 + phase + (b * Math.PI * 2) / 3, len, 5, 2);
+  // the hub: a small cube with a red nose stud
+  block(c, x - 4, y - 4, 8, 8, m, 2);
+  px(c, mat(p, "#c0392b", 0.2)[2], x - 1, y - 1, 3, 3);
 }
 
+/** Tower of stacked bricks, each a step narrower, with a brick nacelle on top. */
 function turbineStill(c: C, p: Pal, x: number, h: number) {
   const m = mat(p, "#f2f4f8", 0.2);
-  taper(c, x, 0, -h, 12, 6, m);
-  slab(c, x - 10, -h - 6, 22, 10, mat(p, "#d8dde6", 0.2), 2);
+  const seg = 12;
+  const n = Math.ceil(h / seg);
+  for (let k = 0; k < n; k++) {
+    const w = Math.round(12 - (6 * k) / n) & ~1;
+    const top = Math.max(-h, -(k + 1) * seg);
+    block(c, x - w / 2, top, w, -k * seg - top, m, 2);
+  }
+  px(c, mat(p, "#c0392b", 0.2)[2], x - 5, -40, 10, 3);
+  const nac = mat(p, "#d8dde6", 0.2);
+  block(c, x - 10, -h - 6, 22, 10, nac, 3);
+  studs(c, x - 10, -h - 6, 22, nac, 7, 3);
   px(c, mat(p, "#c0392b", 0.2)[2], x - 3, -h - 4, 6, 1);
-  px(c, mat(p, "#c0392b", 0.2)[2], x - 3, -40, 6, 3);
 }
 
 function fence(c: C, p: Pal, x0: number, x1: number, h: number) {
@@ -254,17 +284,36 @@ const TITLE: [string, number][] = [
   ["NAGEL", -176],
 ];
 const TK = 6;
+/** The brick frame around the name: x, y, w, h. */
+const FRAME = [-160, -240, 320, 118] as const;
 
 const hello: Station = {
   bounds: [-260, -260, 300, 6],
   still(c, p) {
-    const base = mat(p, p.night ? "#c9d0e6" : "#39425a", 0);
+    const base = mat(p, p.night ? "#c9d0e6" : "#3d4152", 0);
+    // a frame of grey bricks around the name, open to the sky
+    const fr = mat(p, p.night ? "#5d6584" : "#5a5f70", 0);
+    const [fx0, fy0, fw, fh] = FRAME;
+    block(c, fx0, fy0, fw, 8, fr);
+    block(c, fx0, fy0 + 8, 8, fh - 16, fr);
+    block(c, fx0 + fw - 8, fy0 + 8, 8, fh - 16, fr);
+    block(c, fx0, fy0 + fh - 8, fw, 8, fr);
+    studs(c, fx0, fy0, fw, fr, 12);
     for (const [s, y] of TITLE) {
-      const w = textWidth(s, TK);
-      eachTextPixel(s, (gx, gy) => {
-        if (hash(gx * 17 + gy * 5 + s.length * 101) < 0.1) return;
-        slab(c, -w / 2 + gx * TK, y + gy * TK, TK, TK, base, 1);
-      });
+      const w = textWidth(s, 1);
+      const cols = w + 1;
+      const on = new Set<number>();
+      eachTextPixel(s, (gx, gy) => on.add(gy * cols + gx));
+      vox(
+        c,
+        -(w * TK) / 2,
+        y,
+        cols,
+        7,
+        TK,
+        (i, j) => (on.has(j * cols + i) ? base : null),
+        3,
+      );
     }
     // trees and a signpost
     const set = setFor(p);
@@ -272,9 +321,10 @@ const hello: Station = {
     blit(c, set.trees[3]!, 230, 2);
     blit(c, set.trees[4]!, 190, 2);
     const wood = mat(p, "#9a6a3e");
-    slab(c, 98, -58, 8, 58, wood, 2);
+    block(c, 98, -58, 8, 58, wood, 3);
     const board = mat(p, "#d9a21b", 0.2);
-    slab(c, 66, -86, 76, 28, board, 2);
+    block(c, 66, -86, 76, 28, board);
+    studs(c, 66, -86, 76, board);
     for (let i = 0; i < 12; i++)
       px(
         c,
@@ -288,18 +338,22 @@ const hello: Station = {
   },
   live(c, p, v) {
     shadow(c, p, 105, 0, 16);
-    const base = p.night ? "#c9d0e6" : "#39425a";
-    void base;
+    // a few bricks in the name glow through the four colours
     for (const [s, y] of TITLE) {
       const w = textWidth(s, TK);
       eachTextPixel(s, (gx, gy) => {
         const h = hash(gx * 17 + gy * 5 + s.length * 101);
         if (h >= 0.1) return;
-        const col = tone(p, cyc(p, Math.floor(v.t * 2 + h * 40)), 0.15);
-        slab(c, -w / 2 + gx * TK, y + gy * TK, TK, TK, ramp(col), 1);
+        const r = ramp(tone(p, cyc(p, Math.floor(v.t * 2 + h * 40)), 0.15));
+        const x = -w / 2 + gx * TK;
+        const yy = y + gy * TK;
+        px(c, r[2], x, yy, TK, TK);
+        px(c, r[4], x, yy, TK, 1);
+        px(c, r[3], x, yy + 1, 1, TK - 1);
+        px(c, r[1], x, yy + TK - 1, TK, 1);
       });
     }
-    label(c, p, "GRID TO PACKET", 0, -126, 2);
+    label(c, p, "GRID TO PACKET", 0, -110, 2);
     drawLamp(c, p, -140, 0);
   },
 };
@@ -320,8 +374,10 @@ const grid: Station = {
     fence(c, p, -34, 180, 30);
     // control building
     const wall = mat(p, "#aab4c6", 0.2);
+    block(c, -20, -66, 64, 66, wall);
     planks(c, -20, -66, 64, 66, wall, 6);
-    slab(c, -24, -72, 72, 8, mat(p, "#6f7a90", 0.2), 2);
+    block(c, -24, -72, 72, 8, mat(p, "#6f7a90", 0.2));
+    studs(c, -24, -72, 72, mat(p, "#6f7a90", 0.2));
     slab(c, -6, -40, 22, 40, mat(p, "#d9a21b", 0.2), 2);
     px(c, mat(p, "#d9a21b", 0.2)[1], -2, -36, 14, 1);
     px(c, "#c8b45a", 12, -20, 2, 3);
@@ -330,12 +386,12 @@ const grid: Station = {
     px(c, p.red, 34, -96, 5, 4);
     // transformer
     const tank = mat(p, "#3f7fb8", 0.2);
-    slab(c, 80, -48, 62, 48, tank, 2);
+    block(c, 80, -48, 62, 48, tank);
     for (let x = 84; x < 138; x += 5) px(c, tank[1], x, -44, 1, 40);
-    slab(c, 142, -42, 16, 36, mat(p, "#6f7a90", 0.2), 1);
+    block(c, 142, -42, 16, 36, mat(p, "#6f7a90", 0.2), 3);
     for (let y = -38; y < -8; y += 4)
       px(c, mat(p, "#6f7a90", 0.2)[1], 144, y, 12, 1);
-    slab(c, 78, -4, 66, 5, mat(p, "#4a5368", 0.2), 1);
+    block(c, 78, -4, 66, 5, mat(p, "#4a5368", 0.2), 3);
     const ins = mat(p, "#c98a3c", 0.2);
     for (const bx of [92, 110, 128]) {
       cyl(c, bx, -66, 7, 20, ins);
@@ -344,21 +400,21 @@ const grid: Station = {
     }
     // gantry
     const steel = mat(p, "#8d97a8", 0.2);
-    slab(c, 66, -96, 5, 96, steel, 1);
-    slab(c, 150, -96, 5, 96, steel, 1);
-    slab(c, 66, -98, 89, 5, steel, 1);
+    block(c, 66, -96, 5, 96, steel, 3);
+    block(c, 150, -96, 5, 96, steel, 3);
+    block(c, 66, -98, 89, 5, steel, 3);
     for (const bx of [78, 110, 142]) {
       px(c, ins[2], bx, -94, 3, 8);
       px(c, ins[3], bx - 1, -94, 5, 2);
     }
     // pole line out
     const wood = mat(p, "#9a6a3e", 0.2);
-    slab(c, 220, -120, 6, 120, wood, 1);
-    slab(c, 208, -116, 30, 4, wood, 1);
+    block(c, 220, -120, 6, 120, wood, 3);
+    block(c, 208, -116, 30, 4, wood, 3);
     for (const bx of [210, 221, 233]) px(c, ins[3], bx, -124, 3, 8);
     // the line ends on a pole of its own, so the wires never hang in the air
-    slab(c, 300, -106, 6, 106, wood, 1);
-    slab(c, 288, -102, 30, 4, wood, 1);
+    block(c, 300, -106, 6, 106, wood, 3);
+    block(c, 288, -102, 30, 4, wood, 3);
     for (const bx of [290, 301, 313]) px(c, ins[3], bx, -110, 3, 8);
     cloudData(c, p, 50, -215);
   },
@@ -455,12 +511,12 @@ const bess: Station = {
     const white = mat(p, "#e8ecf2", 0.2);
     const band = mat(p, "#47a639", 0.16);
     UNITS.forEach((x, k) => {
-      slab(c, x - 4, -6, 92, 6, mat(p, "#8d949f", 0.2), 1);
-      slab(c, x, -62, 84, 56, white, 2);
+      block(c, x - 4, -6, 92, 6, mat(p, "#8d949f", 0.2), 3);
+      block(c, x, -62, 84, 56, white);
       for (let rx = x + 3; rx < x + 82; rx += 4)
         px(c, white[1], rx, -58, 1, 48);
-      px(c, white[3], x, -62, 84, 3);
-      slab(c, x, -36, 84, 8, band, 1);
+      px(c, white[4], x, -62, 84, 1);
+      block(c, x, -36, 84, 8, band, 0);
       // double door on the right half, battery panel on the left
       slab(c, x + 46, -56, 34, 46, mat(p, "#cfd5de", 0.2), 1);
       px(c, white[1], x + 63, -56, 2, 46);
@@ -468,7 +524,7 @@ const bess: Station = {
       px(c, mat(p, "#6f7a90", 0.2)[2], x + 67, -34, 2, 10);
       slab(c, x + 6, -56, 34, 18, mat(p, "#10131a", 0), 1);
       // roof HVAC unit with a fan grille
-      slab(c, x + 8, -76, 34, 14, mat(p, "#aab4c6", 0.2), 1);
+      block(c, x + 8, -76, 34, 14, mat(p, "#aab4c6", 0.2), 3);
       ball(c, x + 25, -69, 5, mat(p, "#4a5368", 0.2));
       px(c, mat(p, "#6f7a90", 0.2)[1], x + 12, -72, 3, 8);
       if (k === 1) {
@@ -481,12 +537,13 @@ const bess: Station = {
     });
     // power conversion cabinet
     const pcs = mat(p, "#3f7fb8", 0.2);
-    slab(c, 236, -70, 36, 70, pcs, 2);
+    block(c, 236, -70, 36, 70, pcs);
+    studs(c, 236, -70, 36, pcs);
     for (let y = -64; y < -28; y += 4) px(c, pcs[1], 240, y, 28, 1);
     slab(c, 242, -22, 24, 16, mat(p, "#10131a", 0), 1);
     // medium-voltage transformer
     const tank = mat(p, "#8a8f9c", 0.2);
-    slab(c, 292, -46, 48, 46, tank, 2);
+    block(c, 292, -46, 48, 46, tank);
     for (let x = 296; x < 336; x += 5) px(c, tank[1], x, -42, 1, 38);
     const ins = mat(p, "#c98a3c", 0.2);
     for (const bx of [298, 314, 330]) {
@@ -494,8 +551,8 @@ const bess: Station = {
       px(c, mat(p, "#6f7a90", 0.2)[3], bx - 1, -64, 8, 3);
     }
     const wood = mat(p, "#9a6a3e", 0.2);
-    slab(c, 360, -112, 6, 112, wood, 1);
-    slab(c, 348, -108, 30, 4, wood, 1);
+    block(c, 360, -112, 6, 112, wood, 3);
+    block(c, 348, -108, 30, 4, wood, 3);
     for (const bx of [350, 361, 373]) px(c, ins[3], bx, -116, 3, 8);
     cloudData(c, p, 110, -190);
   },
@@ -577,7 +634,7 @@ const bess: Station = {
     label(c, p, "PCS", 254, 38, v.tk);
     label(c, p, "TRAFO", 316 + 20 * (v.tk - 1), 38, v.tk);
     const state = charging ? "CHARGING" : "DISCHARGING";
-    drawText(c, state, -64, -92, charging ? p.green : p.yellow, 2);
+    voxText(c, state, -64, -92, 2, mat(p, charging ? p.green : p.yellow, 0.1));
     drawLamp(c, p, -88, 0);
   },
 };
@@ -605,12 +662,12 @@ const datacenter: Station = {
     // grid connection: a pole and two step-down transformers
     const wood = mat(p, "#9a6a3e", 0.2);
     const ins = mat(p, "#c98a3c", 0.2);
-    slab(c, -180, -108, 6, 108, wood, 1);
-    slab(c, -192, -104, 30, 4, wood, 1);
+    block(c, -180, -108, 6, 108, wood, 3);
+    block(c, -192, -104, 30, 4, wood, 3);
     for (const bx of [-190, -179, -167]) px(c, ins[3], bx, -112, 3, 8);
     const tank = mat(p, "#8a8f9c", 0.2);
     for (const tx of [-130, -80]) {
-      slab(c, tx, -40, 44, 40, tank, 2);
+      block(c, tx, -40, 44, 40, tank);
       for (let x = tx + 4; x < tx + 40; x += 5) px(c, tank[1], x, -36, 1, 32);
       for (const bx of [tx + 10, tx + 30]) {
         cyl(c, bx, -56, 6, 18, ins);
@@ -619,8 +676,9 @@ const datacenter: Station = {
     }
     // the hall: long, windowless and bigger than anything else on the path
     const wall = mat(p, "#7d879a", 0.2);
+    block(c, 0, -88, 260, 88, wall, 6);
     planks(c, 0, -88, 260, 88, wall, 8);
-    slab(c, -6, -96, 272, 8, mat(p, "#4a5368", 0.2), 2);
+    block(c, -6, -96, 272, 8, mat(p, "#4a5368", 0.2), 6);
     slab(c, 12, -70, 176, 28, mat(p, "#10131a", 0), 1);
     for (let x = 14; x < 186; x += 8) px(c, "#1a2140", x, -68, 6, 24);
     slab(c, 206, -52, 40, 52, mat(p, "#cfd5de", 0.2), 1);
@@ -630,19 +688,19 @@ const datacenter: Station = {
     // dry coolers on the roof, their fans spin in the live pass
     const unit = mat(p, "#aab4c6", 0.2);
     for (const x of COOLERS) {
-      slab(c, x, -114, 44, 18, unit, 1);
+      block(c, x, -114, 44, 18, unit);
       ball(c, x + 22, -105, 8, mat(p, "#4a5368", 0.2));
     }
     // UPS container and a backup generator
     const white = mat(p, "#e8ecf2", 0.2);
-    slab(c, 284, -46, 52, 46, white, 2);
-    slab(c, 284, -26, 52, 6, mat(p, "#edcb1f", 0.2), 1);
+    block(c, 284, -46, 52, 46, white);
+    block(c, 284, -26, 52, 6, mat(p, "#edcb1f", 0.2), 0);
     slab(c, 290, -42, 18, 12, mat(p, "#10131a", 0), 1);
     px(c, white[1], 318, -40, 2, 38);
-    slab(c, 346, -34, 44, 34, mat(p, "#d9a21b", 0.2), 2);
+    block(c, 346, -34, 44, 34, mat(p, "#d9a21b", 0.2));
     px(c, mat(p, "#8a6410", 0.2)[1], 352, -28, 24, 3);
     px(c, mat(p, "#8a6410", 0.2)[1], 352, -20, 24, 3);
-    slab(c, 378, -58, 6, 26, mat(p, "#4a5368", 0.2), 1);
+    block(c, 378, -58, 6, 26, mat(p, "#4a5368", 0.2), 3);
     cloudData(c, p, 130, -190);
   },
   live(c, p, v) {
@@ -738,15 +796,17 @@ const house: Station = {
     blit(c, set.trees[0]!, -150, 2);
     // house
     const wall = mat(p, "#f1ece0", 0.2);
+    block(c, -50, -80, 150, 80, wall, 6);
     planks(c, -50, -80, 150, 80, wall, 6);
-    slab(c, -54, -8, 158, 8, mat(p, "#8d949f", 0.2), 2);
+    block(c, -54, -8, 158, 8, mat(p, "#8d949f", 0.2), 3);
     const roof = mat(p, "#c0392b", 0.18);
     trapezoid(c, -66, 116, -20, 70, -80, -126, roof, 6);
     slab(c, -70, -84, 190, 6, mat(p, "#8a2c20", 0.18), 2);
     panel(c, p, -26, -122, 86, 36, 6, 2);
     // chimney
-    slab(c, 76, -150, 16, 40, mat(p, "#a0614a", 0.2), 2);
-    slab(c, 73, -154, 22, 6, mat(p, "#6f7a90", 0.2), 2);
+    block(c, 76, -150, 16, 40, mat(p, "#a0614a", 0.2));
+    courses(c, 76, -150, 16, 40, mat(p, "#a0614a", 0.2), 8, 5);
+    block(c, 73, -154, 22, 6, mat(p, "#6f7a90", 0.2));
     // door
     const door = mat(p, "#d9a21b", 0.2);
     slab(c, 2, -60, 28, 60, door, 2);
@@ -765,7 +825,7 @@ const house: Station = {
     px(c, "#1c2a5a", 43, -37, 12, 3);
     // EV and charger
     const body = mat(p, "#d82d17", 0.14);
-    slab(c, 130, -34, 108, 22, body, 2);
+    block(c, 130, -34, 108, 22, body);
     trapezoid(c, 150, 220, 160, 208, -34, -56, body, 30);
     px(c, p.night ? "#1b2a5a" : "#9fd0f0", 164, -52, 20, 16);
     px(c, p.night ? "#1b2a5a" : "#9fd0f0", 188, -52, 18, 16);
@@ -777,9 +837,10 @@ const house: Station = {
       ball(c, wx, -9, 5, mat(p, "#aab4c6", 0.2));
     }
     const post = mat(p, "#47a639", 0.16);
-    slab(c, 262, -76, 14, 76, post, 2);
+    block(c, 262, -76, 14, 76, post);
+    studs(c, 262, -76, 14, post);
     px(c, "#0b1030", 265, -68, 8, 12);
-    slab(c, 256, -4, 26, 4, mat(p, "#6f7a90", 0.2), 1);
+    block(c, 256, -4, 26, 4, mat(p, "#6f7a90", 0.2), 3);
     cloudData(c, p, 76, -215);
   },
   live(c, p, v) {
@@ -867,7 +928,7 @@ const cabinet: Station = {
   still(c, p) {
     const steel = mat(p, "#7d879a", 0.2);
     const inner = mat(p, "#161c34", 0);
-    slab(c, -120, -168, 300, 168, steel, 3);
+    block(c, -120, -168, 300, 168, steel, 6);
     px(c, inner[2], -110, -158, 280, 148);
     px(c, inner[1], -110, -158, 280, 4);
     px(c, inner[1], -110, -158, 4, 148);
@@ -889,11 +950,11 @@ const cabinet: Station = {
     ] as const)
       ball(c, x, y, 3, steel);
     // DIN rail
-    slab(c, -108, -54, 276, 8, mat(p, "#aab4c6", 0.2), 1);
+    block(c, -108, -54, 276, 8, mat(p, "#aab4c6", 0.2), 3);
     for (let x = -100; x < 164; x += 14) px(c, "#10131a", x, -51, 6, 2);
     // meter
     const white = mat(p, "#f4f1ea", 0.2);
-    slab(c, -98, -146, 74, 94, white, 2);
+    block(c, -98, -146, 74, 94, white);
     px(c, white[1], -96, -66, 70, 2);
     slab(c, -92, -140, 62, 38, mat(p, "#2c3a30", 0.1), 1);
     px(c, "#8aa078", -90, -138, 58, 1);
@@ -909,7 +970,7 @@ const cabinet: Station = {
       ball(c, x, y, 2, mat(p, "#aab4c6", 0.2));
     // gateway
     const gw = mat(p, "#2c4f8f", 0.2);
-    slab(c, -2, -148, 100, 94, gw, 2);
+    block(c, -2, -148, 100, 94, gw);
     for (let i = 0; i < 6; i++) px(c, gw[1], 6, -140 + i * 4, 84, 1);
     slab(c, 6, -106, 84, 24, mat(p, "#10244a", 0.1), 1);
     drawText(c, "GW", 34, -100, mat(p, "#ffffff", 0.2)[2], 2);
@@ -928,7 +989,7 @@ const cabinet: Station = {
     // breakers
     for (let i = 0; i < 9; i++) {
       const bx = -90 + i * 28;
-      slab(c, bx, -40, 20, 30, mat(p, "#e8e4da", 0.2), 1);
+      block(c, bx, -40, 20, 30, mat(p, "#e8e4da", 0.2), 3);
       px(c, "#10131a", bx + 6, -36, 8, 14);
       px(
         c,
@@ -956,7 +1017,7 @@ const cabinet: Station = {
       px(c, cyc(p, Math.floor(t * 3 + i * 1.7)), 12 + i * 12, -138, 6, 6);
     // sub meter
     const white = mat(p, "#f4f1ea", 0.2);
-    slab(c, 112, -146, 54, 94, white, 2);
+    block(c, 112, -146, 54, 94, white);
     slab(c, 118, -140, 42, 22, mat(p, "#2c3a30", 0.1), 1);
     drawText(
       c,
@@ -1050,16 +1111,17 @@ const frame: Station = {
   bounds: [-200, -260, 260, 8],
   still(c, p) {
     const wood = mat(p, "#9a6a3e");
-    slab(c, FX + 14, -112, 10, 112, wood, 2);
-    slab(c, FX + FW - 24, -112, 10, 112, wood, 2);
+    block(c, FX + 14, -112, 10, 112, wood);
+    block(c, FX + FW - 24, -112, 10, 112, wood);
     line(c, wood[2], FX + 24, -20, FX + 56, -86, 4);
     line(c, wood[2], FX + FW - 24, -20, FX + FW - 56, -86, 4);
     const bezel = mat(p, "#2b3558", 0.1);
-    slab(c, FX - 8, -232, FW + 16, 132, bezel, 3);
+    block(c, FX - 8, -232, FW + 16, 132, bezel, 6);
+    studs(c, FX - 8, -232, FW + 16, bezel, 10, 6);
     px(c, p.night ? "#080c28" : "#10163a", FX, -224, FW, 116);
     // the meter that sends it
     const white = mat(p, "#f4f1ea", 0.2);
-    slab(c, -184, -50, 38, 50, white, 2);
+    block(c, -184, -50, 38, 50, white);
     px(c, "#2c3a30", -179, -44, 28, 16);
     px(c, "#10131a", -179, -22, 28, 3);
     px(c, p.green, -179, -14, 5, 5);
@@ -1075,7 +1137,8 @@ const frame: Station = {
       const base = k === "steel" ? "#8d97a8" : p[k];
       const r = mat(p, base, 0.12);
       const on = i === active;
-      slab(c, x, -190, w, 44, r, 3);
+      block(c, x, -190, w, 44, r);
+      courses(c, x, -190, w, 44, r, 16, 11);
       if (on) {
         px(c, "#ffffff", x - 2, -192, w + 4, 2);
         px(c, "#ffffff", x - 2, -146, w + 4, 2);
@@ -1151,30 +1214,29 @@ const contact: Station = {
     blit(c, set.trees[1]!, 250, 2);
     // flag pole
     const m = mat(p, "#d8dde6", 0.2);
-    slab(c, -64, -200, 5, 200, m, 1);
+    block(c, -64, -200, 5, 200, m, 3);
     ball(c, -61, -204, 5, mat(p, "#edcb1f", 0.2));
     // signpost with boards
     const wood = mat(p, "#9a6a3e");
-    slab(c, 66, -130, 8, 130, wood, 2);
+    block(c, 66, -130, 8, 130, wood);
     BOARDS.forEach((b, i) => {
-      slab(c, b.x, b.y, b.w, b.h, mat(p, b.color, 0.2), 2);
+      block(c, b.x, b.y, b.w, b.h, mat(p, b.color, 0.2));
+      if (i === 0) studs(c, b.x, b.y, b.w, mat(p, b.color, 0.2));
       drawText(c, b.text, b.x + 8, b.y + 3, i === 0 ? "#2a1a08" : "#ffffff", 2);
     });
     // bench
-    slab(c, 120, -22, 70, 8, wood, 1);
-    slab(c, 120, -44, 70, 6, wood, 1);
-    slab(c, 124, -22, 6, 22, wood, 1);
-    slab(c, 180, -22, 6, 22, wood, 1);
-    slab(c, 124, -44, 6, 22, wood, 1);
-    slab(c, 180, -44, 6, 22, wood, 1);
+    block(c, 124, -44, 6, 44, wood, 3);
+    block(c, 180, -44, 6, 44, wood, 3);
+    block(c, 120, -22, 70, 8, wood, 6);
+    block(c, 120, -44, 70, 6, wood, 3);
     // mailbox
-    slab(c, 214, -48, 6, 48, wood, 1);
+    block(c, 214, -48, 6, 48, wood, 3);
     const mb = mat(p, "#4398cd", 0.2);
-    slab(c, 196, -78, 46, 32, mb, 2);
+    block(c, 196, -78, 46, 32, mb);
     px(c, mb[1], 196, -62, 46, 3);
     px(c, "#10131a", 232, -70, 8, 14);
-    slab(c, 244, -90, 4, 24, mat(p, "#d82d17", 0.2), 1);
-    slab(c, 238, -90, 10, 8, mat(p, "#d82d17", 0.2), 1);
+    block(c, 244, -90, 4, 24, mat(p, "#d82d17", 0.2), 2);
+    block(c, 238, -90, 10, 8, mat(p, "#d82d17", 0.2), 2);
   },
   live(c, p, v) {
     const t = v.t;

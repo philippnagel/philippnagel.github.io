@@ -1,19 +1,21 @@
 import {
   type C,
+  type R5,
   type Sprite,
-  ball,
   bake,
-  bayer,
   blit,
-  cyl,
+  block,
+  cubeChain,
   glow,
   hash,
   line,
   mat,
   px,
   ramp,
-  slab,
+  shade,
   vnoise,
+  vox,
+  voxBall,
 } from "./gfx";
 import { mix, rgb, type Pal } from "./palette";
 import { drawBird } from "./skylife";
@@ -58,6 +60,8 @@ interface Set {
   decor: Sprite[];
   tufts: Sprite[];
   lamp: Sprite;
+  sun: Sprite;
+  moon: Sprite;
   /** six wires between two pylons, by span in px */
   wires: Map<number, Sprite>;
   sky?: { key: string; cv: HTMLCanvasElement };
@@ -65,164 +69,326 @@ interface Set {
 }
 const sets = new WeakMap<Pal, Set>();
 
-function oak(p: Pal, size: number, seed: number): Sprite {
-  const g = ramp(mix(mat(p, p.green)[2]!, p.hill, 0.25));
-  const trunk = mat(p, "#8a5a36");
-  return bake(-size, -size * 2, size, 4, (c) => {
-    slab(c, -3, -size * 0.7, 6, size * 0.7 + 3, trunk);
-    const blobs = [
-      [0, -size * 1.35, size * 0.62],
-      [-size * 0.5, -size * 1.0, size * 0.5],
-      [size * 0.5, -size * 1.05, size * 0.5],
-      [-size * 0.15, -size * 1.65, size * 0.46],
-      [size * 0.3, -size * 1.5, size * 0.4],
+/** Ramps for one green, from shadow to sunlit, so a voxel canopy can be lit cube by cube. */
+const lit = (g: R5): R5[] =>
+  [1, 1, 2, 3, 4].map((k) => [
+    g[0],
+    g[Math.max(0, k - 1)]!,
+    g[k]!,
+    g[Math.min(4, k + 1)]!,
+    g[4],
+  ]) as R5[];
+
+/** A canopy of cubes: the union of `blobs` [x, y, r] (in cells), each cube lit by the canopy's normal. */
+function canopy(
+  c: C,
+  g: R5,
+  cell: number,
+  blobs: number[][],
+  cx: number,
+  cy: number,
+  seed: number,
+) {
+  const tones = lit(g);
+  const n = 12;
+  const R = Math.max(...blobs.map(([x, y, r]) => Math.hypot(x!, y!) + r!));
+  vox(c, cx - n * cell, cy - n * cell, n * 2, n * 2, cell, (i, j) => {
+    const x = i - n + 0.5;
+    const y = j - n + 0.5;
+    if (
+      !blobs.some(([bx, by, r]) => (x - bx!) ** 2 + (y - by!) ** 2 <= r! * r!)
+    )
+      return null;
+    const k = shade(
+      Math.max(-0.95, Math.min(0.95, x / R)),
+      Math.max(-0.95, Math.min(0.95, y / R)),
+    );
+    // a few leaves catch more or less light than their neighbours
+    const jit = hash(seed * 977 + i * 31 + j * 7);
+    return tones[
+      Math.max(1, Math.min(4, k + (jit > 0.88 ? 1 : jit < 0.1 ? -1 : 0)))
     ];
-    blobs.forEach(([x, y, r], i) =>
-      ball(
-        c,
-        Math.round(x! + (hash(seed + i) - 0.5) * 4),
-        Math.round(y!),
-        Math.round(r!),
-        g,
-      ),
+  });
+}
+
+function oak(p: Pal, size: number, seed: number): Sprite {
+  const g = ramp(mix(mat(p, p.green)[2]!, p.hill, 0.15));
+  const trunk = mat(p, "#8a5a36");
+  const cell = size > 30 ? 5 : 4;
+  const u = size / cell;
+  return bake(-size - 6, -size * 2.4, size + 8, 4, (c) => {
+    block(c, -3, -size * 0.75, 6, size * 0.75 + 2, trunk, 3);
+    block(c, -9, -size * 0.95, 6, 4, trunk, 2);
+    canopy(
+      c,
+      g,
+      cell,
+      [
+        [0, -0.2, u * 0.62],
+        [-u * 0.5, u * 0.25, u * 0.48],
+        [u * 0.5, u * 0.2, u * 0.5],
+        [-u * 0.15, -u * 0.45, u * 0.46],
+        [u * 0.3, -u * 0.3, u * 0.4],
+      ],
+      0,
+      Math.round(-size * 1.3),
+      seed,
     );
   });
 }
 
 function pine(p: Pal, size: number): Sprite {
-  const g = ramp(mix(mat(p, "#2f7d43")[2]!, p.hill, 0.2));
+  const g = ramp(mix(mat(p, "#2f7d43")[2]!, p.hill, 0.15));
+  const tones = lit(g);
   const trunk = mat(p, "#6e4a2c");
-  return bake(-size, -size * 2.4, size, 4, (c) => {
-    slab(c, -2, -size * 0.45, 4, size * 0.45 + 3, trunk);
-    for (let k = 0; k < 4; k++) {
-      const top = -size * 2.3 + k * size * 0.5;
-      const half = Math.round(size * (0.38 + k * 0.17));
-      for (let r = 0; r < size * 0.8; r++) {
-        const w = Math.round((r / (size * 0.8)) * half);
-        const y = top + r;
-        px(c, g[2], -w, y, w * 2 + 1, 1);
-        px(c, g[3], -w, y, Math.max(1, Math.round(w * 0.5)), 1);
-        px(
-          c,
-          g[1],
-          Math.round(w * 0.45),
-          y,
-          Math.max(1, Math.round(w * 0.55)) + 1,
-          1,
-        );
-        if (r > size * 0.7) px(c, g[1], -w, y, w * 2 + 1, 1);
-      }
-    }
+  const cell = 4;
+  const rows = Math.round((size * 2.1) / cell);
+  const cols = Math.round(size / cell) * 2 + 1;
+  return bake(-size - 4, -size * 2.5 - 6, size + 8, 4, (c) => {
+    block(c, -2, -size * 0.45, 4, size * 0.45 + 2, trunk, 2);
+    const mid = (cols - 1) / 2;
+    vox(
+      c,
+      -mid * cell - cell / 2,
+      -size * 0.35 - rows * cell,
+      cols,
+      rows,
+      cell,
+      (i, j) => {
+        // three tiers, each a stepped triangle wider than the one above
+        const tier = Math.min(2, Math.floor((j / rows) * 3));
+        const inTier = j - (tier * rows) / 3;
+        const half = (inTier / (rows / 3)) * (mid * (0.45 + tier * 0.28)) + 0.6;
+        const dx = i - mid;
+        if (Math.abs(dx) > half) return null;
+        const edge = inTier > rows / 3 - 1.2;
+        return tones[
+          edge ? 1 : dx < -half * 0.35 ? 3 : dx > half * 0.4 ? 1 : 2
+        ];
+      },
+      2,
+    );
   });
 }
 
 function bush(p: Pal, w: number): Sprite {
   const g = ramp(mat(p, "#3f9d3c")[2]!);
-  return bake(-w, -w, w, 3, (c) => {
-    ball(c, -w * 0.4, -w * 0.45, Math.round(w * 0.45), g);
-    ball(c, w * 0.35, -w * 0.4, Math.round(w * 0.42), g);
-    ball(c, 0, -w * 0.62, Math.round(w * 0.5), g);
+  const u = w / 4;
+  return bake(-w - 4, -w - 6, w + 6, 3, (c) => {
+    canopy(
+      c,
+      g,
+      4,
+      [
+        [-u * 0.4, 0.2 * u, u * 0.5],
+        [u * 0.4, 0.25 * u, u * 0.45],
+        [0, -0.15 * u, u * 0.52],
+      ],
+      0,
+      Math.round(-w * 0.55),
+      w,
+    );
   });
 }
 
+/** A lattice tower in thin bricks: stepped legs, cross bars, cube braces and stacked insulators. */
 function pylonSprite(p: Pal): Sprite {
   const m = mat(p, "#8d97a8", 0.2);
   const col = mix(m[2], p.hill, 0.35);
-  return bake(-26, -150, 26, 2, (c) => {
-    line(c, col, -16, 0, -3, -138, 2);
-    line(c, col, 16, 0, 3, -138, 2);
-    for (let y = -10; y > -132; y -= 20) {
-      const k = (y + 138) / 138;
-      const hw = 3 + 13 * (1 - k) * 1.0;
-      line(c, col, -hw, y, hw - 4 * k, y - 20, 1);
-      line(c, col, hw, y, -hw + 4 * k, y - 20, 1);
-      px(c, col, -hw, y, hw * 2 + 1, 1);
+  const r = ramp(col);
+  const half = (y: number) => Math.round(3 + 13 * (1 + y / 138));
+  return bake(-28, -152, 30, 2, (c) => {
+    for (let y = 0; y > -138; y -= 20) {
+      const y1 = Math.max(-138, y - 20);
+      const hb = half(y);
+      const ht = half(y1);
+      // braces behind the legs
+      cubeChain(
+        c,
+        r,
+        -hb + 2,
+        y - 2,
+        Math.atan2(y1 - y + 4, ht + hb - 4),
+        Math.hypot(ht + hb - 4, y1 - y + 4),
+        2,
+      );
+      cubeChain(
+        c,
+        r,
+        hb - 2,
+        y - 2,
+        Math.atan2(y1 - y + 4, -(ht + hb - 4)),
+        Math.hypot(ht + hb - 4, y1 - y + 4),
+        2,
+      );
+      // each leg steps inward one brick at a time
+      const hm = half((y + y1) / 2);
+      block(c, -hm - 2, y1, 3, y - y1, r, 2);
+      block(c, hm - 1, y1, 3, y - y1, r, 2);
+      block(c, -ht - 1, y1 - 1, ht * 2 + 3, 2, r, 1);
     }
-    px(c, col, -24, -138, 49, 3);
-    px(c, col, -16, -112, 33, 3);
-    px(c, col, -9, -88, 19, 2);
-    // three phases per side: one insulator per arm end
+    block(c, -3, -146, 6, 8, r, 2);
+    block(c, -24, -140, 49, 3, r, 2);
+    block(c, -16, -114, 33, 3, r, 2);
+    block(c, -9, -90, 19, 3, r, 2);
+    // three phases per side: one insulator string per arm end
+    const ins = mat(p, "#e8dcc0");
     for (const [x, y] of [
-      [-22, -134],
-      [22, -134],
-      [-14, -108],
-      [14, -108],
-      [-7, -84],
-      [7, -84],
+      [-22, -137],
+      [22, -137],
+      [-14, -111],
+      [14, -111],
+      [-7, -87],
+      [7, -87],
     ] as const)
-      px(c, mat(p, "#e8dcc0")[3], x - 1, y, 3, 6);
+      for (let k = 0; k < 3; k++) block(c, x - 2, y + k * 2, 4, 2, ins, 1);
   });
 }
 
+/** A cloud built from white cubes: a stepped dome on a flat base, shaded darker underneath. */
 function cloudSprite(p: Pal, seed: number): Sprite {
-  const r: [string, string, string, string, string] = p.night
-    ? ["#16205a", "#26327a", "#3a4694", "#5360a6", "#6c78b8"]
-    : ["#9fb9d6", "#c4d8ec", "#e6f1fa", "#ffffff", "#ffffff"];
-  const w = 70 + Math.floor(hash(seed) * 60);
+  const r: R5 = p.night
+    ? ["#0c1030", "#1a2152", "#2a336c", "#3d4884", "#5561a0"]
+    : ["#7f9cc4", "#b7cde8", "#e9f2fb", "#ffffff", "#ffffff"];
+  const under: R5 = p.night
+    ? ["#0c1030", "#141a44", "#20285c", "#2a336c", "#3d4884"]
+    : ["#7f9cc4", "#9fb9dc", "#c9dbef", "#e9f2fb", "#ffffff"];
+  const cell = 6;
+  const cols = 18 + Math.floor(hash(seed) * 12);
+  const rows = 7;
+  const bumps = 3 + Math.floor(hash(seed + 1) * 3);
+  const height = (i: number) => {
+    let h = 1.6;
+    for (let k = 0; k < bumps; k++) {
+      const bx = ((k + 0.5) / bumps) * cols + (hash(seed + 10 + k) - 0.5) * 3;
+      const br =
+        2.5 +
+        Math.sin(((k + 0.5) / bumps) * Math.PI) * 3.2 +
+        hash(seed + 20 + k);
+      const dx = (i + 0.5 - bx) / br;
+      if (dx * dx < 1)
+        h = Math.max(h, 1.4 + br * Math.sqrt(1 - dx * dx) * 0.95);
+    }
+    return Math.min(rows, Math.round(h));
+  };
+  const hs = Array.from({ length: cols }, (_, i) => height(i));
+  const w = cols * cell;
   return bake(
-    -w,
-    -34,
-    w,
-    20,
-    (c) => {
-      const n = 5 + Math.floor(hash(seed + 1) * 3);
-      for (let i = 0; i < n; i++) {
-        const u = (i + 0.5) / n;
-        const x = Math.round((u - 0.5) * 2 * w * 0.8);
-        const lift = Math.sin(u * Math.PI);
-        const rad = Math.round(11 + lift * 12 + hash(seed + 10 + i) * 5);
-        ball(
-          c,
-          x,
-          Math.round(-lift * 12 - hash(seed + 20 + i) * 4),
-          rad,
-          r,
-          Math.round(rad * 1.5),
-          -0.3,
-          -0.85,
-        );
-      }
-      // flat base
-      c.clearRect(-w - 1, 6, w * 2 + 2, 40);
-    },
+    -w / 2 - 2,
+    -rows * cell - cell,
+    w / 2 + cell,
+    2,
+    (c) =>
+      vox(c, -w / 2, -rows * cell, cols, rows, cell, (i, j) => {
+        // round the two ends off
+        const h = i === 0 || i === cols - 1 ? Math.min(hs[i]!, 1) : hs[i]!;
+        if (rows - j > h) return null;
+        return j === rows - 1 ? under : r;
+      }),
     false,
   );
 }
 
+/** Three stems with a single-stud flower head each. */
 function flower(p: Pal, seed: number): Sprite {
   const petal = [p.red, p.blue, p.yellow, "#f4f4f4", "#e56fb0"][seed % 5]!;
   const stem = mat(p, "#3d8a35");
-  return bake(-10, -22, 10, 2, (c) => {
+  const pc = mat(p, petal, 0.2);
+  return bake(-12, -26, 12, 2, (c) => {
     for (let k = 0; k < 3; k++) {
-      const x = (k - 1) * 6 + Math.round((hash(seed + k) - 0.5) * 3);
+      const x = (k - 1) * 7 + Math.round((hash(seed + k) - 0.5) * 3);
       const h = 8 + Math.floor(hash(seed * 3 + k) * 9);
-      px(c, stem[1], x, -h, 1, h);
-      px(c, stem[3], x - 2, -h * 0.5, 2, 1);
-      const pc = mat(p, petal, 0.2);
-      px(c, pc[3], x - 2, -h - 2, 5, 3);
-      px(c, pc[2], x - 1, -h - 3, 3, 5);
-      px(c, p.yellow, x, -h - 1, 1, 1);
+      px(c, stem[1], x, -h, 2, h);
+      px(c, stem[3], x, -h, 1, h);
+      block(c, x + 2, -h * 0.5, 3, 2, stem, 1);
+      block(c, x - 2, -h - 4, 5, 4, pc, 2);
+      px(c, mat(p, p.yellow)[4], x, -h - 3, 1, 1);
     }
   });
 }
 
+/** A rounded grey lump, two or three cubes high. */
 function rock(p: Pal, seed: number): Sprite {
   const m = mat(p, "#8d949f", 0.2);
-  const w = 8 + (seed % 3) * 4;
-  return bake(-w, -w, w, 2, (c) => {
-    ball(c, 0, -Math.round(w * 0.45), Math.round(w * 0.5), m, w);
-  });
+  const tones = lit(m);
+  const cols = 3 + (seed % 3);
+  return bake(-14, -16, 18, 2, (c) =>
+    vox(
+      c,
+      -(cols * 4) / 2,
+      -8,
+      cols,
+      2,
+      4,
+      (i, j) =>
+        j === 0 && (i === 0 || i === cols - 1)
+          ? null
+          : tones[j === 0 ? 3 : i < cols / 2 ? 2 : 1],
+      2,
+    ),
+  );
 }
 
 function lampPost(p: Pal): Sprite {
   const m = mat(p, "#4a5368", 0.1);
-  return bake(-12, -66, 12, 2, (c) => {
-    slab(c, -2, -60, 4, 62, m);
-    slab(c, -6, 0 - 6, 12, 6, m);
-    px(c, m[2], -2, -62, 14, 3);
-    px(c, p.glow, 7, -59, 5, 4);
-    px(c, "#fffbe0", 8, -58, 3, 2);
+  return bake(-12, -70, 16, 2, (c) => {
+    block(c, -2, -60, 4, 60, m, 2);
+    block(c, -6, -6, 12, 6, m, 3);
+    block(c, -2, -63, 14, 3, m, 2);
+    block(c, 7, -60, 6, 4, ramp(p.glow), 1);
+    px(c, "#fffbe0", 8, -59, 4, 2);
   });
+}
+
+function sunSprite(): Sprite {
+  return bake(-24, -26, 26, 24, (c) =>
+    voxBall(c, 0, 0, 20, 4, [
+      "#b8641a",
+      "#f0a830",
+      "#ffd23f",
+      "#ffe98a",
+      "#fffbe0",
+    ]),
+  );
+}
+
+/** The moon: pale cubes with a few darker ones for the maria. */
+function moonSprite(): Sprite {
+  const r: R5 = ["#4a4a5e", "#9a96a0", "#cfcab4", "#e9e4cc", "#fffbea"];
+  const sea: R5 = ["#4a4a5e", "#8a8696", "#a8a496", "#bdb8a4", "#d4cfb8"];
+  const n = 5;
+  const cell = 4;
+  return bake(-24, -26, 26, 24, (c) =>
+    vox(
+      c,
+      -n * cell,
+      -n * cell,
+      n * 2,
+      n * 2,
+      cell,
+      (i, j) => {
+        const nx = (i + 0.5 - n) / n;
+        const ny = (j + 0.5 - n) / n;
+        if (nx * nx + ny * ny > 1) return null;
+        const maria =
+          (i === 3 && j >= 3 && j <= 4) ||
+          (i === 4 && j === 3) ||
+          (i === 6 && j === 6) ||
+          (i === 5 && j === 6) ||
+          (i === 6 && j === 2);
+        const k = shade(nx, ny);
+        const base = maria ? sea : r;
+        return [
+          base[0],
+          base[Math.max(0, k - 1)]!,
+          base[k]!,
+          base[Math.min(4, k + 1)]!,
+          base[4],
+        ];
+      },
+      2,
+    ),
+  );
 }
 
 function buildSet(p: Pal): Set {
@@ -248,6 +414,8 @@ function buildSet(p: Pal): Set {
     ],
     tufts: [0, 1, 2, 3].map((i) => tuft(p, i)),
     lamp: lampPost(p),
+    sun: sunSprite(),
+    moon: moonSprite(),
     wires: new Map(),
   };
 }
@@ -286,29 +454,61 @@ function wireSprite(col: string, span: number): Sprite {
   );
 }
 
+/** Foreground plants, close to the lens: blades of stacked dark cubes. */
+const TUFTS = [
+  [
+    "....#....",
+    "..#.#..#.",
+    "..#.#..#.",
+    "#.#.##.#.",
+    "#.##.#.##",
+    "##.#.###.",
+    ".###.###.",
+    ".#######.",
+    "..#####..",
+  ],
+  [
+    "......#..",
+    ".#....#..",
+    ".#..#.#.#",
+    ".##.#.#.#",
+    "..#.###.#",
+    "#.#.##.##",
+    "#####.##.",
+    ".#######.",
+    "..######.",
+  ],
+];
+
 function tuft(p: Pal, seed: number): Sprite {
-  const col = p.fg;
+  const r = ramp(p.fg);
+  const flat: R5 = [
+    r[0],
+    r[1],
+    r[2],
+    mix(r[2], r[3], 0.3),
+    mix(r[2], r[3], 0.5),
+  ];
+  const rows = TUFTS[seed & 1]!;
+  const flip = seed & 2;
+  const cell = 5;
   return bake(
     -24,
-    -42,
-    24,
-    8,
-    (c) => {
-      for (let k = 0; k < 9; k++) {
-        const x = (k - 4) * 5 + Math.round((hash(seed * 9 + k) - 0.5) * 4);
-        const h = 14 + Math.floor(hash(seed * 31 + k) * 26);
-        const lean = Math.round((hash(seed * 17 + k) - 0.5) * 8);
-        for (let y = 0; y < h; y++)
-          px(
-            c,
-            col,
-            x + Math.round((lean * y) / h),
-            -y,
-            Math.max(1, 3 - Math.floor((y * 3) / h)),
-            1,
-          );
-      }
-    },
+    -rows.length * cell - 4,
+    30,
+    2,
+    (c) =>
+      vox(
+        c,
+        -22,
+        -rows.length * cell,
+        9,
+        rows.length,
+        cell,
+        (i, j) => (rows[j]![flip ? 8 - i : i] === "#" ? flat : null),
+        2,
+        false,
+      ),
     false,
   );
 }
@@ -334,26 +534,33 @@ function gradient(stops: string[], t: number): [number, number, number] {
   ];
 }
 
-/** Sky quantised to bands with ordered dithering between them. */
+/**
+ * Sky in a few flat bands, like stacked plates, each edge stepped in a
+ * two-row checker. A faint stud grid over all of it: the baseplate the world
+ * is built on.
+ */
 function skyBitmap(p: Pal, W: number, gy: number): HTMLCanvasElement {
   const cv = document.createElement("canvas");
   cv.width = W;
   cv.height = gy;
   const c = cv.getContext("2d")!;
   const img = c.createImageData(W, gy);
-  const bands = 22;
+  const bands = 9;
+  const dotK = p.night ? 0.07 : 0.06;
   for (let y = 0; y < gy; y++) {
-    const u = (y / gy) * (bands - 1);
-    const lo = Math.floor(u);
+    const u = (y / gy) * bands;
+    const lo = Math.min(bands - 1, Math.floor(u));
     const f = u - lo;
     const a = gradient(p.sky, lo / (bands - 1));
     const b = gradient(p.sky, Math.min(bands - 1, lo + 1) / (bands - 1));
     for (let x = 0; x < W; x++) {
-      const q = bayer(x, y) < f ? b : a;
+      // the next band reaches up two rows in a checker
+      const step = f > 1 - 2 / (gy / bands) && ((x >> 1) + y) % 2 === 0;
+      const q = step ? b : a;
+      const dot = (x & 3) === 1 && (y & 3) === 1;
       const o = (y * W + x) * 4;
-      img.data[o] = q[0];
-      img.data[o + 1] = q[1];
-      img.data[o + 2] = q[2];
+      for (let k = 0; k < 3; k++)
+        img.data[o + k] = dot ? q[k]! + (255 - q[k]!) * dotK : q[k]!;
       img.data[o + 3] = 255;
     }
   }
@@ -377,24 +584,12 @@ export function drawSky(c: C, p: Pal, v: View) {
   if (set.sky?.key !== key) set.sky = { key, cv: skyBitmap(p, v.W, v.gy) };
   c.drawImage(set.sky.cv, 0, 0);
 
-  const sx = Math.round(v.W * 0.84 - v.camX * 0.02);
+  // far right, clear of the station clouds and their labels (they sit nearer the middle)
+  const sx = Math.round(v.W * (v.W < 500 ? 0.84 : 0.92) - v.camX * 0.002);
   const sy = Math.round(v.gy * 0.2);
   if (p.night) {
-    for (let k = 9; k > 0; k--) ring(c, "#9fb0ff", sx, sy, 16 + k * 7, 0.035);
-    ball(c, sx, sy, 17, ramp("#ece6c0"), 17, -0.4, -0.5);
-    for (const [dx, dy, r] of [
-      [-5, -3, 4],
-      [4, 5, 3],
-      [3, -7, 2],
-      [-7, 6, 2],
-    ] as const)
-      ball(c, sx + dx, sy + dy, r, [
-        "#8c8a78",
-        "#aaa68e",
-        "#bfbaa0",
-        "#d4cfae",
-        "#e6e0bd",
-      ]);
+    for (let k = 9; k > 0; k--) ring(c, "#9fb0ff", sx, sy, 16 + k * 7, 0.03);
+    blit(c, set.moon, sx, sy);
     // stars
     cells(v, 0.08, 70, (i, x) => {
       for (let k = 0; k < 4; k++) {
@@ -428,16 +623,7 @@ export function drawSky(c: C, p: Pal, v: View) {
     }
   } else {
     for (let k = 8; k > 0; k--) ring(c, "#fff4c0", sx, sy, 14 + k * 8, 0.05);
-    ball(
-      c,
-      sx,
-      sy,
-      17,
-      ["#f0a830", "#f7c948", "#ffe27a", "#fff2b0", "#ffffff"],
-      17,
-      -0.2,
-      -0.3,
-    );
+    blit(c, set.sun, sx, sy);
     cells(v, 0.1, 190, (i, x) => {
       const h = hash(i + 700);
       const set2 = setFor(p).clouds[i & 1 ? 0 : Math.floor(h * 3)]!;
@@ -449,15 +635,17 @@ export function drawSky(c: C, p: Pal, v: View) {
   if (p.night)
     cells(v, 0.1, 260, (i, x) => {
       const h = hash(i + 700);
-      if (h < 0.4) return;
+      if (h < 0.55) return;
       const cx = x + h * 120 + ((v.t * 2) % 520);
       const wx = ((cx + 200) % (v.W + 400)) - 200;
+      c.globalAlpha = 0.4;
       blit(
         c,
         setFor(p).clouds[Math.floor(h * 3) % 3]!,
         wx,
         40 + hash(i + 800) * v.gy * 0.35,
       );
+      c.globalAlpha = 1;
     });
 }
 
@@ -484,20 +672,31 @@ function ridge(
           vnoise(wx / 15, seed + 4) * 0.1)
     );
   };
-  for (let x = 0; x < v.W; x++) {
-    const hh = Math.round(h(x));
-    px(c, col, x, v.gy - hh, 1, hh);
-    const rock = Math.min(hh, 16 + Math.round(amp * 0.2));
-    const slopeRight = h(x + 3) < h(x);
-    px(
-      c,
-      slopeRight ? dark : lit,
-      x,
-      v.gy - hh,
-      1,
-      Math.round(rock * (slopeRight ? 0.8 : 0.55)),
-    );
-    px(c, lit, x, v.gy - hh, 1, 1);
+  // stepped into brick columns: each has a lit top face and, where the next
+  // one is lower, a shaded side
+  const cell = Math.max(6, Math.round(amp / 8));
+  const step = Math.max(3, Math.round(cell / 2));
+  const d = Math.max(2, step - 1);
+  const o = v.camX * f;
+  const i0 = Math.floor(o / cell) - 1;
+  const i1 = Math.floor((o + v.W) / cell) + 1;
+  const q = (i: number) => Math.round(h(i * cell - o + cell / 2) / step) * step;
+  const top = mix(lit, "#ffffff", 0.15);
+  const seam = mix(col, dark, 0.35);
+  for (let i = i0; i <= i1; i++) {
+    const x = Math.round(i * cell - o);
+    const hh = q(i);
+    const next = q(i + 1);
+    px(c, col, x, v.gy - hh, cell, hh);
+    // a course line every step down the face, offset so it reads as stacked bricks
+    for (let y = v.gy - hh + step * 2; y < v.gy; y += step * 2)
+      px(c, seam, x, y, cell, 1);
+    px(c, seam, x + ((hh / step) & 1 ? cell >> 1 : 0), v.gy - hh, 1, hh);
+    for (let k = 1; k <= d; k++)
+      px(c, k === d ? top : lit, x + k, v.gy - hh - k, cell, 1);
+    if (next < hh)
+      for (let k = 1; k <= d; k++)
+        px(c, dark, x + cell - 1 + k, v.gy - hh - k + 1, 1, hh - next);
   }
 }
 
@@ -511,20 +710,31 @@ function turbineFar(
   phase: number,
   len: number,
 ) {
-  px(c, col, x - 1, gy - h, 3, h);
-  for (let b = 0; b < 3; b++) {
-    const a = t * 0.9 + phase + (b * Math.PI * 2) / 3;
-    line(
+  const r = ramp(col);
+  // flat haze tones: far away, only the shape and a lit edge are left
+  const far: R5 = [
+    r[1],
+    mix(col, r[1], 0.5),
+    col,
+    mix(col, r[3], 0.5),
+    mix(col, r[3], 0.7),
+  ];
+  for (let k = 0; k < 4; k++) {
+    const w = k < 2 ? 4 : 3;
+    block(c, x - (w >> 1), gy - ((k + 1) * h) / 4, w, h / 4, far, 1);
+  }
+  for (let b = 0; b < 3; b++)
+    cubeChain(
       c,
-      col,
+      far,
       x,
       gy - h,
-      x + Math.cos(a) * len,
-      gy - h + Math.sin(a) * len,
+      t * 0.9 + phase + (b * Math.PI * 2) / 3,
+      len,
+      3,
       2,
     );
-  }
-  px(c, col, x - 2, gy - h - 2, 5, 5);
+  block(c, x - 3, gy - h - 3, 6, 5, far, 1);
 }
 
 export function drawFar(c: C, p: Pal, v: View) {
@@ -578,33 +788,49 @@ function skyline(c: C, p: Pal, v: View) {
   const body = mix(m[2], p.sky[p.sky.length - 1]!, 0.35);
   const lit = mix(body, "#ffffff", p.night ? 0.06 : 0.25);
   const dark = mix(body, "#1a2766", 0.22);
+  const r: R5 = [
+    dark,
+    dark,
+    body,
+    lit,
+    mix(lit, "#ffffff", p.night ? 0.05 : 0.3),
+  ];
+  const pane = mix(body, "#1a2766", p.night ? 0.3 : 0.12);
+  const shine = mix(body, "#ffffff", 0.4);
   cells(v, 0.26, 52, (i, x) => {
-    const h = 24 + Math.floor(hash(i + 5) * 70);
-    const w = 28 + Math.floor(hash(i + 9) * 18);
+    // whole studs tall, so the skyline steps like stacked bricks
+    const h = 24 + Math.floor(hash(i + 5) * 9) * 8;
+    const w = 28 + Math.floor(hash(i + 9) * 3) * 8;
     const y0 = v.gy - h - 6;
-    px(c, body, x, y0, w, h + 6);
-    px(c, lit, x, y0, w, 2);
-    px(c, lit, x, y0, 2, h + 6);
-    px(c, dark, x + w - 5, y0, 5, h + 6);
-    if (hash(i + 13) > 0.6) {
-      px(c, body, x + (w >> 1) - 1, y0 - 12, 3, 12);
-      px(c, p.red, x + (w >> 1) - 1, y0 - 13, 3, 2);
-    } else if (hash(i + 14) > 0.7) {
-      px(c, dark, x + 4, y0 - 8, w - 12, 8);
+    const kind = hash(i + 13);
+    if (kind > 0.6) {
+      // a mast with a warning light
+      block(c, x + (w >> 1) - 2, y0 - 14, 4, 14, r, 2);
+      px(
+        c,
+        Math.floor(v.t + i) & 1 ? p.red : mix(p.red, body, 0.5),
+        x + (w >> 1) - 2,
+        y0 - 16,
+        4,
+        2,
+      );
+    } else if (hash(i + 14) > 0.6) {
+      // a stepped crown, two bricks narrower
+      block(c, x + 8, y0 - 8, w - 16, 8, r, 3);
     }
-    for (let ry = 6; ry < h; ry += 9)
-      for (let rx = 5; rx < w - 8; rx += 7) {
-        const on = hash(i * 131 + ry * 7 + rx) > 0.5;
-        if (p.night) px(c, on ? p.glow : dark, x + rx, y0 + ry, 3, 4);
-        else
-          px(
-            c,
-            on ? mix(body, "#ffffff", 0.4) : mix(body, "#1a2766", 0.1),
-            x + rx,
-            y0 + ry,
-            3,
-            4,
-          );
+    block(c, x, y0, w, h + 6, r, 3);
+    for (let ry = 6; ry < h; ry += 8)
+      for (let rx = 4; rx < w - 6; rx += 6) {
+        const on = hash(i * 131 + ry * 7 + rx) > (p.night ? 0.55 : 0.6);
+        px(
+          c,
+          p.night ? (on ? p.glow : pane) : on ? shine : pane,
+          x + rx,
+          y0 + ry,
+          3,
+          4,
+        );
+        if (p.night && on) px(c, "#fff6c8", x + rx, y0 + ry, 1, 1);
       }
   });
 }
@@ -712,69 +938,58 @@ function groundTiles(p: Pal, h: number) {
   g.width = 256;
   g.height = h;
   const gc = g.getContext("2d")!;
-  const img = gc.createImageData(256, h);
-  const base = rgb(p.ground);
-  const dark = rgb(p.grass2);
-  const light = rgb(p.dot);
+  // a green baseplate: flat bands that darken toward the viewer, studded on a grid
+  const fade = (y: number) => 1 - Math.floor((y / h) * 4) * 0.07;
   for (let y = 0; y < h; y++)
-    for (let x = 0; x < 256; x++) {
-      const n = hash(x * 131 + y * 17);
-      const fade = 1 - (y / h) * 0.28;
-      let col = base;
-      if (n < 0.1) col = dark;
-      else if (n > 0.94) col = light;
-      else if (hash((x >> 1) * 73 + (y >> 1) * 29) < 0.08) col = dark;
-      const o = (y * 256 + x) * 4;
-      img.data[o] = col[0] * fade;
-      img.data[o + 1] = col[1] * fade;
-      img.data[o + 2] = col[2] * fade;
-      img.data[o + 3] = 255;
+    px(gc, mix(p.ground, "#0b1a10", 1 - fade(y)), 0, y, 256, 1);
+  const g5 = ramp(p.ground);
+  for (let y = 9; y < h - 2; y += 8)
+    for (let x = (y >> 3) & 1 ? 2 : 6; x < 256; x += 8) {
+      const k = 1 - fade(y);
+      const top = mix(g5[3], "#0b1a10", k);
+      px(gc, mix(g5[1], "#0b1a10", k), x + 1, y + 1, 4, 2);
+      px(gc, mix(g5[2], "#0b1a10", k), x, y, 4, 2);
+      px(gc, top, x, y - 1, 4, 1);
+      px(gc, mix(g5[4], "#0b1a10", k), x, y - 1, 2, 1);
     }
-  gc.putImageData(img, 0, 0);
-  // blade strokes
-  for (let k = 0; k < 90; k++) {
-    const x = Math.floor(hash(k * 7) * 250);
+  // a few blades poking up between the studs
+  for (let k = 0; k < 40; k++) {
+    const x = Math.floor(hash(k * 7) * 254);
     const y = 6 + Math.floor(hash(k * 13) * (h - 12));
-    px(gc, p.dot, x, y, 1, 3);
-    px(gc, p.dot, x + 1, y - 1, 1, 2);
-    px(gc, p.grass2, x + 2, y + 1, 1, 2);
+    px(gc, p.dot, x, y, 1, 2);
+    px(gc, p.grass2, x + 1, y + 1, 1, 2);
   }
-  // lit rim along the horizon edge
-  px(gc, p.dot, 0, 0, 256, 2);
+  // lit rim along the horizon edge: the top face of the plate
+  px(gc, mix(p.dot, "#ffffff", p.night ? 0.05 : 0.2), 0, 0, 256, 1);
+  px(gc, p.dot, 0, 1, 256, 1);
   px(gc, p.line, 0, 2, 256, 1);
 
+  // the path: flat tan plates in running bond, each with its own lit edge
   const pa = document.createElement("canvas");
   pa.width = 192;
   pa.height = 26;
   const pc = pa.getContext("2d")!;
   const pbase = p.path;
+  const pr = ramp(pbase);
   px(pc, mix(pbase, p.ground, 0.5), 0, 0, 192, 26);
-  px(pc, mix(pbase, "#ffffff", 0.2), 0, 2, 192, 3);
-  px(pc, pbase, 0, 5, 192, 17);
-  px(pc, mix(pbase, "#1a2766", 0.22), 0, 22, 192, 3);
-  for (let k = 0; k < 120; k++) {
-    const x = Math.floor(hash(k * 5 + 1) * 190);
-    const y = 6 + Math.floor(hash(k * 11 + 3) * 15);
-    const lit = hash(k * 19) > 0.5;
-    px(
-      pc,
-      lit ? mix(pbase, "#ffffff", 0.3) : mix(pbase, "#1a2766", 0.25),
-      x,
-      y,
-      1 + (k & 1),
-      1,
-    );
-  }
-  for (let k = 0; k < 7; k++) {
-    const x = Math.floor(hash(k * 41 + 5) * 184);
-    const y = 8 + Math.floor(hash(k * 43 + 2) * 11);
-    px(pc, mix(pbase, "#1a2766", 0.35), x + 1, y + 1, 4, 3);
-    px(pc, mix(pbase, "#ffffff", 0.35), x, y, 4, 2);
-  }
-  for (const y of [9, 17])
-    for (let x = 0; x < 192; x += 3)
-      if (hash(x * 3 + y) > 0.2)
-        px(pc, mix(pbase, "#1a2766", 0.12), x, y, 3, 1);
+  px(pc, pr[3], 0, 2, 192, 2);
+  px(pc, pr[4], 0, 2, 192, 1);
+  for (const [y0, off] of [
+    [4, 0],
+    [13, 12],
+  ] as const)
+    for (let x0 = -off; x0 < 192; x0 += 24) {
+      const tint = hash(x0 * 7 + y0) * 0.12 - 0.06;
+      const base =
+        tint > 0 ? mix(pbase, "#ffffff", tint) : mix(pbase, "#1a2766", -tint);
+      px(pc, base, x0, y0, 24, 9);
+      px(pc, mix(base, "#ffffff", 0.22), x0 + 1, y0, 22, 1);
+      px(pc, mix(base, "#ffffff", 0.12), x0, y0, 1, 8);
+      px(pc, mix(pbase, "#1a2766", 0.28), x0 + 23, y0, 1, 9);
+      px(pc, mix(pbase, "#1a2766", 0.2), x0, y0 + 8, 24, 1);
+    }
+  px(pc, mix(pbase, "#1a2766", 0.3), 0, 22, 192, 1);
+  px(pc, mix(pbase, "#1a2766", 0.42), 0, 23, 192, 2);
   return { grass: g, path: pa };
 }
 

@@ -22,11 +22,6 @@ export function vnoise(x: number, seed = 0) {
   return hash(i * 7919 + seed) * (1 - u) + hash((i + 1) * 7919 + seed) * u;
 }
 
-const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
-/** 4x4 ordered-dither threshold in (0, 1). */
-export const bayer = (x: number, y: number) =>
-  (BAYER[(y & 3) * 4 + (x & 3)]! + 0.5) / 16;
-
 export const px = (c: C, col: string, x: number, y: number, w = 1, h = 1) => {
   c.fillStyle = col;
   c.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
@@ -169,9 +164,175 @@ export function ball(
       if (d2 > 1) continue;
       const nz = Math.sqrt(1 - d2);
       const l = Math.max(0, nx * lx + ny * ly + nz * 0.55);
-      const lvl = Math.floor(l * 3.6 + (bayer(cx + dx, cy + dy) - 0.5) * 0.9);
+      // hard bands, no dither: reads as moulded plastic
+      const lvl = Math.floor(l * 3.4);
       px(c, r[Math.max(1, Math.min(4, lvl + 1))]!, cx + dx, cy + dy);
     }
+}
+
+/* ---------- bricks ---------- */
+
+/** How far brick depth recedes (up and to the right, one pixel per pixel). */
+export const DEPTH = 4;
+
+/**
+ * Extruded brick: the front face fills the rect, the top face and the right
+ * side recede `d` px up and to the right, like a toy brick seen from a little
+ * above and to the left.
+ */
+export function block(
+  c: C,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: R5,
+  d = DEPTH,
+) {
+  x = Math.round(x);
+  y = Math.round(y);
+  w = Math.round(w);
+  h = Math.round(h);
+  for (let k = 1; k <= d; k++) {
+    px(c, k === d ? r[4] : r[3], x + k, y - k, w, 1);
+    px(c, r[1], x + w - 1 + k, y - k + 1, 1, h);
+  }
+  px(c, r[2], x, y, w, h);
+  px(c, r[4], x, y, w, 1);
+  px(c, r[3], x, y + 1, 1, h - 1);
+  px(c, mix(r[1], r[0], 0.4), x, y + h - 1, w, 1);
+  // a darker crease where the side meets the front
+  px(c, mix(r[2], r[1], 0.5), x + w - 1, y + 1, 1, h - 1);
+}
+
+/** A row of studs along the top face of a brick whose front starts at (x, y). */
+export function studs(
+  c: C,
+  x: number,
+  y: number,
+  w: number,
+  r: R5,
+  pitch = 8,
+  d = DEPTH,
+) {
+  const sy = Math.round(y - Math.ceil(d / 2));
+  const n = Math.max(1, Math.floor(w / pitch));
+  const off = Math.round((w - n * pitch) / 2) + Math.ceil(d / 2);
+  for (let i = 0; i < n; i++) {
+    const sx = Math.round(x + off + i * pitch + (pitch - 5) / 2);
+    px(c, r[1], sx + 1, sy - 1, 5, 2);
+    px(c, r[3], sx, sy - 2, 5, 2);
+    px(c, r[4], sx, sy - 3, 4, 1);
+    px(c, r[4], sx, sy - 2, 1, 1);
+  }
+}
+
+/** Staggered mortar lines across a front face: running bond. */
+export function courses(
+  c: C,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: R5,
+  bw = 16,
+  bh = 6,
+) {
+  const seam = mix(r[2], r[1], 0.55);
+  for (let yy = bh; yy < h - 1; yy += bh) px(c, seam, x + 1, y + yy, w - 2, 1);
+  for (let row = 0; row * bh < h - 1; row++) {
+    const y0 = y + row * bh + 1;
+    const hh = Math.min(bh - 1, h - 2 - row * bh);
+    for (let xx = (row & 1) * (bw >> 1) + bw; xx < w - 2; xx += bw)
+      px(c, seam, x + xx, y0, 1, hh);
+  }
+}
+
+/**
+ * Voxel picture: a `cols` x `rows` grid of cubes of `cell` px, top-left at
+ * (x, y). `at(i, j)` gives each cell's ramp, or null for empty. Hidden faces
+ * are skipped, so neighbouring cubes merge into one moulded shape with a
+ * faint seam between them.
+ */
+export function vox(
+  c: C,
+  x: number,
+  y: number,
+  cols: number,
+  rows: number,
+  cell: number,
+  at: (i: number, j: number) => R5 | null | undefined,
+  d = Math.max(1, Math.round(cell * 0.5)),
+  seams = true,
+) {
+  const g = (i: number, j: number) =>
+    i < 0 || j < 0 || i >= cols || j >= rows ? null : at(i, j);
+  // back faces first, so every front face sits on top of them
+  for (let j = rows - 1; j >= 0; j--)
+    for (let i = 0; i < cols; i++) {
+      const r = g(i, j);
+      if (!r) continue;
+      const x0 = x + i * cell;
+      const y0 = y + j * cell;
+      for (let k = 1; k <= d; k++) {
+        if (!g(i, j - 1)) px(c, k === d ? r[4] : r[3], x0 + k, y0 - k, cell, 1);
+        if (!g(i + 1, j)) px(c, r[1], x0 + cell - 1 + k, y0 - k + 1, 1, cell);
+      }
+    }
+  for (let j = 0; j < rows; j++)
+    for (let i = 0; i < cols; i++) {
+      const r = g(i, j);
+      if (!r) continue;
+      const x0 = x + i * cell;
+      const y0 = y + j * cell;
+      px(c, r[2], x0, y0, cell, cell);
+      if (!g(i, j - 1)) px(c, r[4], x0, y0, cell, 1);
+      else if (seams && g(i, j - 1) !== r)
+        px(c, mix(r[2], r[1], 0.6), x0, y0, cell, 1);
+      if (!g(i - 1, j)) px(c, r[3], x0, y0 + 1, 1, cell - 1);
+      else if (seams) px(c, mix(r[2], r[1], 0.35), x0, y0 + 1, 1, cell - 1);
+      if (!g(i, j + 1)) px(c, mix(r[1], r[0], 0.3), x0, y0 + cell - 1, cell, 1);
+    }
+}
+
+/** Ramp index (1..4) for a cube on a lit sphere or dome, picked by its normal. */
+export function shade(nx: number, ny: number, lx = -0.6, ly = -0.7) {
+  const nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
+  const l = Math.max(0, nx * lx + ny * ly + nz * 0.5);
+  const k = l > 0.85 ? 4 : l > 0.55 ? 3 : l > 0.25 ? 2 : 1;
+  return k;
+}
+
+/** Voxel disc (sun, moon, balloon): cubes inside a circle, each lit by its normal. */
+export function voxBall(
+  c: C,
+  cx: number,
+  cy: number,
+  rad: number,
+  cell: number,
+  r: R5,
+  d = Math.max(1, Math.round(cell / 2)),
+) {
+  const n = Math.ceil(rad / cell);
+  const cols = n * 2;
+  const tones = r.map(
+    (col, k) => [r[0], r[1], col, r[Math.min(4, k + 1)]!, r[4]] as R5,
+  );
+  vox(
+    c,
+    cx - n * cell,
+    cy - n * cell,
+    cols,
+    cols,
+    cell,
+    (i, j) => {
+      const nx = (i + 0.5 - n) / n;
+      const ny = (j + 0.5 - n) / n;
+      if (nx * nx + ny * ny > 1) return null;
+      return tones[shade(nx, ny)]!;
+    },
+    d,
+  );
 }
 
 /** Soft ground shadow under an object. */
@@ -285,3 +446,39 @@ export const blit = (c: C, s: Sprite, x: number, y: number, flip = false) => {
   c.drawImage(s.cv, Math.round(s.ox), Math.round(y + s.oy));
   c.restore();
 };
+
+/**
+ * A rod of cubes from (x, y) along angle `ang`, tapering from `w0` to `w1` px:
+ * turbine blades, braces, anything thin that has to stay blocky while it turns.
+ */
+export function cubeChain(
+  c: C,
+  r: R5,
+  x: number,
+  y: number,
+  ang: number,
+  len: number,
+  w0: number,
+  w1 = w0,
+) {
+  const cos = Math.cos(ang);
+  const sin = Math.sin(ang);
+  const pts: [number, number, number][] = [];
+  for (let i = 0; i <= len; i += Math.max(1, Math.round(w1 * 0.75))) {
+    const w = Math.max(1, Math.round(w0 + ((w1 - w0) * i) / len));
+    pts.push([
+      Math.round(x + cos * i - w / 2),
+      Math.round(y + sin * i - w / 2),
+      w,
+    ]);
+  }
+  // the receding faces of all cubes first, then the fronts on top
+  for (const [bx, by, w] of pts) px(c, r[1], bx + 1, by - 1, w, w);
+  for (const [bx, by, w] of pts) {
+    px(c, r[2], bx, by, w, w);
+    if (w > 1) {
+      px(c, r[4], bx, by, w - 1, 1);
+      px(c, mix(r[1], r[2], 0.4), bx + w - 1, by + 1, 1, w - 1);
+    }
+  }
+}

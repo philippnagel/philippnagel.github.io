@@ -19,7 +19,7 @@ A chapter card explains each station; the dots on the right jump between them. T
 
 ## Stack
 
-TypeScript + [Bun](https://bun.sh) 1.4.4. No runtime dependencies; `typescript` and `@types/bun` are dev-only. Everything is drawn in code to a small canvas (about 640x360 art pixels, scaled by a whole number). Objects are pre-rendered once per time of day with five-tone shaded material ramps, dithering and an automatic coloured silhouette outline; the sky is a dithered 22-band gradient and the hills come from value noise. Labels use a 5x7 bitmap font. No image assets except the avatar. Page scroll sets how far Philipp has walked; the walk is eased so he keeps stepping after you stop.
+TypeScript + [Bun](https://bun.sh) 1.4.4. No runtime dependencies; `typescript` and `@types/bun` are dev-only. Everything is drawn in code to a small canvas (about 640x360 art pixels, scaled by a whole number). The art is a brick world after the Yamauchi No.10 site: objects are extruded bricks (lit top face, shaded side, studs) or voxel shapes built cube by cube (`block`, `vox`, `studs` in `gfx.ts`), in five-tone material ramps with an automatic coloured silhouette outline, pre-rendered once per time of day. The sky is flat banded plates under a faint stud grid, the hills are stepped brick terraces from value noise, and the ground is a studded baseplate with a plate path. Labels use a 5x7 bitmap font. No image assets except the avatar. Page scroll sets how far Philipp has walked; the walk is eased so he keeps stepping after you stop.
 
 ## Creative Inspiration
 

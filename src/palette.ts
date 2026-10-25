@@ -65,7 +65,7 @@ const shared = {
 const day: Pal = {
   ...shared,
   night: false,
-  sky: ["#2f7fd6", "#5aa8ee", "#9fd4f5", "#e6f2e8"],
+  sky: ["#2b74d0", "#4b9be6", "#86c6f0", "#cfe8f2"],
   far: "#a9cbe0",
   hill: "#8dbf9a",
   ground: "#5cae45",
@@ -87,7 +87,7 @@ const day: Pal = {
 const night: Pal = {
   ...shared,
   night: true,
-  sky: ["#02041a", "#0a1240", "#1b2a72", "#4a4a96"],
+  sky: ["#03040c", "#070a1e", "#0f1638", "#232c62"],
   far: "#101a3d",
   hill: "#142a4a",
   ground: "#1c4430",

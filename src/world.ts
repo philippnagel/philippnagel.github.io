@@ -1,7 +1,7 @@
 import { drawCritters } from "./critters";
 import { drawWeather } from "./weather";
 import { drawSkyLife } from "./skylife";
-import { drawStation } from "./stations";
+import { drawStation, flushLabels } from "./stations";
 import {
   drawFar,
   drawForeground as drawTufts,
@@ -16,9 +16,10 @@ import { ART_AHEAD, STATIONS } from "./walk";
 export { hash } from "./gfx";
 export type { View } from "./scenery";
 
-/** Foreground tufts, then the weather over everything. */
+/** Foreground tufts, the stations' ground labels over them, then the weather over everything. */
 export function drawForeground(c: CanvasRenderingContext2D, p: Pal, v: View) {
   drawTufts(c, p, v);
+  flushLabels(c);
   drawWeather(c, p, v);
 }
 

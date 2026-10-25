@@ -1,15 +1,16 @@
 import {
   type C,
+  type R5,
   type Sprite,
-  ball,
   bake,
   blit,
+  block,
   mat,
   px,
   ramp,
   shadow,
-  slab,
   tone,
+  vox,
 } from "./gfx";
 import { mix, type Pal } from "./palette";
 
@@ -29,9 +30,34 @@ export interface Pose {
 /** Walk frames 0..3, then two wave frames. */
 const frames = new WeakMap<Pal, Sprite[]>();
 
-/** Philipp: red-blond hair, blue eyes, dark fleece over a blue collar. Shaded in code, about 60 art pixels tall. */
+/** Hair piece, 3 px cubes from (-10, -66): a cap swept up to the right, longer at the back. */
+const HAIR = [
+  "..####.",
+  ".######",
+  "#######",
+  "###....",
+  "##.....",
+  "##.....",
+  "#......",
+];
+
+/**
+ * Philipp as a toy figure: red-blond hair piece, blue eyes, dark fleece over a
+ * blue collar. Every part is a brick with a lit top and a shaded side, about
+ * 60 art pixels tall.
+ */
 function draw(c: C, p: Pal, f: number, wave: number) {
-  const skin = ramp(p.skin);
+  // warm skin shadow: the generic ramp goes grey-blue on skin
+  const sk = tone(p, p.skin);
+  const skinSh = mix(sk, "#a8553f", 0.42);
+  const skinDk = mix(skinSh, "#5a2a28", 0.4);
+  const skin: R5 = [
+    skinDk,
+    skinSh,
+    sk,
+    mix(sk, "#fff3df", 0.35),
+    mix(sk, "#ffffff", 0.6),
+  ];
   const hair = ramp(p.night ? mix(p.hair, "#2a3a8a", 0.15) : p.hair);
   const jacket = mat(p, p.jacket, 0.05);
   const shirt = mat(p, p.shirt, 0.2);
@@ -40,102 +66,105 @@ function draw(c: C, p: Pal, f: number, wave: number) {
   const sole = mat(p, "#4b4f5e", 0.2);
 
   const bob = f === 1 || f === 3 ? -1 : 0;
+  const ty = bob;
 
-  // legs: frame 1 steps the right leg forward, frame 3 kicks the left leg back
+  // legs: frame 1 steps the front leg forward, frame 3 kicks the back leg back
   const legs = [
     { x: -8, dx: f === 1 ? -2 : f === 3 ? -3 : 0, lift: f === 3 ? 3 : 0 },
     { x: 1, dx: f === 1 ? 3 : f === 3 ? 2 : 0, lift: f === 1 ? 3 : 0 },
   ];
   for (const l of legs) {
-    slab(c, l.x + l.dx, -19 - l.lift, 7, 14, pants, 2);
-    px(c, pants[3], l.x + l.dx + 2, -19 - l.lift, 1, 14);
-    slab(c, l.x + l.dx, -5 - l.lift, 11, 5, shoe, 1);
-    px(c, sole[2], l.x + l.dx, -1 - l.lift, 11, 1);
+    const x = l.x + l.dx;
+    const y = -l.lift;
+    block(c, x, -19 + y, 7, 14, pants, 2);
+    block(c, x, -5 + y, 10, 4, shoe, 2);
+    px(c, sole[2], x, -1 + y, 10, 1);
   }
+  // hip brick across both legs
+  block(c, -9, -22 + ty, 17, 4, pants, 2);
 
   const sw = f === 1 ? 3 : f === 3 ? -3 : 0;
-  const ty = bob;
 
-  // back arm
+  // back arm, with a C-shaped hand
   const bx = -13 - Math.max(sw, -1);
-  slab(c, bx, -35 + ty, 5, 15, jacket, 1);
-  px(c, jacket[1], bx, -22 + ty, 5, 2);
-  slab(c, bx, -20 + ty, 5, 4, skin, 1);
+  block(c, bx, -36 + ty, 5, 15, jacket, 2);
+  hand(c, skin, bx, -21 + ty);
 
-  // torso
-  slab(c, -9, -37 + ty, 18, 19, jacket, 2);
-  px(c, jacket[2], -8, -38 + ty, 16, 1);
-  px(c, jacket[1], 3, -34 + ty, 1, 15);
-  px(c, jacket[4], 4, -34 + ty, 1, 14);
-  px(c, jacket[3], -6, -36 + ty, 1, 8);
-  px(c, jacket[1], -9, -20 + ty, 18, 2);
+  // torso: a brick that widens toward the hips, like a toy figure's
+  for (let i = 0; i < 18; i++) {
+    const w = 16 + Math.round((i / 17) * 3);
+    const x = -8 - Math.round((i / 17) * 1.5);
+    px(c, jacket[1], x + w, -40 + i + ty - 1, 2, 1);
+    px(c, i === 0 ? jacket[4] : jacket[2], x, -40 + i + ty, w, 1);
+    px(c, jacket[3], x, -40 + i + ty, 1, 1);
+  }
+  for (let k = 1; k <= 2; k++) px(c, jacket[3], -8 + k, -40 - k + ty, 16, 1);
+  // zip and a lit pocket edge
+  px(c, jacket[1], 3, -36 + ty, 1, 14);
+  px(c, jacket[4], 4, -36 + ty, 1, 13);
+  px(c, jacket[3], -6, -28 + ty, 5, 1);
   // collar and shirt
-  slab(c, -3, -41 + ty, 9, 5, shirt, 1);
-  px(c, shirt[4], -2, -41 + ty, 3, 1);
-  px(c, jacket[3], -5, -39 + ty, 3, 4);
-  px(c, jacket[3], 6, -39 + ty, 3, 4);
-  px(c, shirt[1], 2, -37 + ty, 3, 1);
+  block(c, -2, -42 + ty, 9, 4, shirt, 1);
+  px(c, jacket[3], -5, -40 + ty, 3, 4);
+  px(c, jacket[3], 7, -40 + ty, 2, 4);
 
   // front arm
   if (wave) {
     const w = wave === 2 ? 8 : 5;
-    slab(c, 8, -37 + ty, 5 + w, 5, jacket, 1); // shoulder reaching out to the raised arm
-    slab(c, 8 + w, -50 + ty, 5, 15, jacket, 1);
-    slab(c, 8 + w, -55 + ty, 5, 5, skin, 1);
-    px(c, skin[4], 9 + w, -55 + ty, 2, 1);
+    block(c, 8, -38 + ty, 5 + w, 5, jacket, 2); // shoulder reaching out to the raised arm
+    block(c, 8 + w, -51 + ty, 5, 15, jacket, 2);
+    hand(c, skin, 8 + w, -56 + ty);
   } else {
-    slab(c, 8 + sw * -1, -35 + ty, 5, 15, jacket, 1);
-    px(c, jacket[1], 8 - sw, -22 + ty, 5, 2);
-    slab(c, 8 - sw, -20 + ty, 5, 4, skin, 1);
+    block(c, 8 - sw, -36 + ty, 5, 15, jacket, 2);
+    hand(c, skin, 8 - sw, -21 + ty);
   }
 
-  // neck, head, hair
-  // warm skin shadow: the generic ramp goes grey-blue on skin
-  const skinSh = mix(tone(p, p.skin), "#a8553f", 0.42);
-  const skinDk = mix(skinSh, "#5a2a28", 0.4);
-  px(c, skinSh, -2, -43 + ty, 6, 6);
-  ball(c, -1, -57 + ty, 11, hair, 10, -0.35, -0.7);
-  // face: flat skin with a lit forehead and cheek and a shaded jaw, no dither
-  for (let dy = -8; dy <= 8; dy++) {
-    const w = Math.round(8 * Math.sqrt(1 - (dy * dy) / 69));
-    for (let dx = -w; dx <= w; dx++) {
-      const edge = dx <= -w + 1 && dy > -4;
-      px(c, edge || dy >= 7 ? skinSh : skin[2], 2 + dx, -52 + dy + ty);
-    }
-  }
-  px(c, skin[3], 0, -57 + ty, 6, 2);
-  px(c, skin[3], 6, -50 + ty, 3, 2);
-  // ear
-  px(c, skin[2], -7, -52 + ty, 3, 5);
-  px(c, skinSh, -6, -51 + ty, 1, 3);
-  // fringe swept up and to the right, so the forehead shows on that side
-  const drop = [6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 2, 1];
-  for (let i = 0; i < 12; i++) {
-    for (let j = 0; j < drop[i]!; j++)
-      px(c, (i + j) % 3 === 0 ? hair[3] : hair[2], -4 + i, -62 + j + ty);
-    px(c, hair[1], -4 + i, -62 + drop[i]! + ty);
-  }
-  px(c, hair[3], 0, -63 + ty, 3, 2);
-  px(c, hair[4], 1, -64 + ty, 2, 1);
-  px(c, hair[3], -5, -62 + ty, 2, 3);
-  px(c, hair[2], 4, -64 + ty, 2, 2);
-  px(c, hair[2], -9, -56 + ty, 3, 8);
-  px(c, hair[1], -9, -49 + ty, 3, 1);
+  // neck stud, then the head: a rounded brick
+  block(c, -1, -44 + ty, 6, 3, skin, 1);
+  const hx = -6;
+  const hy = -60 + ty;
+  block(c, hx, hy, 17, 16, skin, 2);
+  // rounded corners
+  for (const [x, y] of [
+    [hx, hy],
+    [hx + 16, hy + 15],
+    [hx, hy + 15],
+  ])
+    c.clearRect(x!, y!, 1, 1);
+  px(c, skinSh, hx, hy + 13, 17, 2);
+  px(c, skin[3], hx + 6, hy + 3, 6, 2);
+  // hair piece in cubes
+  vox(
+    c,
+    -10,
+    -66 + ty,
+    7,
+    HAIR.length,
+    3,
+    (i, j) => (HAIR[j]![i] === "#" ? hair : null),
+    2,
+  );
   // brows, eyes
-  px(c, hair[1], 2, -56 + ty, 3, 1);
-  px(c, hair[1], 7, -56 + ty, 3, 1);
+  px(c, hair[1], 2, -55 + ty, 3, 1);
+  px(c, hair[1], 7, -55 + ty, 3, 1);
   for (const x of [2, 7]) {
-    px(c, "#ffffff", x, -54 + ty, 3, 3);
-    px(c, p.blue, x + 1, -54 + ty, 2, 3);
-    px(c, "#10244a", x + 2, -53 + ty, 1, 1);
+    px(c, "#ffffff", x, -53 + ty, 3, 3);
+    px(c, p.blue, x + 1, -53 + ty, 2, 3);
+    px(c, "#10244a", x + 2, -52 + ty, 1, 1);
   }
-  // nose, cheek, mouth
-  px(c, skin[3], 9, -51 + ty, 2, 2);
-  px(c, skinSh, 9, -49 + ty, 2, 1);
-  px(c, mix(skin[2], "#e58a7c", 0.5), 3, -48 + ty, 2, 1);
+  // nose, cheek, smile
+  px(c, skin[3], 9, -50 + ty, 2, 2);
+  px(c, skinSh, 9, -48 + ty, 2, 1);
+  px(c, mix(sk, "#e58a7c", 0.5), 2, -48 + ty, 2, 1);
   px(c, skinDk, 4, -46 + ty, 5, 1);
   px(c, skinDk, 3, -47 + ty, 1, 1);
   px(c, skinDk, 9, -47 + ty, 1, 1);
+}
+
+/** A toy figure's C-shaped hand, opening forward. */
+function hand(c: C, skin: R5, x: number, y: number) {
+  block(c, x, y, 5, 5, skin, 1);
+  px(c, skin[1], x + 2, y + 2, 3, 1);
 }
 
 function build(p: Pal): Sprite[] {
@@ -148,7 +177,7 @@ function build(p: Pal): Sprite[] {
     [0, 1],
     [0, 2],
   ] as const)
-    out.push(bake(-20, -72, 20, 2, (c) => draw(c, p, f, w)));
+    out.push(bake(-22, -74, 24, 2, (c) => draw(c, p, f, w)));
   return out;
 }
 
