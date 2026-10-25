@@ -10,7 +10,7 @@ Goal: add personal accomplishments and text that helps prospective consulting cl
 
 ## Check before publishing
 
-- CV says the Hausheld acquisition closed Sept 2025. Press (pv magazine, ox8) dates it Nov 2025 and names Mako365, not Mako Software. Confirm the date and entity name.
+- Hausheld date and entities settled: site uses the press date (Nov 2025); Mako365 and Mako Software were sister companies acquired in the same transaction. Update the CV (it says Sept 2025) so both agree.
 - Press names Ancala as Hausheld's private-equity owner. Decide whether to mention it.
 - Sources:
   - https://ancala.com/ancala-forms-germanys-largest-independent-smart-metering-platform/
@@ -19,14 +19,14 @@ Goal: add personal accomplishments and text that helps prospective consulting cl
 
 ## Insertion points (no new stations)
 
-| Chapter | Add |
-| --- | --- |
-| Hello | One positioning sentence: "I build and run smart-metering platforms: 500k+ meters, ~10M market messages a week." |
-| Grid | One-line proof of market-communication scale (~10M EDIFACT/AS4 messages/week across GPKE, WiM, MPES). |
-| Metering point | §14a EnWG, MsbG and iMSys rollout angle (garden: Q4 2025 rollout 23.3%). |
-| Meter cabinet | SMGW lifecycle, BSI TR-03109, DLMS/COSEM (IEC 62056). |
-| Protocol frame | Japan bridge: ECHONET Lite ↔ DLMS/COSEM, B-route. The differentiator. |
-| Contact | Explicit offer plus a short track-record line, replacing "Say hello". |
+| Chapter        | Add                                                                                                              |
+| -------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Hello          | One positioning sentence: "I build and run smart-metering platforms: 500k+ meters, ~10M market messages a week." |
+| Grid           | One-line proof of market-communication scale (~10M EDIFACT/AS4 messages/week across GPKE, WiM, MPES).            |
+| Metering point | §14a EnWG, MsbG and iMSys rollout angle (garden: Q4 2025 rollout 23.3%).                                         |
+| Meter cabinet  | SMGW lifecycle, BSI TR-03109, DLMS/COSEM (IEC 62056).                                                            |
+| Protocol frame | Japan bridge: ECHONET Lite ↔ DLMS/COSEM, B-route. The differentiator.                                            |
+| Contact        | Explicit offer plus a short track-record line, replacing "Say hello".                                            |
 
 ## New copy
 
@@ -80,10 +80,32 @@ Verdict: memorable and technically credible, but a utility buyer can't yet justi
 
 ### Fixes, by priority
 
-1. [ ] Visible plain-text services and proof block, or a "Skip to services" link (problems 1, 3, 6, 9).
-2. [ ] Decide client-name policy, publish at least one case, anonymised if needed (problem 2).
-3. [ ] Add Impressum, Datenschutz and an email address (problem 7).
+1. [x] Visible plain-text services and proof block, or a "Skip to services" link (problems 1, 3, 6, 9).
+2. [x] Decide client-name policy, publish at least one case, anonymised if needed (problem 2).
+3. [x] Add Impressum, Datenschutz and an email address (problem 7). Placeholders to fill: name, address, phone, VAT ID, email (`EMAIL` in `chapters.ts`, `index.html`, legal pages).
 4. [ ] Pick primary audience, trim the rest (problem 5).
-5. [ ] Rewrite `<title>` and meta description, e.g. "Smart metering & market-communication consultant: SMGW, MaKo, DLMS/COSEM" (problem 10).
+5. [x] Rewrite `<title>` and meta description, e.g. "Smart metering & market-communication consultant: SMGW, MaKo, DLMS/COSEM" (problem 10).
 6. [ ] Make the gate optional or silent by default (problem 8).
 7. [ ] State independence, engagement model and availability (problem 4).
+
+## Further findings (review session)
+
+### Fill in before publishing
+
+- Impressum: name, address, phone, VAT ID, person responsible for content.
+- Datenschutz: controller details. The privacy text is a template; have it checked (GitHub Pages hosting, third-country transfer, cal.com).
+- Email: still the placeholder `hello@example.com`. It appears in `EMAIL` (`src/chapters.ts`), the `#email` link in `src/index.html`, and both legal pages.
+
+### Open issues
+
+- [ ] Independence conflict: the CV lists you as Managing Director at Hausheld AG after the acquisition. "Independent" was removed from the meta description for that reason. Decide how to describe your position before using the word again (see fix 7).
+- [ ] CV says the Japan client was "an asset management firm"; the site says "a Japanese energy consultancy". Make them agree.
+- [ ] Cases carry no outcome numbers (time saved, rollout rate, cost). Add real results if available; none were invented.
+- [ ] Data center and battery stations (02, 03) read as filler: no proof of work in either. Cut them, shorten them, or tie each to a real project.
+- [ ] Pixel concept may read as creative rather than reliable to conservative buyers. Keep the proof strip, plain services block and visible email prominent as the counterweight.
+- [ ] Services and cases appear only in the simple view and hidden text, not on the story card. Check that story-view visitors can still find them (the gate has a "Skip to services and contact" button).
+- [ ] Add German copy if the primary audience is German MSBs (fix 4).
+
+### Done this session
+
+- Philipp figure redrawn: face shading, mouth, nose, fringe, walk-cycle legs, back arm and wave arm.
